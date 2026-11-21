@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { OrganizationProvider, useOrganization } from './context/OrganizationContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
+import { API_BASE } from './api/client';
 
 // Feature Views
 import { DashboardView } from './features/dashboard/DashboardView';
@@ -49,6 +50,16 @@ const ModuleRouter: React.FC = () => {
 };
 
 export const AppContent: React.FC = () => {
+  // Global backend keep-warm ping to eliminate cold-starts across all company views
+  useEffect(() => {
+    const keepWarm = () => {
+      fetch(`${API_BASE}/health`).catch(() => {});
+    };
+    keepWarm();
+    const interval = setInterval(keepWarm, 3.5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex h-screen bg-solian-obsidian text-slate-100 overflow-hidden font-sans">
       <Sidebar />
