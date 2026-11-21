@@ -27,12 +27,18 @@ export interface ChatMessage {
   timestamp: string;
   contextSources?: string[];
   actionProposals?: ActionProposal[];
+  attachments?: Array<{
+    type: 'image' | 'document' | 'file';
+    url: string;
+    name?: string;
+    size?: number;
+  }>;
 }
 
 export interface ActionProposal {
   id: string;
   title: string;
-  type: 'create_task' | 'draft_sop' | 'brief_team' | 'schedule_review';
+  type: 'create_task' | 'complete_task' | 'draft_sop' | 'brief_team' | 'schedule_review';
   payload: Record<string, any>;
   status: 'pending' | 'accepted' | 'dismissed';
 }
