@@ -38,7 +38,33 @@ export const CompanyChatView: React.FC = () => {
 
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [thinkingSeconds, setThinkingSeconds] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Keep-warm ping to eliminate cold-starts
+  useEffect(() => {
+    const pingBackend = () => {
+      fetch('/api/v1/health').catch(() => {});
+    };
+    pingBackend();
+    const interval = setInterval(pingBackend, 4 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Track thinking seconds during AI generation
+  useEffect(() => {
+    let timer: any = null;
+    if (isStreaming) {
+      timer = setInterval(() => {
+        setThinkingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setThinkingSeconds(0);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isStreaming]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -269,12 +295,26 @@ export const CompanyChatView: React.FC = () => {
 
         {isStreaming && (
           <div className="flex gap-4">
-            <div className="w-9 h-9 rounded-xl bg-solian-card border border-gold-500/30 p-1.5 shrink-0 flex items-center justify-center animate-pulse">
+            <div className="w-9 h-9 rounded-xl bg-solian-card border border-gold-500/30 p-1.5 shrink-0 flex items-center justify-center animate-pulse shadow-glow-subtle">
               <img src="/favicon.svg" alt="Wolf" className="w-full h-full object-contain" />
             </div>
-            <div className="p-4 rounded-2xl bg-solian-card border border-solian-border text-xs text-graphite-400 flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-gold-500 animate-spin" />
-              <span>AUREN SOLIAN is querying institutional memory...</span>
+            <div className="p-4 rounded-2xl bg-solian-card border border-solian-border text-xs text-graphite-300 flex flex-col space-y-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-gold-500 animate-spin" />
+                <span className="font-semibold text-slate-100">
+                  {thinkingSeconds < 3
+                    ? 'AUREN SOLIAN is analyzing query...'
+                    : thinkingSeconds < 6
+                    ? 'Querying institutional memory & SOPs...'
+                    : 'Synthesizing executive brief...'}
+                </span>
+                <span className="text-[10px] text-gold-400 font-mono">({thinkingSeconds}s)</span>
+              </div>
+              {thinkingSeconds >= 7 && (
+                <span className="text-[10px] text-graphite-400 italic">
+                  Compiling cross-departmental context and action proposals...
+                </span>
+              )}
             </div>
           </div>
         )}
