@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="solianGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7E7B4" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#9E7D1E" />
+    </linearGradient>
+    <linearGradient id="goldFoil" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C59B27" />
+      <stop offset="50%" stop-color="#E5C158" />
+      <stop offset="100%" stop-color="#FFF4D4" />
+    </linearGradient>
+    <linearGradient id="facetLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2A344A" />
+      <stop offset="100%" stop-color="#182030" />
+    </linearGradient>
+    <linearGradient id="facetDark" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E2638" />
+      <stop offset="100%" stop-color="#101522" />
+    </linearGradient>
+    <linearGradient id="facetAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3A4866" />
+      <stop offset="100%" stop-color="#1A2232" />
+    </linearGradient>
+  </defs>
+
+  <!-- Premium Obsidian Shield Background -->
+  <rect width="512" height="512" rx="112" fill="#0A0D14" />
+  <rect width="502" height="502" x="5" y="5" rx="107" fill="none" stroke="url(#solianGold)" stroke-width="3" stroke-opacity="0.45" />
+
+  <!-- Symmetrical Geometric Wolf Head -->
+  <g id="wolf-emblem" stroke="#D4AF37" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- EARS -->
+    <!-- Left Ear Outer -->
+    <polygon points="256,130 216,150 130,80" fill="url(#facetLight)" />
+    <polygon points="130,80 110,210 186,180" fill="url(#facetDark)" />
+    <!-- Left Ear Inner Ingot -->
+    <polygon points="140,110 186,180 130,190" fill="url(#goldFoil)" stroke="#F7E7B4" stroke-width="1.5" opacity="0.9" />
+
+    <!-- Right Ear Outer -->
+    <polygon points="256,130 296,150 382,80" fill="url(#facetDark)" />
+    <polygon points="382,80 402,210 326,180" fill="url(#facetLight)" />
+    <!-- Right Ear Inner Ingot -->
+    <polygon points="372,110 326,180 382,190" fill="url(#solianGold)" stroke="#F7E7B4" stroke-width="1.5" opacity="0.9" />
+
+    <!-- FOREHEAD & CROWN -->
+    <!-- Center Diamond Crest -->
+    <polygon points="256,130 216,180 256,230 296,180" fill="url(#facetAccent)" stroke="url(#solianGold)" stroke-width="3" />
+    <polygon points="256,145 228,180 256,215 284,180" fill="none" stroke="#F7E7B4" stroke-width="1.5" opacity="0.6" />
+
+    <!-- Upper Forehead Wings -->
+    <polygon points="256,130 216,150 186,180 216,180" fill="url(#facetLight)" />
+    <polygon points="256,130 296,150 326,180 296,180" fill="url(#facetDark)" />
+
+    <!-- CHEEKS / RUFF -->
+    <!-- Left Upper Cheek -->
+    <polygon points="186,180 110,210 90,270 170,250" fill="url(#facetDark)" />
+    <!-- Right Upper Cheek -->
+    <polygon points="326,180 402,210 422,270 342,250" fill="url(#facetLight)" />
+
+    <!-- Left Mid Cheek Flare -->
+    <polygon points="90,270 120,340 190,310 170,250" fill="url(#facetLight)" />
+    <!-- Right Mid Cheek Flare -->
+    <polygon points="422,270 392,340 322,310 342,250" fill="url(#facetDark)" />
+
+    <!-- Left Lower Ruff -->
+    <polygon points="120,340 170,395 210,360 190,310" fill="url(#facetDark)" />
+    <!-- Right Lower Ruff -->
+    <polygon points="392,340 342,395 302,360 322,310" fill="url(#facetLight)" />
+
+    <!-- EYES & BROW (Disciplined, Intelligent, Commanding) -->
+    <!-- Left Brow -->
+    <polygon points="256,230 216,180 186,220 220,230" fill="url(#facetDark)" />
+    <!-- Right Brow -->
+    <polygon points="256,230 296,180 326,220 292,230" fill="url(#facetLight)" />
+
+    <!-- Left Eye Aperture (Golden Amber) -->
+    <polygon points="186,225 230,230 222,248 188,242" fill="url(#goldFoil)" stroke="#FFF4D4" stroke-width="2" />
+    <!-- Right Eye Aperture (Golden Amber) -->
+    <polygon points="326,225 282,230 290,248 324,242" fill="url(#goldFoil)" stroke="#FFF4D4" stroke-width="2" />
+
+    <!-- SNOUT & NOSE BRIDGE -->
+    <!-- Upper Bridge -->
+    <polygon points="256,230 220,230 226,300 256,310" fill="url(#facetLight)" />
+    <polygon points="256,230 292,230 286,300 256,310" fill="url(#facetDark)" />
+
+    <!-- Mid Bridge -->
+    <polygon points="256,310 226,300 236,360 256,370" fill="url(#facetDark)" />
+    <polygon points="256,310 286,300 276,360 256,370" fill="url(#facetLight)" />
+
+    <!-- Snout Flanks -->
+    <polygon points="220,230 170,250 190,310 226,300" fill="url(#facetDark)" />
+    <polygon points="292,230 342,250 322,310 286,300" fill="url(#facetLight)" />
+
+    <!-- Lower Muzzle Flanks -->
+    <polygon points="226,300 190,310 210,360 236,360" fill="url(#facetLight)" />
+    <polygon points="286,300 322,310 302,360 276,360" fill="url(#facetDark)" />
+
+    <!-- NOSE (Champagne Gold Apex) -->
+    <polygon points="240,370 272,370 256,392" fill="url(#solianGold)" stroke="#FFF4D4" stroke-width="2" />
+
+    <!-- CHIN & JAW APEX -->
+    <polygon points="236,360 256,370 256,425 220,395" fill="url(#facetDark)" />
+    <polygon points="276,360 256,370 256,425 292,395" fill="url(#facetLight)" />
+    <!-- Jaw Point Accent Ingot -->
+    <polygon points="256,392 268,412 256,428 244,412" fill="url(#goldFoil)" stroke="#F7E7B4" stroke-width="1.5" />
+  </g>
+</svg>
