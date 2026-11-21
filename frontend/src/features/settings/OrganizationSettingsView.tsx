@@ -79,3 +79,4 @@ export const OrganizationSettingsView: React.FC = () => {
     </div>
   );
 };
+

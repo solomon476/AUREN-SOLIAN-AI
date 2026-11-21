@@ -28,3 +28,4 @@ async def get_org(user: AuthUser = Depends(get_current_user)):
         "tier": "enterprise",
         "total_members": 28,
     }
+

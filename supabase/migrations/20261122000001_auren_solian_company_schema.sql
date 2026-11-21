@@ -138,3 +138,4 @@ CREATE POLICY org_isolation_knowledge ON company_knowledge
 
 CREATE POLICY org_isolation_projects ON projects
     USING (organization_id = (SELECT organization_id FROM organization_members WHERE user_id = auth.uid() LIMIT 1));
+

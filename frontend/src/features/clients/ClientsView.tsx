@@ -67,3 +67,4 @@ export const ClientsView: React.FC = () => {
     </div>
   );
 };
+

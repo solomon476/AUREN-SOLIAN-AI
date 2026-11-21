@@ -39,3 +39,4 @@ class GeminiService:
 
         for sec in sections:
             yield sec
+

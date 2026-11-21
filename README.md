@@ -89,3 +89,4 @@ uvicorn app.main:app --reload --port 8000
 
 - **Repository:** Independent Git repository (`git branch -M main`).
 - **Personal Project Protection:** The AUREN Personal project remains 100% untouched and isolated.
+

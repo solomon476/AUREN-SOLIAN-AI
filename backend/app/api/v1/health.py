@@ -24,3 +24,4 @@ async def readiness_check():
         "knowledge_vault": "indexed",
         "ai_engine": "operational",
     }
+

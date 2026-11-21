@@ -20,3 +20,4 @@ async def list_documents(user: AuthUser = Depends(require_role(UserRole.MEMBER))
         }
         for d in repo.documents
     ]
+

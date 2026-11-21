@@ -16,3 +16,4 @@ def test_chat_stream_endpoint():
     content = response.text
     assert "data: " in content
     assert "[DONE]" in content
+

@@ -17,3 +17,4 @@ async def get_stats(user: AuthUser = Depends(get_current_user)):
         "aiQueriesThisMonth": stats.ai_queries_this_month,
         "operationsVelocity": stats.operations_velocity,
     }
+

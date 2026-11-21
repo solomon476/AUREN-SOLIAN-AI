@@ -23,3 +23,4 @@ class OrganizationMember(BaseModel):
     department: str
     status: str = "active"
     assigned_projects: int = 0
+

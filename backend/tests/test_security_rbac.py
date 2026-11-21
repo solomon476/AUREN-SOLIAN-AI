@@ -26,3 +26,4 @@ def test_manager_allowed_on_workflows():
     response = client.get("/api/v1/workflows", headers=headers)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+

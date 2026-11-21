@@ -74,3 +74,4 @@ class KnowledgeService:
 
 
 knowledge_service = KnowledgeService()
+

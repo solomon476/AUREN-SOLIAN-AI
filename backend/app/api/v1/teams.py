@@ -21,3 +21,4 @@ async def list_members(user: AuthUser = Depends(require_role(UserRole.GUEST))):
         }
         for m in repo.members
     ]
+

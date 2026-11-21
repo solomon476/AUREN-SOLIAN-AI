@@ -13,3 +13,4 @@ async def get_metrics(user: AuthUser = Depends(require_role(UserRole.MANAGER))):
         "sopRetrievalLatencyMs": 180,
         "departmentalAlignment": "98.5%",
     }
+

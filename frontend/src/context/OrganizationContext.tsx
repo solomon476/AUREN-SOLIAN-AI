@@ -34,3 +34,4 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 };
 
 export const useOrganization = () => useContext(OrganizationContext);
+

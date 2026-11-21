@@ -21,3 +21,4 @@ async def list_projects(user: AuthUser = Depends(require_role(UserRole.GUEST))):
         }
         for p in repo.projects
     ]
+

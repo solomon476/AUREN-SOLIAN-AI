@@ -18,3 +18,4 @@ class KnowledgeQuery(BaseModel):
     query: str
     category: Optional[str] = None
     limit: int = 10
+

@@ -19,3 +19,4 @@ async def list_workflows(user: AuthUser = Depends(require_role(UserRole.MANAGER)
         }
         for wf in repo.workflows
     ]
+

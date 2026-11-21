@@ -18,3 +18,4 @@ def test_knowledge_search_query():
     items = response.json()
     assert len(items) >= 1
     assert "SOP-401" in items[0]["title"]
+

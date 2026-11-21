@@ -27,3 +27,4 @@ api_router.include_router(documents_router, prefix="/documents", tags=["Document
 api_router.include_router(knowledge_router, prefix="/knowledge", tags=["Knowledge Vault"])
 api_router.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])
 api_router.include_router(workflows_router, prefix="/workflows", tags=["Workflows"])
+

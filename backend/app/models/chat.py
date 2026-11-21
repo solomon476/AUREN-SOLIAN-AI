@@ -26,3 +26,4 @@ class ChatRequest(BaseModel):
     user_id: Optional[str] = None
     user_role: Optional[str] = "admin"
     include_knowledge: bool = True
+

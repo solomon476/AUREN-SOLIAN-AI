@@ -20,3 +20,4 @@ async def list_clients(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
         }
         for c in repo.clients
     ]
+

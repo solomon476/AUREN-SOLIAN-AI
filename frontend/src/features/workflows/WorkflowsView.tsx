@@ -61,3 +61,4 @@ export const WorkflowsView: React.FC = () => {
     </div>
   );
 };
+

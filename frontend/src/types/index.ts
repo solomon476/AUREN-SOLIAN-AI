@@ -117,3 +117,4 @@ export interface DashboardStats {
   aiQueriesThisMonth: number;
   operationsVelocity: string;
 }
+

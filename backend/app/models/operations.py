@@ -61,3 +61,4 @@ class DashboardStats(BaseModel):
     knowledge_entities_count: int
     ai_queries_this_month: int
     operations_velocity: str
+

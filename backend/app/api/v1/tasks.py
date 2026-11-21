@@ -20,3 +20,4 @@ async def list_tasks(user: AuthUser = Depends(require_role(UserRole.GUEST))):
         }
         for t in repo.tasks
     ]
+
