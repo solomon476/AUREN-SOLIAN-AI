@@ -16,18 +16,27 @@ export const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 export class SolianApiClient {
   private static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    const signal = options.signal || controller.signal;
 
-    if (!res.ok) {
-      throw new Error(`API Error [${res.status}]: ${res.statusText}`);
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        ...options,
+        signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`API Error [${res.status}]: ${res.statusText}`);
+      }
+      return res.json();
+    } finally {
+      clearTimeout(timeoutId);
     }
-    return res.json();
   }
 
   // Dashboard
