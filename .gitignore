@@ -39,6 +39,10 @@ backend/data/
 frontend/dist/
 frontend/dist-ssr/
 
+# Platform Deployment CLIs
+.vercel/
+.railway/
+
 # IDE & Editor
 .vscode/
 .idea/
@@ -54,3 +58,6 @@ yarn-error.log*
 pnpm-debug.log*
 *.log
 
+.vercel
+.env*
+*.isolated_backup

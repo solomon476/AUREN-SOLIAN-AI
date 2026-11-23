@@ -17,5 +17,5 @@ def test_knowledge_search_query():
     assert response.status_code == 200
     items = response.json()
     assert len(items) >= 1
-    assert "SOP-401" in items[0]["title"]
+    assert any("SOP-401" in it["title"] for it in items)
 

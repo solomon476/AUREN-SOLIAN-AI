@@ -3,14 +3,15 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('AUREN SOLIAN Enterprise Frontend', () => {
-  it('renders the AUREN SOLIAN brand name and executive hub', async () => {
+  it('renders the AUREN SOLIAN brand name and company command center', async () => {
     render(<App />);
     expect(screen.getAllByText(/AUREN/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/SOLIAN/i).length).toBeGreaterThan(0);
-    expect(await screen.findByText(/Executive Command & Operations/i)).toBeDefined();
+    const commandCenterElements = await screen.findAllByText(/Company Command Center/i);
+    expect(commandCenterElements.length).toBeGreaterThan(0);
   });
 
-  it('renders primary navigation items for company platform foundation', () => {
+  it('renders primary navigation items for Solian Wolves platform foundation', () => {
     render(<App />);
     expect(screen.getByText(/Company AI Assistant/i)).toBeDefined();
     expect(screen.getByText(/Knowledge Vault/i)).toBeDefined();

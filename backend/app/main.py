@@ -35,3 +35,17 @@ async def root():
         "api_v1": settings.API_V1_STR,
     }
 
+
+@app.get("/health")
+async def root_health():
+    """Top-level healthcheck probe for Railway and cloud load balancers."""
+    return {
+        "status": "healthy",
+        "app": settings.APP_NAME,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "organization": settings.ORGANIZATION_NAME,
+        "auth_mode": settings.AUTH_MODE,
+        "database_dialect": settings.database_dialect,
+    }
+

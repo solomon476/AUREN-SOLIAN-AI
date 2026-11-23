@@ -1,89 +1,414 @@
-import React from 'react';
-import { Search, Bell, Shield, ShieldCheck, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Search, ShieldCheck, LogOut, LogIn, KeyRound, X, User } from 'lucide-react';
 import { useOrganization } from '../../context/OrganizationContext';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
+import { AuthModal } from '../auth/AuthModal';
+import { NotificationCenter } from '../notifications/NotificationCenter';
+import { CommandPalette } from '../search/CommandPalette';
 
 export const Topbar: React.FC = () => {
   const { currentOrg, activeModule } = useOrganization();
-  const { user, setRole } = useAuth();
+  const { user, availableUsers, switchUser, authMode, isDevSimulation, signOut } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
 
-  const roleOptions: UserRole[] = ['owner', 'admin', 'manager', 'member', 'guest'];
+  // Global shortcut listener: ⌘K or Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const roleColors: Record<UserRole, string> = {
+    owner: 'bg-gold-500/20 text-gold-400 border-gold-500/40',
+    admin: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
+    manager: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+    member: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
+    guest: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/40',
+  };
 
   const moduleTitles: Record<string, string> = {
-    dashboard: 'Executive Dashboard & Operations Hub',
+    dashboard: 'Company Command Center',
     chat: 'Company AI Assistant (Solian Intelligence)',
-    projects: 'Enterprise Projects & Strategic Initiatives',
+    finance: 'Financial Intelligence & Company Records (Treasury & Cash Flow)',
+    projects: 'Strategic Initiatives & Enterprise Projects',
     tasks: 'Operational Backlog & Execution Kanban',
     workflows: 'Business Automation & Decision Triggers',
     knowledge: 'Institutional Knowledge Vault & SOPs',
-    documents: 'Confidential Document Repository',
+    documents: 'Confidential Corporate Document Repository',
     analytics: 'Performance & Operations Analytics',
-    teams: 'Staff Directory & Access Governance',
+    teams: 'Organization Structure & Staff Directory',
     clients: 'Client Accounts & CRM Engagements',
-    settings: 'Organization Configuration & RBAC',
+    settings: 'Organization Configuration & Governance',
+    meetings: 'Company Cadences, Meetings & Minutes',
+    discussions: 'Executive Discussions & Async Comms',
+    calendar: 'Operational Timeline & Strategic Calendar',
+  };
+
+  const mobileModuleTitles: Record<string, string> = {
+    dashboard: 'Command',
+    chat: 'Auren AI',
+    finance: 'Finance',
+    projects: 'Projects',
+    tasks: 'Tasks',
+    workflows: 'Workflows',
+    knowledge: 'Knowledge',
+    documents: 'Documents',
+    analytics: 'Analytics',
+    teams: 'Teams',
+    clients: 'Clients',
+    settings: 'Settings',
+    meetings: 'Cadences',
+    discussions: 'Discussions',
+    calendar: 'Calendar',
+  };
+
+  const getInitials = (name: string): string => {
+    if (!name) return 'SW';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
   return (
-    <header className="h-16 bg-solian-obsidian/90 backdrop-blur border-b border-solian-border px-6 flex items-center justify-between sticky top-0 z-20">
-      {/* Left: Organization context & current module */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-solian-surface border border-gold-500/25">
-          <span className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"></span>
-          <span className="text-xs font-bold tracking-wide text-gold-400 uppercase">
+    <header className="min-h-[3.5rem] md:min-h-[4rem] h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:h-16 pt-[env(safe-area-inset-top,0px)] bg-solian-obsidian/95 backdrop-blur-md border-b border-solian-border px-2.5 sm:px-4 md:px-6 flex items-center justify-between sticky top-0 z-20 select-none overflow-x-hidden">
+      {/* Left: Brand Wolf Emblem + Org context & module title */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3.5 min-w-0 flex-1 mr-2">
+        {/* Solian Wolves Emblem */}
+        <div
+          className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center p-1 shrink-0"
+          title="Solian Wolves Company Operating System"
+        >
+          <img src="/favicon.svg" alt="Solian Wolves Emblem" className="w-full h-full object-contain" />
+        </div>
+
+        {/* Organization identity badge */}
+        <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 py-0.5 rounded bg-solian-surface border border-gold-500/30 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse"></span>
+          <span className="text-xs font-bold tracking-wide text-gold-400 uppercase hidden sm:inline">
             {currentOrg.name}
           </span>
-          <span className="text-[10px] px-1.5 py-0.2 bg-gold-500/20 text-gold-300 rounded font-mono">
+          <span className="text-[10px] px-1.5 py-0.5 bg-gold-500/20 text-gold-300 rounded font-mono font-bold">
             {currentOrg.code}
           </span>
         </div>
 
-        <div className="h-4 w-px bg-solian-border"></div>
+        <div className="h-3.5 w-px bg-solian-border shrink-0 hidden xs:block"></div>
 
-        <h1 className="text-sm font-semibold text-slate-200">
-          {moduleTitles[activeModule] || 'Enterprise Hub'}
+        {/* Page / Workspace title */}
+        <h1 className="text-xs sm:text-sm font-semibold text-slate-200 truncate min-w-0">
+          <span className="hidden md:inline">{moduleTitles[activeModule] || 'Enterprise Hub'}</span>
+          <span className="md:hidden">{mobileModuleTitles[activeModule] || 'Command'}</span>
         </h1>
       </div>
 
-      {/* Right: Quick actions, role switcher demo & user status */}
-      <div className="flex items-center gap-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-graphite-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search company knowledge, SOPs, tasks (⌘K)..."
-            className="w-80 bg-solian-surface border border-solian-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-graphite-400 focus:outline-none focus:border-gold-500/50"
-          />
-        </div>
-
-        {/* Role Switcher Demo for RBAC testing */}
-        <div className="flex items-center gap-1.5 bg-solian-surface px-2 py-1 rounded border border-solian-border">
-          <ShieldCheck className="w-3.5 h-3.5 text-gold-500" />
-          <span className="text-[11px] text-graphite-400">Role:</span>
-          <select
-            value={user.role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
-            className="bg-transparent text-xs font-semibold text-gold-400 uppercase focus:outline-none cursor-pointer"
-          >
-            {roleOptions.map((r) => (
-              <option key={r} value={r} className="bg-solian-card text-white">
-                {r}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Notifications */}
+      {/* Right: Search, verified account switcher & notifications */}
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
+        {/* Mobile Search Button (touch target >= 38px) */}
         <button
-          title="Notifications"
-          className="relative p-2 rounded-lg bg-solian-surface text-slate-400 hover:text-white border border-solian-border"
+          onClick={() => setIsCommandPaletteOpen(true)}
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-solian-surface hover:bg-white/5 text-slate-300 hover:text-white border border-solian-border lg:hidden flex items-center justify-center shrink-0 cursor-pointer transition min-h-[38px] min-w-[38px] active:scale-95"
+          aria-label="Search company intelligence"
+          title="Search (⌘K)"
         >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gold-500"></span>
+          <Search className="w-4 h-4 text-gold-400" />
         </button>
+
+        {/* Desktop Search trigger button styled as input */}
+        <button
+          onClick={() => setIsCommandPaletteOpen(true)}
+          className="relative hidden lg:flex items-center w-60 xl:w-72 bg-solian-surface border border-solian-border hover:border-gold-500/50 rounded-lg pl-9 pr-3 py-1.5 text-xs text-graphite-400 cursor-pointer transition text-left"
+        >
+          <Search className="w-4 h-4 text-graphite-400 absolute left-3 top-2" />
+          <span className="truncate">Search company intelligence (⌘K)...</span>
+          <kbd className="ml-auto font-mono text-[10px] uppercase px-1.5 py-0.2 rounded bg-solian-darkest text-graphite-400 border border-solian-border">
+            ⌘K
+          </kbd>
+        </button>
+
+        {/* Desktop Identity & Session Controls (Hidden on mobile < md) */}
+        <div className="hidden md:flex items-center gap-2">
+          {authMode === 'SUPABASE_JWT' && user.id !== 'guest' ? (
+            <div className="flex items-center gap-2 bg-solian-surface px-2.5 py-1 rounded-lg border border-emerald-500/40 min-h-[36px]">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold leading-tight">
+                  Supabase Auth
+                </span>
+                <span className="text-xs font-bold text-white truncate max-w-[140px]">
+                  {user.fullName}
+                </span>
+              </div>
+              <span
+                className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ml-1 ${
+                  roleColors[user.role]
+                }`}
+              >
+                {user.role}
+              </span>
+              <button
+                onClick={() => signOut()}
+                title="Sign Out of Corporate Session"
+                className="ml-1 p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : isDevSimulation ? (
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 bg-solian-surface px-2.5 py-1 rounded-lg border border-amber-500/30 min-h-[36px]">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <div className="flex flex-col text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-amber-400/90 font-bold leading-tight">
+                      Dev Identity
+                    </span>
+                    <span
+                      className="text-[8px] font-bold px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      title="DEVELOPMENT-ONLY: Identity resolved via X-User-Id header for role testing."
+                    >
+                      DEV SIMULATION
+                    </span>
+                  </div>
+                  <select
+                    value={user.userId || user.id}
+                    onChange={(e) => {
+                      const target = availableUsers.find(
+                        (u) => u.userId === e.target.value || u.id === e.target.value
+                      );
+                      if (target) switchUser(target);
+                    }}
+                    title="Switch user identity for RBAC testing"
+                    className="bg-transparent text-xs font-bold text-slate-200 focus:outline-none cursor-pointer pr-1 truncate max-w-[160px]"
+                  >
+                    {availableUsers.map((u) => (
+                      <option key={u.id} value={u.userId || u.id} className="bg-solian-card text-white">
+                        {u.isDemo ? '[DEMO] ' : ''}{u.fullName} ({u.role.toUpperCase()})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <span
+                  className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ml-0.5 ${
+                    roleColors[user.role]
+                  }`}
+                >
+                  {user.role}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                title="Open Supabase Corporate Sign-In"
+                className="flex p-1.5 rounded-lg bg-solian-surface hover:bg-gold-500/10 text-slate-300 hover:text-gold-400 border border-solian-border transition items-center gap-1 cursor-pointer shrink-0 min-h-[36px]"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-semibold">Auth</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 border border-gold-500/40 text-xs font-bold transition shadow-sm cursor-pointer min-h-[36px]"
+            >
+              <LogIn className="w-3.5 h-3.5 text-gold-400" />
+              <span>Sign In</span>
+            </button>
+          )}
+        </div>
+
+        {/* Mobile User Profile Avatar Trigger (Visible on < md) */}
+        <button
+          onClick={() => setIsMobileProfileOpen(true)}
+          className={`md:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-solian-surface border transition active:scale-95 cursor-pointer shrink-0 min-h-[38px] min-w-[38px] relative ${
+            authMode === 'SUPABASE_JWT' && user.id !== 'guest'
+              ? 'border-emerald-500/50'
+              : isDevSimulation
+              ? 'border-amber-500/40'
+              : 'border-gold-500/30'
+          }`}
+          aria-label={`User profile: ${user.fullName} (${user.role})`}
+          title={`${user.fullName} (${user.role.toUpperCase()})`}
+        >
+          <span className="text-xs font-extrabold font-mono text-slate-200">
+            {getInitials(user.fullName)}
+          </span>
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-solian-obsidian ${
+              user.role === 'owner'
+                ? 'bg-gold-500'
+                : user.role === 'admin'
+                ? 'bg-purple-500'
+                : user.role === 'manager'
+                ? 'bg-blue-500'
+                : user.role === 'member'
+                ? 'bg-slate-400'
+                : 'bg-zinc-500'
+            }`}
+          />
+        </button>
+
+        {/* Live Notification Center */}
+        <NotificationCenter />
       </div>
+
+      {/* Mobile Profile & Identity Sheet (Mounted to document.body to avoid backdrop-filter containing block issues) */}
+      {isMobileProfileOpen && typeof document !== 'undefined' && createPortal(
+        <>
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 md:hidden animate-fadeIn"
+            onClick={() => setIsMobileProfileOpen(false)}
+          />
+          <div className="fixed bottom-0 inset-x-0 bg-solian-darkest border-t border-gold-500/30 rounded-t-2xl p-5 pb-[max(env(safe-area-inset-bottom,0px),1.5rem)] z-50 md:hidden max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl animate-slideUp">
+            {/* Sheet Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-solian-border">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-gold-500/10 border border-gold-500/30 flex items-center justify-center p-0.5">
+                  <img src="/favicon.svg" alt="Solian Emblem" className="w-full h-full object-contain" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-white">
+                  Executive Identity & Clearance
+                </span>
+              </div>
+              <button
+                onClick={() => setIsMobileProfileOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+                aria-label="Close profile drawer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Profile Information Card */}
+            <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gold-500/10 border border-gold-500/40 flex items-center justify-center text-sm font-bold font-mono text-gold-400 shrink-0">
+                    {getInitials(user.fullName)}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white leading-tight">
+                      {user.fullName}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {user.title}
+                    </p>
+                    <p className="text-[10px] text-gold-400/80 font-mono mt-0.5">
+                      {user.email || 'No institutional email'}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded border shrink-0 ${
+                    roleColors[user.role]
+                  }`}
+                >
+                  {user.role}
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-solian-border/60 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Department</span>
+                <span className="text-slate-200 font-medium text-right truncate max-w-[200px]">
+                  {user.department}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Auth Mode</span>
+                <span
+                  className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                    authMode === 'SUPABASE_JWT'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  }`}
+                >
+                  {authMode === 'SUPABASE_JWT' ? 'SUPABASE JWT' : 'DEV SIMULATION'}
+                </span>
+              </div>
+            </div>
+
+            {/* Dev Persona Switcher (Only in Dev Simulation Mode) */}
+            {isDevSimulation && (
+              <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Switch Test Identity</span>
+                  </span>
+                  <span className="text-[9px] font-mono text-amber-400/70">RBAC SIMULATION</span>
+                </div>
+                <select
+                  value={user.userId || user.id}
+                  onChange={(e) => {
+                    const target = availableUsers.find(
+                      (u) => u.userId === e.target.value || u.id === e.target.value
+                    );
+                    if (target) {
+                      switchUser(target);
+                      setIsMobileProfileOpen(false);
+                    }
+                  }}
+                  aria-label="Switch development user"
+                  className="w-full bg-solian-surface border border-solian-border rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-gold-500 transition cursor-pointer"
+                >
+                  {availableUsers.map((u) => (
+                    <option key={u.id} value={u.userId || u.id} className="bg-solian-card text-white">
+                      {u.isDemo ? '[DEMO] ' : ''}{u.fullName} — {u.title} ({u.role.toUpperCase()})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={() => {
+                  setIsMobileProfileOpen(false);
+                  setIsAuthModalOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-solian-surface hover:bg-gold-500/10 text-slate-200 hover:text-gold-400 border border-solian-border hover:border-gold-500/40 text-xs font-bold transition min-h-[44px] cursor-pointer"
+              >
+                <KeyRound className="w-4 h-4 text-gold-400" />
+                <span>Corporate Sign In (Supabase Auth)</span>
+              </button>
+
+              {authMode === 'SUPABASE_JWT' && user.id !== 'guest' && (
+                <button
+                  onClick={async () => {
+                    await signOut();
+                    setIsMobileProfileOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition min-h-[44px] cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out of Corporate Session</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
+
+      {/* Supabase Corporate Authentication Dialog */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </header>
   );
 };
-

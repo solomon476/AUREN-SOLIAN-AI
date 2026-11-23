@@ -29,7 +29,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <div className={`relative flex items-center justify-center shrink-0 ${iconSizes[size]} rounded-lg p-0.5 bg-solian-surface border border-gold-500/30 shadow-glow-subtle`}>
         <img
           src="/favicon.svg"
-          alt="AUREN SOLIAN Wolf Emblem"
+          alt="Solian Wolves Emblem"
           className="w-full h-full object-contain"
         />
       </div>
@@ -39,12 +39,11 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           <div className={`font-extrabold tracking-wider leading-none text-white ${textSizes[size]}`}>
             AUREN <span className="text-gold-500">SOLIAN</span>
           </div>
-          <span className="text-[9px] tracking-widest font-semibold uppercase text-gold-400/80 mt-1">
-            Organizational AI
+          <span className="text-[9px] tracking-widest font-semibold uppercase text-gold-400/90 mt-1">
+            Organizational Intelligence
           </span>
         </div>
       )}
     </div>
   );
 };
-

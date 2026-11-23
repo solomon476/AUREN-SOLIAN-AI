@@ -1,8 +1,8 @@
 """SSE Streaming and Chat endpoints for Company AI."""
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from app.models.chat import ChatRequest
-from app.core.security import get_current_user, AuthUser
+from app.models.chat import ChatRequest, ExecuteActionRequest, ExecuteActionResult
+from app.core.security import get_current_user, AuthUser, require_role, UserRole
 from app.services.chat.chat_service import chat_service
 
 router = APIRouter()
@@ -13,10 +13,11 @@ async def stream_chat(
     req: ChatRequest,
     current_user: AuthUser = Depends(get_current_user),
 ):
-    user_role = req.user_role or current_user.role.value
     stream = chat_service.generate_chat_stream(
         message=req.message,
-        user_role=user_role,
+        user=current_user,
+        history=req.history,
+        workspace_context=req.workspace_context,
     )
     return StreamingResponse(
         stream,
@@ -28,3 +29,11 @@ async def stream_chat(
         },
     )
 
+
+@router.post("/execute-action")
+async def execute_action(
+    req: ExecuteActionRequest,
+    current_user: AuthUser = Depends(require_role(UserRole.MEMBER)),
+) -> ExecuteActionResult:
+    """Executes a confirmed action proposal from AUREN SOLIAN on the enterprise repository."""
+    return chat_service.execute_action(req, current_user)
