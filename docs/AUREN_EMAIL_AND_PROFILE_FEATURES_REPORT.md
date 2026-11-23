@@ -159,3 +159,4 @@ dist/assets/index-DVb_bHDa.js   862.31 kB │ gzip: 203.24 kB
 | Cloud Deployments | DEFERRED | No Vercel or Railway deployment triggered |
 | Credential Protection | CONFIRMED | Zero secrets logged, printed, or committed |
 | Uploads Sanitization | CONFIRMED | Added `backend/uploads/` to `.gitignore`; local test avatars purged |
+
