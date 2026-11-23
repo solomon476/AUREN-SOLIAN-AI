@@ -19,6 +19,7 @@ import {
 import { SolianApiClient } from '../../api/client';
 import { TeamMember, Department, Team, HierarchyNode, UserRole, MemberInviteCreate } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 const VERIFIED_LEADERSHIP = [
   {
@@ -189,9 +190,12 @@ export const TeamsView: React.FC = () => {
           style={{ marginLeft: `${level * 24}px` }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-solian-surface border border-gold-500/30 text-gold-400 font-bold text-xs flex items-center justify-center shrink-0">
-              {node.name.substring(0, 2).toUpperCase()}
-            </div>
+            <UserAvatar
+              name={node.name}
+              avatarUrl={(node as any).avatarUrl}
+              role={node.role}
+              size="sm"
+            />
             <div>
               <div className="text-xs md:text-sm font-bold text-white flex items-center gap-2 flex-wrap">
                 {node.name}
@@ -386,9 +390,12 @@ export const TeamsView: React.FC = () => {
                     <tr key={member.id} className="hover:bg-solian-surface/50 transition">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-solian-surface border border-gold-500/30 text-gold-400 font-bold flex items-center justify-center shrink-0">
-                            {member.name.substring(0, 2).toUpperCase()}
-                          </div>
+                          <UserAvatar
+                            name={member.name}
+                            avatarUrl={member.avatarUrl}
+                            role={member.role}
+                            size="sm"
+                          />
                           <div>
                             <div className="font-bold text-slate-100 flex items-center gap-2">
                               {member.name}

@@ -33,6 +33,15 @@ import {
   ExpenseRequest,
   FinancialOverviewStats,
   ProjectFinancialSummary,
+  EmailMessage,
+  EmailDraft,
+  EmailDraftCreate,
+  EmailDraftUpdate,
+  EmailSendRequest,
+  EmailSendResult,
+  EmailProviderStatus,
+  EmailAIAssistRequest,
+  EmailAIAssistResponse,
 } from '../types';
 
 function resolveApiBase(): string {
@@ -922,5 +931,102 @@ export class SolianApiClient {
   // Project Financials
   static async getProjectFinancials(projectId: string): Promise<ProjectFinancialSummary> {
     return await this.request<ProjectFinancialSummary>(`/finance/projects/${projectId}`);
+  }
+
+  // --- Profile Picture & Avatar Management ---
+  static async uploadAvatar(file: File, targetUserId?: string): Promise<{ success: boolean; avatarUrl: string; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (targetUserId) {
+      formData.append('target_user_id', targetUserId);
+    }
+    const headers: Record<string, string> = {};
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    } else {
+      headers['X-User-Id'] = this.currentUserId;
+    }
+    const res = await fetch(buildApiUrl('/auth/avatar'), {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to upload profile picture' }));
+      throw new Error(err.detail || 'Upload failed');
+    }
+    return await res.json();
+  }
+
+  static async deleteAvatar(targetUserId?: string): Promise<{ success: boolean; avatarUrl: null; message: string }> {
+    const qs = targetUserId ? `?target_user_id=${encodeURIComponent(targetUserId)}` : '';
+    return await this.request<{ success: boolean; avatarUrl: null; message: string }>(`/auth/avatar${qs}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // --- Email & Company Communications ---
+  static async getEmailStatus(): Promise<EmailProviderStatus> {
+    return await this.request<EmailProviderStatus>('/email/status');
+  }
+
+  static async getEmailMessages(
+    folder = 'inbox',
+    search?: string,
+    page = 1,
+    pageSize = 20
+  ): Promise<{ folder: string; messages: EmailMessage[]; total: number; pageSize: number; page: number; providerStatus: EmailProviderStatus }> {
+    const sp = new URLSearchParams();
+    sp.append('folder', folder);
+    if (search) sp.append('search', search);
+    sp.append('page', String(page));
+    sp.append('page_size', String(pageSize));
+    return await this.request(`/email/messages?${sp.toString()}`);
+  }
+
+  static async getEmailMessage(messageId: string): Promise<EmailMessage> {
+    return await this.request<EmailMessage>(`/email/messages/${messageId}`);
+  }
+
+  static async sendEmail(req: EmailSendRequest): Promise<EmailSendResult> {
+    return await this.request<EmailSendResult>('/email/send', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
+  }
+
+  static async getEmailDrafts(): Promise<EmailDraft[]> {
+    return await this.request<EmailDraft[]>('/email/drafts');
+  }
+
+  static async getEmailDraft(draftId: string): Promise<EmailDraft> {
+    return await this.request<EmailDraft>(`/email/drafts/${draftId}`);
+  }
+
+  static async createEmailDraft(draft: EmailDraftCreate): Promise<EmailDraft> {
+    return await this.request<EmailDraft>('/email/drafts', {
+      method: 'POST',
+      body: JSON.stringify(draft),
+    });
+  }
+
+  static async updateEmailDraft(draftId: string, update: EmailDraftUpdate): Promise<EmailDraft> {
+    return await this.request<EmailDraft>(`/email/drafts/${draftId}`, {
+      method: 'PUT',
+      body: JSON.stringify(update),
+    });
+  }
+
+  static async deleteEmailDraft(draftId: string): Promise<void> {
+    await this.request(`/email/drafts/${draftId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  static async getAIEmailAssist(req: EmailAIAssistRequest): Promise<EmailAIAssistResponse> {
+    return await this.request<EmailAIAssistResponse>('/email/ai/assist', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
   }
 }

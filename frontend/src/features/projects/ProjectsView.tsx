@@ -17,6 +17,7 @@ import { SolianApiClient } from '../../api/client';
 import { Project, TaskItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useOrganization } from '../../context/OrganizationContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const ProjectsView: React.FC = () => {
   const { user, hasRole } = useAuth();
@@ -222,7 +223,7 @@ export const ProjectsView: React.FC = () => {
 
                 <div className="pt-3 border-t border-solian-border flex items-center justify-between text-xs text-graphite-400">
                   <div className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-gold-500" />
+                    <UserAvatar name={p.lead} size="xs" />
                     <span className="text-slate-200 font-semibold">{p.lead}</span>
                   </div>
                   <div className="flex items-center gap-3">

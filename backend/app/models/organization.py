@@ -60,6 +60,7 @@ class OrganizationMember(BaseModel):
     responsibilities: List[str] = Field(default_factory=list)
     reports_to_id: Optional[str] = None
     reports_to_name: Optional[str] = None
+    avatar_url: Optional[str] = None
     status: str = "active"  # active | away | offline
     assigned_projects: int = 0
     joined_date: str = "2024-01-15"

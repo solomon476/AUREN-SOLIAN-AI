@@ -14,6 +14,7 @@ import {
 import { SolianApiClient } from '../../api/client';
 import { DiscussionChannel, DiscussionMessage } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const DiscussionsView: React.FC = () => {
   const { user } = useAuth();
@@ -312,9 +313,12 @@ export const DiscussionsView: React.FC = () => {
                     {/* Message Header */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gold-500/20 text-gold-400 flex items-center justify-center font-bold text-xs border border-gold-500/30 shrink-0">
-                          {msg.authorName.substring(0, 2).toUpperCase()}
-                        </div>
+                        <UserAvatar
+                          name={msg.authorName}
+                          size="xs"
+                          role={msg.authorRole as any}
+                          className="shrink-0"
+                        />
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-white">{msg.authorName}</span>

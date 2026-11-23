@@ -20,6 +20,7 @@ import { ChatMessage, ActionProposal } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useOrganization } from '../../context/OrganizationContext';
 import { SolianApiClient, API_BASE, buildApiUrl } from '../../api/client';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const CompanyChatView: React.FC = () => {
   const { user } = useAuth();
@@ -490,9 +491,13 @@ export const CompanyChatView: React.FC = () => {
               </div>
 
               {isUser && (
-                <div className="w-9 h-9 rounded-xl bg-solian-surface border border-solian-border flex items-center justify-center text-xs font-bold text-gold-400 shrink-0 mt-1">
-                  {user.fullName.substring(0, 2).toUpperCase()}
-                </div>
+                <UserAvatar
+                  name={user.fullName}
+                  avatarUrl={user.avatarUrl}
+                  role={user.role}
+                  size="sm"
+                  className="mt-1 shrink-0"
+                />
               )}
             </div>
           );

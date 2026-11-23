@@ -34,6 +34,7 @@ test-results/
 *.sqlite
 *.sqlite3
 backend/data/
+backend/uploads/
 
 # Production build outputs
 frontend/dist/

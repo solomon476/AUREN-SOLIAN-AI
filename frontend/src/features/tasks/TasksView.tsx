@@ -17,6 +17,7 @@ import {
 import { SolianApiClient } from '../../api/client';
 import { TaskItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const TasksView: React.FC = () => {
   const { user, hasRole } = useAuth();
@@ -265,10 +266,11 @@ export const TasksView: React.FC = () => {
                         )}
 
                         <div className="pt-2 border-t border-solian-border/50 flex items-center justify-between text-[10px] text-graphite-400">
-                          <span className="truncate max-w-[120px]">
-                            Assignee: <span className="text-slate-300">{t.assignee}</span>
+                          <span className="truncate max-w-[140px] flex items-center gap-1.5">
+                            <UserAvatar name={t.assignee} size="xs" />
+                            <span className="text-slate-300 truncate">{t.assignee}</span>
                           </span>
-                          <span className="font-mono text-gold-400/90">{t.dueDate}</span>
+                          <span className="font-mono text-gold-400/90 shrink-0">{t.dueDate}</span>
                         </div>
 
                         {col.next && hasRole('member') && (

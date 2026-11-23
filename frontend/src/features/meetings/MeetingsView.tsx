@@ -19,6 +19,7 @@ import {
 import { SolianApiClient } from '../../api/client';
 import { Meeting, MeetingActionItem, MeetingDecision } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const MeetingsView: React.FC = () => {
   const { user } = useAuth();
@@ -304,7 +305,10 @@ export const MeetingsView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-slate-400 mt-2.5 pt-2 border-t border-solian-border/50">
-                    <span className="text-[11px] truncate max-w-[140px]">Org: {m.organizerName}</span>
+                    <span className="text-[11px] truncate max-w-[150px] flex items-center gap-1.5">
+                      <UserAvatar name={m.organizerName} size="xs" />
+                      <span className="truncate">{m.organizerName}</span>
+                    </span>
                     <div className="flex items-center gap-2 text-[10px] text-graphite-400">
                       <span>{m.decisions?.length || 0} decisions</span>
                       <span>•</span>
@@ -520,9 +524,10 @@ export const MeetingsView: React.FC = () => {
                 {selectedMeeting.attendees?.map((att, idx) => (
                   <span
                     key={idx}
-                    className="text-[11px] px-2 py-0.5 rounded bg-solian-surface border border-solian-border text-slate-300"
+                    className="text-[11px] px-2 py-0.5 rounded bg-solian-surface border border-solian-border text-slate-300 flex items-center gap-1.5"
                   >
-                    {att}
+                    <UserAvatar name={att} size="xs" />
+                    <span>{att}</span>
                   </span>
                 ))}
               </div>

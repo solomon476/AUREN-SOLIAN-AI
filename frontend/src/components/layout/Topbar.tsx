@@ -7,6 +7,7 @@ import { UserRole } from '../../types';
 import { AuthModal } from '../auth/AuthModal';
 import { NotificationCenter } from '../notifications/NotificationCenter';
 import { CommandPalette } from '../search/CommandPalette';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const Topbar: React.FC = () => {
   const { currentOrg, activeModule } = useOrganization();
@@ -229,31 +230,16 @@ export const Topbar: React.FC = () => {
         {/* Mobile User Profile Avatar Trigger (Visible on < md) */}
         <button
           onClick={() => setIsMobileProfileOpen(true)}
-          className={`md:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-solian-surface border transition active:scale-95 cursor-pointer shrink-0 min-h-[38px] min-w-[38px] relative ${
-            authMode === 'SUPABASE_JWT' && user.id !== 'guest'
-              ? 'border-emerald-500/50'
-              : isDevSimulation
-              ? 'border-amber-500/40'
-              : 'border-gold-500/30'
-          }`}
+          className="md:hidden flex items-center justify-center p-0.5 rounded-full transition active:scale-95 cursor-pointer shrink-0"
           aria-label={`User profile: ${user.fullName} (${user.role})`}
           title={`${user.fullName} (${user.role.toUpperCase()})`}
         >
-          <span className="text-xs font-extrabold font-mono text-slate-200">
-            {getInitials(user.fullName)}
-          </span>
-          <span
-            className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-solian-obsidian ${
-              user.role === 'owner'
-                ? 'bg-gold-500'
-                : user.role === 'admin'
-                ? 'bg-purple-500'
-                : user.role === 'manager'
-                ? 'bg-blue-500'
-                : user.role === 'member'
-                ? 'bg-slate-400'
-                : 'bg-zinc-500'
-            }`}
+          <UserAvatar
+            name={user.fullName}
+            avatarUrl={user.avatarUrl}
+            role={user.role}
+            size="sm"
+            showRoleBadge
           />
         </button>
 
@@ -292,9 +278,13 @@ export const Topbar: React.FC = () => {
             <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gold-500/10 border border-gold-500/40 flex items-center justify-center text-sm font-bold font-mono text-gold-400 shrink-0">
-                    {getInitials(user.fullName)}
-                  </div>
+                  <UserAvatar
+                    name={user.fullName}
+                    avatarUrl={user.avatarUrl}
+                    role={user.role}
+                    size="lg"
+                    className="shrink-0"
+                  />
                   <div>
                     <h3 className="text-sm font-bold text-white leading-tight">
                       {user.fullName}

@@ -155,6 +155,7 @@ export interface TeamMember {
   status: 'active' | 'away' | 'offline';
   assignedProjects: number;
   joinedDate?: string;
+  avatarUrl?: string | null;
   isDemo?: boolean;
 }
 
@@ -617,3 +618,113 @@ export interface ProjectFinancialSummary {
   outstandingRevenue: number;
   transactions: FinancialTransaction[];
 }
+
+// ============================================================================
+// Email and Company Communications
+// ============================================================================
+
+export interface EmailAttachmentMeta {
+  id: string;
+  filename: string;
+  size_bytes: number;
+  content_type: string;
+  url?: string;
+}
+
+export interface EmailMessage {
+  id: string;
+  organization_id: string;
+  user_id?: string;
+  folder: 'inbox' | 'sent' | 'archive' | 'trash';
+  from_address: string;
+  to_addresses: string[];
+  cc_addresses?: string[];
+  bcc_addresses?: string[];
+  subject: string;
+  body_text: string;
+  body_html?: string;
+  is_read: boolean;
+  created_at: string;
+  attachments?: EmailAttachmentMeta[];
+  reply_to_id?: string;
+}
+
+export interface EmailDraft {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  to_addresses: string[];
+  cc_addresses?: string[];
+  bcc_addresses?: string[];
+  subject: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  attachments?: EmailAttachmentMeta[];
+}
+
+export interface EmailDraftCreate {
+  to_addresses: string[];
+  cc_addresses?: string[];
+  bcc_addresses?: string[];
+  subject: string;
+  body: string;
+  attachments?: EmailAttachmentMeta[];
+}
+
+export interface EmailDraftUpdate {
+  to_addresses?: string[];
+  cc_addresses?: string[];
+  bcc_addresses?: string[];
+  subject?: string;
+  body?: string;
+  attachments?: EmailAttachmentMeta[];
+}
+
+export interface EmailSendRequest {
+  to_addresses: string[];
+  cc_addresses?: string[];
+  bcc_addresses?: string[];
+  subject: string;
+  body: string;
+  draft_id?: string;
+  reply_to_id?: string;
+  attachments?: EmailAttachmentMeta[];
+}
+
+export interface EmailSendResult {
+  success: boolean;
+  message_id?: string;
+  status: string;
+  error?: string;
+  sent_at?: string;
+}
+
+export interface EmailProviderStatus {
+  provider_type: 'none' | 'smtp' | 'google_workspace' | 'microsoft_365';
+  is_connected: boolean;
+  account_email?: string | null;
+  sender_name?: string | null;
+  status_message: string;
+  supported_features: string[];
+  required_configs: string[];
+}
+
+export interface EmailAIAssistRequest {
+  action: 'draft' | 'improve' | 'summarize' | 'reply' | 'extract_action_items' | 'extract_key_info';
+  prompt?: string;
+  tone?: 'executive' | 'concise' | 'diplomatic' | 'assertive' | 'formal';
+  email_text?: string;
+  recipient_role?: string;
+  subject?: string;
+}
+
+export interface EmailAIAssistResponse {
+  action: string;
+  content: string;
+  subject_suggestion?: string;
+  action_items?: string[];
+  key_info?: Array<{ label: string; value: string }>;
+  confidence?: number;
+}
+

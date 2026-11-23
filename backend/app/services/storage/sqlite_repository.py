@@ -62,6 +62,13 @@ from app.models.notifications import (
     NotificationItem,
     NotificationCreate,
 )
+from app.models.email import (
+    EmailMessage,
+    EmailDraft,
+    EmailDraftCreate,
+    EmailDraftUpdate,
+    EmailAttachmentMeta,
+)
 from app.models.finance import (
     FinancialAccount,
     FinancialAccountCreate,
@@ -500,6 +507,38 @@ class EnterpriseRepository:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS email_drafts (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                organization_id TEXT NOT NULL DEFAULT 'org-solian-wolves',
+                to_addresses TEXT NOT NULL,
+                cc_addresses TEXT DEFAULT '[]',
+                bcc_addresses TEXT DEFAULT '[]',
+                subject TEXT NOT NULL DEFAULT '',
+                body TEXT NOT NULL DEFAULT '',
+                attachments TEXT DEFAULT '[]',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS email_messages (
+                id TEXT PRIMARY KEY,
+                organization_id TEXT NOT NULL DEFAULT 'org-solian-wolves',
+                user_id TEXT,
+                folder TEXT NOT NULL DEFAULT 'inbox',
+                from_address TEXT NOT NULL,
+                to_addresses TEXT NOT NULL,
+                cc_addresses TEXT DEFAULT '[]',
+                bcc_addresses TEXT DEFAULT '[]',
+                subject TEXT NOT NULL,
+                body_text TEXT NOT NULL,
+                body_html TEXT,
+                is_read INTEGER DEFAULT 1,
+                attachments TEXT DEFAULT '[]',
+                reply_to_id TEXT,
+                created_at TEXT NOT NULL
+            );
             """)
 
             # Ensure initial migrations are recorded if table was initialized
@@ -518,6 +557,12 @@ class EnterpriseRepository:
             try:
                 cur.execute("ALTER TABLE members ADD COLUMN auth_user_id TEXT;")
                 cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_members_auth_user_id ON members(auth_user_id);")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+
+            # Ensure avatar_url column exists on members table
+            try:
+                cur.execute("ALTER TABLE members ADD COLUMN avatar_url TEXT;")
             except sqlite3.OperationalError:
                 pass  # column already exists
 
@@ -793,6 +838,9 @@ class EnterpriseRepository:
 
         # Seed finance data (accounts, invoices, payables, budgets, transactions)
         self._seed_finance_data(conn)
+
+        # Seed clean verified production statutory foundation
+        self._bootstrap_production_foundation(conn)
 
         # 1. Organization: Solian Wolves (Neutral, unverified fields set to None)
         cur.execute("""
@@ -1144,12 +1192,16 @@ class EnterpriseRepository:
             ("notif-3", "org-solian-wolves", "all", "Platform Upgrade Notice", "AUREN SOLIAN platform v2.5 unified workspace is active.", "announcement", None, None, 1, "normal", "2026-11-21T12:00:00Z"),
         ]
         cur.executemany("INSERT OR IGNORE INTO notifications VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", notifications)
+        conn.commit()
         if owns_conn:
-            conn.commit()
             conn.close()
 
-    def _bootstrap_production_foundation(self, conn: sqlite3.Connection):
+    def _bootstrap_production_foundation(self, conn: Optional[sqlite3.Connection] = None):
         """Bootstraps clean production organizational foundation with verified statutory officers and zero fake demo data."""
+        owns_conn = False
+        if conn is None:
+            conn = self._get_connection()
+            owns_conn = True
         cur = conn.cursor()
 
         # 1. Organization: Solian Wolves
@@ -1181,7 +1233,7 @@ class EnterpriseRepository:
             ("op-3", "org-solian-wolves", "Strict RBAC & Boundary Isolation", "Institutional and customer data must strictly respect multi-tenant boundaries and security clearance tiers.", 0),
             ("op-4", "org-solian-wolves", "Velocity Through Discipline", "Standard Operating Procedures (SOPs) are living operational assets reviewed regularly to prevent drift.", 0),
         ]
-        cur.executemany("INSERT INTO operating_principles VALUES (?, ?, ?, ?, ?);", principles)
+        cur.executemany("INSERT OR REPLACE INTO operating_principles VALUES (?, ?, ?, ?, ?);", principles)
 
         # 3. Operating Cadences (Verified cadences, is_demo=0)
         cadences = [
@@ -1190,7 +1242,7 @@ class EnterpriseRepository:
             ("cad-3", "org-solian-wolves", "Treasury & Capital Review", "Monthly (First Friday)", "Finance & Executive Leadership", "Review financial statements, cash flow, budget allocations, and accounts receivable.", "Alice Moraa Nyakundi", 0),
             ("cad-4", "org-solian-wolves", "Technology Architecture & AI Systems", "Weekly (Thursdays 15:00 UTC)", "Technology, AI Engineering & Security", "Review AI model performance, platform infrastructure, and security controls.", "Solomon Nyangweso Omwenga", 0),
         ]
-        cur.executemany("INSERT INTO operating_cadences VALUES (?, ?, ?, ?, ?, ?, ?, ?);", cadences)
+        cur.executemany("INSERT OR REPLACE INTO operating_cadences VALUES (?, ?, ?, ?, ?, ?, ?, ?);", cadences)
 
         # 4. Official Corporate Departments (is_demo=0)
         departments = [
@@ -1200,7 +1252,7 @@ class EnterpriseRepository:
             ("dept-admin", "org-solian-wolves", "Administration & Corporate Services", "ADMIN", "Human resources, facilities, compliance, statutory documentation, and corporate administration.", "tm-4", "Noella Maraka Kaatho", 1, 1, 0),
             ("dept-tech", "org-solian-wolves", "Technology & AI Systems", "TECH", "AUREN platform engineering, AI systems integration, security architecture, and cloud operations.", "tm-5", "Solomon Nyangweso Omwenga", 1, 1, 0),
         ]
-        cur.executemany("INSERT INTO departments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", departments)
+        cur.executemany("INSERT OR REPLACE INTO departments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", departments)
 
         # 5. Statutory Officers / Leadership Council (all is_demo=0)
         members = [
@@ -1248,6 +1300,9 @@ class EnterpriseRepository:
             joined_date, is_demo
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, members)
+        conn.commit()
+        if owns_conn:
+            conn.close()
 
     def purge_demo_data(self) -> Dict[str, int]:
         """Purges all demo rows (flagged with is_demo=1 or [DEMO]) from the database."""
@@ -1708,6 +1763,10 @@ class EnterpriseRepository:
         if "auth_user_id" in row.keys():
             auth_user_id = row["auth_user_id"]
 
+        avatar_url = None
+        if "avatar_url" in row.keys() and row["avatar_url"]:
+            avatar_url = row["avatar_url"]
+
         return OrganizationMember(
             id=row["id"],
             user_id=row["user_id"],
@@ -1724,6 +1783,7 @@ class EnterpriseRepository:
             responsibilities=responsibilities,
             reports_to_id=row["reports_to_id"],
             reports_to_name=row["reports_to_name"],
+            avatar_url=avatar_url,
             status=row["status"],
             assigned_projects=row["assigned_projects"],
             joined_date=row["joined_date"],
@@ -4355,6 +4415,276 @@ class EnterpriseRepository:
             outstanding_revenue=outstanding_revenue,
             transactions=txs[:20],
         )
+
+    # -------------------------------------------------------------------------
+    # Profile & Avatar Management
+    # -------------------------------------------------------------------------
+    def update_member_avatar(self, user_id_or_member_id: str, avatar_url: Optional[str]) -> Optional[OrganizationMember]:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE members SET avatar_url = ? WHERE user_id = ? OR id = ? OR auth_user_id = ?;",
+                (avatar_url, user_id_or_member_id, user_id_or_member_id, user_id_or_member_id),
+            )
+            conn.commit()
+            conn.close()
+            return self.get_member_by_user_id(user_id_or_member_id) or self.get_member_by_id(user_id_or_member_id)
+
+    # -------------------------------------------------------------------------
+    # Email Drafts & Messages Persistence
+    # -------------------------------------------------------------------------
+    def save_email_draft(self, user_id: str, draft: EmailDraftCreate) -> EmailDraft:
+        with self._lock:
+            draft_id = f"drf-{uuid.uuid4().hex[:10]}"
+            now = datetime.now(timezone.utc).isoformat()
+            attachments_json = json.dumps([a.model_dump() for a in draft.attachments] if draft.attachments else [])
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO email_drafts (
+                    id, user_id, organization_id, to_addresses, cc_addresses, bcc_addresses,
+                    subject, body, attachments, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    draft_id,
+                    user_id,
+                    self.organization_id,
+                    json.dumps(draft.to_addresses),
+                    json.dumps(draft.cc_addresses),
+                    json.dumps(draft.bcc_addresses),
+                    draft.subject,
+                    draft.body,
+                    attachments_json,
+                    now,
+                    now,
+                ),
+            )
+            conn.commit()
+            conn.close()
+            res = self.get_email_draft(draft_id, user_id)
+            if not res:
+                raise RuntimeError("Failed to retrieve newly created email draft.")
+            return res
+
+    def update_email_draft(self, draft_id: str, user_id: str, update: EmailDraftUpdate) -> Optional[EmailDraft]:
+        with self._lock:
+            current = self.get_email_draft(draft_id, user_id)
+            if not current:
+                return None
+            now = datetime.now(timezone.utc).isoformat()
+            to_addrs = json.dumps(update.to_addresses) if update.to_addresses is not None else json.dumps(current.to_addresses)
+            cc_addrs = json.dumps(update.cc_addresses) if update.cc_addresses is not None else json.dumps(current.cc_addresses)
+            bcc_addrs = json.dumps(update.bcc_addresses) if update.bcc_addresses is not None else json.dumps(current.bcc_addresses)
+            subject = update.subject if update.subject is not None else current.subject
+            body = update.body if update.body is not None else current.body
+            attachments = json.dumps([a.model_dump() for a in update.attachments]) if update.attachments is not None else json.dumps([a.model_dump() for a in current.attachments])
+
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                UPDATE email_drafts
+                SET to_addresses = ?, cc_addresses = ?, bcc_addresses = ?, subject = ?, body = ?, attachments = ?, updated_at = ?
+                WHERE id = ? AND user_id = ?;
+                """,
+                (to_addrs, cc_addrs, bcc_addrs, subject, body, attachments, now, draft_id, user_id),
+            )
+            conn.commit()
+            conn.close()
+            return self.get_email_draft(draft_id, user_id)
+
+    def get_email_draft(self, draft_id: str, user_id: str) -> Optional[EmailDraft]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM email_drafts WHERE id = ? AND user_id = ? LIMIT 1;", (draft_id, user_id))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return None
+        to_addrs = json.loads(row["to_addresses"]) if row["to_addresses"] else []
+        cc_addrs = json.loads(row["cc_addresses"]) if row["cc_addresses"] else []
+        bcc_addrs = json.loads(row["bcc_addresses"]) if row["bcc_addresses"] else []
+        attachments = [EmailAttachmentMeta(**a) for a in json.loads(row["attachments"])] if row["attachments"] else []
+        return EmailDraft(
+            id=row["id"],
+            user_id=row["user_id"],
+            organization_id=row["organization_id"],
+            to_addresses=to_addrs,
+            cc_addresses=cc_addrs,
+            bcc_addresses=bcc_addrs,
+            subject=row["subject"],
+            body=row["body"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            attachments=attachments,
+        )
+
+    def delete_email_draft(self, draft_id: str, user_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM email_drafts WHERE id = ? AND user_id = ?;", (draft_id, user_id))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
+
+    def list_email_drafts(self, user_id: str) -> List[EmailDraft]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM email_drafts WHERE user_id = ? ORDER BY updated_at DESC;", (user_id,))
+        rows = cur.fetchall()
+        conn.close()
+        drafts = []
+        for row in rows:
+            to_addrs = json.loads(row["to_addresses"]) if row["to_addresses"] else []
+            cc_addrs = json.loads(row["cc_addresses"]) if row["cc_addresses"] else []
+            bcc_addrs = json.loads(row["bcc_addresses"]) if row["bcc_addresses"] else []
+            attachments = [EmailAttachmentMeta(**a) for a in json.loads(row["attachments"])] if row["attachments"] else []
+            drafts.append(
+                EmailDraft(
+                    id=row["id"],
+                    user_id=row["user_id"],
+                    organization_id=row["organization_id"],
+                    to_addresses=to_addrs,
+                    cc_addresses=cc_addrs,
+                    bcc_addresses=bcc_addrs,
+                    subject=row["subject"],
+                    body=row["body"],
+                    created_at=row["created_at"],
+                    updated_at=row["updated_at"],
+                    attachments=attachments,
+                )
+            )
+        return drafts
+
+    def save_email_message(self, message: EmailMessage) -> EmailMessage:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            attachments_json = json.dumps([a.model_dump() for a in message.attachments] if message.attachments else [])
+            cur.execute(
+                """
+                INSERT OR REPLACE INTO email_messages (
+                    id, organization_id, user_id, folder, from_address, to_addresses,
+                    cc_addresses, bcc_addresses, subject, body_text, body_html,
+                    is_read, attachments, reply_to_id, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    message.id,
+                    message.organization_id,
+                    message.user_id,
+                    message.folder,
+                    message.from_address,
+                    json.dumps(message.to_addresses),
+                    json.dumps(message.cc_addresses),
+                    json.dumps(message.bcc_addresses),
+                    message.subject,
+                    message.body_text,
+                    message.body_html,
+                    1 if message.is_read else 0,
+                    attachments_json,
+                    message.reply_to_id,
+                    message.created_at,
+                ),
+            )
+            conn.commit()
+            conn.close()
+            return message
+
+    def get_email_message(self, message_id: str) -> Optional[EmailMessage]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM email_messages WHERE id = ? LIMIT 1;", (message_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return None
+        to_addrs = json.loads(row["to_addresses"]) if row["to_addresses"] else []
+        cc_addrs = json.loads(row["cc_addresses"]) if row["cc_addresses"] else []
+        bcc_addrs = json.loads(row["bcc_addresses"]) if row["bcc_addresses"] else []
+        attachments = [EmailAttachmentMeta(**a) for a in json.loads(row["attachments"])] if row["attachments"] else []
+        return EmailMessage(
+            id=row["id"],
+            organization_id=row["organization_id"],
+            user_id=row["user_id"],
+            folder=row["folder"],
+            from_address=row["from_address"],
+            to_addresses=to_addrs,
+            cc_addresses=cc_addrs,
+            bcc_addresses=bcc_addrs,
+            subject=row["subject"],
+            body_text=row["body_text"],
+            body_html=row["body_html"],
+            is_read=bool(row["is_read"]),
+            attachments=attachments,
+            reply_to_id=row["reply_to_id"],
+            created_at=row["created_at"],
+        )
+
+    def list_email_messages(
+        self,
+        folder: str = "inbox",
+        search: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> Tuple[List[EmailMessage], int]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        query = "SELECT * FROM email_messages WHERE folder = ?"
+        params: List[Any] = [folder]
+        if search:
+            query += " AND (subject LIKE ? OR from_address LIKE ? OR body_text LIKE ?)"
+            s_param = f"%{search}%"
+            params.extend([s_param, s_param, s_param])
+
+        count_cur = conn.cursor()
+        count_sql = "SELECT COUNT(*) as count FROM email_messages WHERE folder = ?"
+        count_params: List[Any] = [folder]
+        if search:
+            count_sql += " AND (subject LIKE ? OR from_address LIKE ? OR body_text LIKE ?)"
+            count_params.extend([s_param, s_param, s_param])
+        count_cur.execute(count_sql, count_params)
+        total = count_cur.fetchone()["count"]
+
+        query += " ORDER BY created_at DESC LIMIT ? OFFSET ?;"
+        offset = (page - 1) * page_size
+        params.extend([page_size, offset])
+
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        conn.close()
+
+        messages = []
+        for row in rows:
+            to_addrs = json.loads(row["to_addresses"]) if row["to_addresses"] else []
+            cc_addrs = json.loads(row["cc_addresses"]) if row["cc_addresses"] else []
+            bcc_addrs = json.loads(row["bcc_addresses"]) if row["bcc_addresses"] else []
+            attachments = [EmailAttachmentMeta(**a) for a in json.loads(row["attachments"])] if row["attachments"] else []
+            messages.append(
+                EmailMessage(
+                    id=row["id"],
+                    organization_id=row["organization_id"],
+                    user_id=row["user_id"],
+                    folder=row["folder"],
+                    from_address=row["from_address"],
+                    to_addresses=to_addrs,
+                    cc_addresses=cc_addrs,
+                    bcc_addresses=bcc_addrs,
+                    subject=row["subject"],
+                    body_text=row["body_text"],
+                    body_html=row["body_html"],
+                    is_read=bool(row["is_read"]),
+                    attachments=attachments,
+                    reply_to_id=row["reply_to_id"],
+                    created_at=row["created_at"],
+                )
+            )
+        return messages, total
 
 
 class DynamicRepositoryProxy:

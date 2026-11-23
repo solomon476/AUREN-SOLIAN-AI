@@ -7,6 +7,7 @@ interface AuthContextType {
   user: UserProfile;
   availableUsers: UserProfile[];
   switchUser: (user: UserProfile) => void;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
   setRole: (role: UserRole) => void;
   hasRole: (minRole: UserRole) => boolean;
   isAuthenticated: boolean;
@@ -105,6 +106,7 @@ const AuthContext = createContext<AuthContextType>({
   user: isProductionEnv ? unauthenticatedUser : defaultUser,
   availableUsers: verifiedLeadershipUsers,
   switchUser: () => {},
+  updateUserProfile: () => {},
   setRole: () => {},
   hasRole: () => false,
   isAuthenticated: !isProductionEnv,
@@ -233,6 +235,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = (updates: Partial<UserProfile>) => {
+    setUser((prev) => ({ ...prev, ...updates }));
+    setAvailableUsers((prev) =>
+      prev.map((u) => (u.userId === user.userId || u.id === user.id ? { ...u, ...updates } : u))
+    );
+  };
+
   const setRole = (role: UserRole) => {
     // Strictly prohibited in production environments
     if (isDevSimulation && !isProductionEnv) {
@@ -252,6 +261,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         availableUsers,
         switchUser,
+        updateUserProfile,
         setRole,
         hasRole,
         isAuthenticated,

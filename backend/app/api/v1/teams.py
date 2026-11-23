@@ -35,6 +35,7 @@ async def list_members(user: AuthUser = Depends(require_role(UserRole.GUEST))):
             "status": m.status,
             "assignedProjects": m.assigned_projects,
             "joinedDate": m.joined_date,
+            "avatarUrl": m.avatar_url if getattr(m, "avatar_url", None) else None,
             "isDemo": m.is_demo,
         }
         for m in members
@@ -63,6 +64,7 @@ async def get_member(member_id: str, user: AuthUser = Depends(require_role(UserR
         "status": member.status,
         "assignedProjects": member.assigned_projects,
         "joinedDate": member.joined_date,
+        "avatarUrl": member.avatar_url if getattr(member, "avatar_url", None) else None,
         "isDemo": member.is_demo,
     }
 
@@ -144,6 +146,7 @@ async def invite_member(
         "responsibilities": member.responsibilities,
         "status": member.status,
         "joinedDate": member.joined_date,
+        "avatarUrl": getattr(member, "avatar_url", None),
         "message": f"Successfully invited {member.name} ({member.email}) as {member.role.value}.",
     }
 

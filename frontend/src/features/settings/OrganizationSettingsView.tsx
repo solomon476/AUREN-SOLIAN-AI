@@ -13,6 +13,7 @@ import { useOrganization } from '../../context/OrganizationContext';
 import { useAuth } from '../../context/AuthContext';
 import { SolianApiClient } from '../../api/client';
 import { CompanyOperatingInfo } from '../../types';
+import { ProfileSettingsSection } from './ProfileSettingsSection';
 
 export const OrganizationSettingsView: React.FC = () => {
   const { currentOrg, refreshOrg } = useOrganization();
@@ -76,6 +77,9 @@ export const OrganizationSettingsView: React.FC = () => {
           Enterprise configuration parameters, operating principles, operational cadences, and RBAC security gates.
         </p>
       </div>
+
+      {/* Personal User Profile & Avatar Customization */}
+      <ProfileSettingsSection />
 
       {/* Organization Profile Configuration */}
       <form

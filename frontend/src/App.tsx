@@ -23,6 +23,7 @@ import { MeetingsView } from './features/meetings/MeetingsView';
 import { DiscussionsView } from './features/discussions/DiscussionsView';
 import { CalendarView } from './features/calendar/CalendarView';
 import { FinanceView } from './features/finance/FinanceView';
+import { EmailView } from './features/email/EmailView';
 
 const ModuleRouter: React.FC = () => {
   const { activeModule } = useOrganization();
@@ -34,6 +35,8 @@ const ModuleRouter: React.FC = () => {
       return <CompanyChatView />;
     case 'finance':
       return <FinanceView />;
+    case 'email':
+      return <EmailView />;
     case 'knowledge':
       return <KnowledgeVaultView />;
     case 'teams':

@@ -59,6 +59,7 @@ class AuthUser(BaseModel):
     organization_id: str
     title: str = "Staff Member"
     department: str = "Operations"
+    avatar_url: Optional[str] = None
     auth_mode: str = "DEVELOPMENT_SIMULATION"
     is_demo_user: bool = False
 
@@ -261,7 +262,7 @@ def get_current_user(
         role_map = {
             "owner": "usr-1",
             "admin": "usr-2",
-            "manager": "usr-3",
+            "manager": "usr-4",
             "member": "usr-5",
             "guest": "usr-6",
         }
@@ -280,6 +281,22 @@ def get_current_user(
                 auth_mode="DEVELOPMENT_SIMULATION",
                 is_demo_user=member.is_demo,
             )
+        try:
+            parsed_role = UserRole(x_user_role.lower())
+        except ValueError:
+            parsed_role = UserRole.MEMBER
+        return AuthUser(
+            id=x_user_id or f"usr-{parsed_role.value}",
+            user_id=x_user_id or f"usr-{parsed_role.value}",
+            email=f"{parsed_role.value}@solianwolves.co",
+            full_name=f"Simulated {parsed_role.value.title()}",
+            role=parsed_role,
+            organization_id=x_org_id or settings.ORGANIZATION_ID,
+            title=f"Staff {parsed_role.value.title()}",
+            department="Operations",
+            auth_mode="DEVELOPMENT_SIMULATION",
+            is_demo_user=True,
+        )
 
     # Default to executive owner Solomon K. in local development
     default_member = repo.get_member_by_user_id("usr-1")

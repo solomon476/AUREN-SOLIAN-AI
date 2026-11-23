@@ -16,10 +16,12 @@ import {
   Calendar,
   MessageSquare,
   Landmark,
+  Mail,
 } from 'lucide-react';
 import { useOrganization } from '../../context/OrganizationContext';
 import { useAuth } from '../../context/AuthContext';
 import { BrandLogo } from './BrandLogo';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const Sidebar: React.FC = () => {
   const { activeModule, setActiveModule, isMobileNavOpen, closeMobileNav } = useOrganization();
@@ -42,6 +44,7 @@ export const Sidebar: React.FC = () => {
         { id: 'tasks', label: 'Tasks & Operations', icon: CheckSquare },
         { id: 'meetings', label: 'Meetings & Minutes', icon: CalendarClock },
         { id: 'workflows', label: 'Workflows & Automation', icon: GitFork },
+        { id: 'email', label: 'Email & Communications', icon: Mail },
       ],
     },
     {
@@ -140,9 +143,12 @@ export const Sidebar: React.FC = () => {
         >
           <div className="flex items-center justify-between p-2 rounded-lg bg-solian-surface/80 border border-solian-border/60">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center font-bold text-xs border border-gold-500/30 shrink-0">
-                {user.fullName.substring(0, 2).toUpperCase()}
-              </div>
+              <UserAvatar
+                name={user.fullName}
+                avatarUrl={user.avatarUrl}
+                role={user.role}
+                size="sm"
+              />
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-slate-200 truncate">{user.fullName}</div>
                 <div className="text-[10px] text-graphite-400 truncate">{user.title}</div>

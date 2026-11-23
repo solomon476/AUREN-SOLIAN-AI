@@ -18,6 +18,7 @@ from app.api.v1.notifications import router as notifications_router
 from app.api.v1.calendar import router as calendar_router
 from app.api.v1.search import router as search_router
 from app.api.v1.finance import router as finance_router
+from app.api.v1.email import router as email_router
 
 api_router = APIRouter()
 
@@ -39,4 +40,5 @@ api_router.include_router(notifications_router, prefix="/notifications", tags=["
 api_router.include_router(calendar_router, prefix="/calendar", tags=["Calendar"])
 api_router.include_router(search_router, prefix="/search", tags=["Search"])
 api_router.include_router(finance_router, prefix="/finance", tags=["Finance & Company Records"])
+api_router.include_router(email_router, prefix="/email", tags=["Email & Communications"])
 

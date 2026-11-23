@@ -1,4 +1,5 @@
 """Comprehensive tests for Phase 2.1: Data integrity, input validation, and proposal idempotency."""
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -84,7 +85,7 @@ def test_action_proposal_rbac_index_sop_requires_manager():
     """Verify MEMBER clearance cannot index SOPs via chat action proposals."""
     headers_member = {"X-User-Id": "usr-5"}  # David Ochieng (Member)
     payload = {
-        "proposal_id": "prop-member-sop-attempt",
+        "proposal_id": f"prop-member-sop-attempt-{uuid.uuid4().hex[:6]}",
         "action_type": "index_sop",
         "payload": {
             "title": "Unauthorized SOP Proposal",
