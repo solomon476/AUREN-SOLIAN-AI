@@ -132,3 +132,4 @@ Now that the provisioning and migrations are complete, you should revoke the acc
 2. Find the token(s) used for this setup.
 3. Click **Revoke** / **Delete**.
 4. Both tokens will immediately be invalidated.
+
