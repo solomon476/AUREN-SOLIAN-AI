@@ -46,3 +46,19 @@ CREATE TABLE IF NOT EXISTS email_messages (
 CREATE INDEX IF NOT EXISTS idx_email_messages_folder ON email_messages(organization_id, folder, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_email_messages_user ON email_messages(user_id);
 
+-- 4. Row Level Security Policies
+ALTER TABLE email_drafts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_messages ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'email_drafts_tenant_isolation') THEN
+        CREATE POLICY email_drafts_tenant_isolation ON email_drafts
+            FOR ALL USING (organization_id = COALESCE(NULLIF(current_setting('app.current_org_id', true), ''), 'org-solian-wolves'));
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'email_messages_tenant_isolation') THEN
+        CREATE POLICY email_messages_tenant_isolation ON email_messages
+            FOR ALL USING (organization_id = COALESCE(NULLIF(current_setting('app.current_org_id', true), ''), 'org-solian-wolves'));
+    END IF;
+END $$;
+
+
