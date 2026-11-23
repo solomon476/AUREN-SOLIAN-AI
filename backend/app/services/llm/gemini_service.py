@@ -1,8 +1,8 @@
 """Enterprise LLM Integration for AUREN SOLIAN Organizational AI.
 
 Supports direct, low-latency asynchronous HTTP streaming:
-- Primary: Google Gemini API (gemini-3.5-flash) via official REST SSE streaming.
-- Fallback: Groq Cloud API (qwen/qwen3.8-27b) via OpenAI-compatible SSE streaming.
+- Primary: Google Gemini API (gemini-3.5-flash-lite) via official REST SSE streaming.
+- Fallback: Groq Cloud API (openai/gpt-oss-120b) via OpenAI-compatible SSE streaming.
 - Honest error reporting: Never substitutes fabricated fake text for failed LLM calls.
 """
 import os
@@ -40,12 +40,12 @@ class GeminiService:
     async def stream_executive_response(
         self,
         prompt: str,
-        user_role: str,
-        user_name: str,
-        user_department: str,
-        context_sources: List[str],
-        operational_context: Dict[str, Any],
-        knowledge_context: List[Dict[str, Any]],
+        user_role: str = "member",
+        user_name: str = "Solian Operator",
+        user_department: str = "Operations",
+        context_sources: Optional[List[str]] = None,
+        operational_context: Optional[Dict[str, Any]] = None,
+        knowledge_context: Optional[List[Dict[str, Any]]] = None,
         history: Optional[List[Dict[str, Any]]] = None,
         workspace_context: Optional[str] = None,
         restricted_attempt: bool = False,
@@ -75,9 +75,9 @@ class GeminiService:
             f"Organizational Operating Context for Solian Wolves:\n"
             f"- Active User: {user_name} (Role: {user_role.upper()}, Department: {user_department})\n"
             f"- Active Workspace Module: {workspace_context or 'General Command'}\n"
-            f"- Verified Knowledge Sources: {json.dumps(context_sources)}\n"
-            f"- Accessible Company Documentation: {json.dumps(knowledge_context)}\n"
-            f"- Operational Records & Financial Intelligence: {json.dumps(operational_context)}\n"
+            f"- Verified Knowledge Sources: {json.dumps(context_sources or [])}\n"
+            f"- Accessible Company Documentation: {json.dumps(knowledge_context or [])}\n"
+            f"- Operational Records & Financial Intelligence: {json.dumps(operational_context or {})}\n"
         )
 
         user_content_prompt = f"{context_preamble}\n\nUser Directive/Query:\n{prompt}"
@@ -175,7 +175,10 @@ class GeminiService:
                 "POST",
                 url,
                 json=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "curl/8.5.0",
+                },
             ) as response:
                 if response.status_code != 200:
                     err_body = await response.aread()
@@ -233,6 +236,7 @@ class GeminiService:
                 headers={
                     "Authorization": f"Bearer {groq_key}",
                     "Content-Type": "application/json",
+                    "User-Agent": "curl/8.5.0",
                 },
             ) as response:
                 if response.status_code != 200:

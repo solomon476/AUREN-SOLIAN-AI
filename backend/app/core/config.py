@@ -96,7 +96,7 @@ class Settings(BaseSettings):
         default="",
         description="Groq API Key for fast inference fallback",
     )
-    GROQ_MODEL: str = "qwen/qwen3.8-27b"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
     EMBEDDING_PROVIDER: str = "gemini"
     EMBEDDING_MODEL: str = "gemini-embedding-2"
     EMBEDDING_API_KEY: str = ""
