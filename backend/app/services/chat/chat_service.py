@@ -4,6 +4,7 @@ import asyncio
 from typing import AsyncGenerator, Dict, Any, List, Optional
 from app.services.llm.gemini_service import GeminiService
 from app.services.knowledge.knowledge_service import knowledge_service
+from app.services.chat.retrieval import company_retrieval_service
 from app.services.storage.sqlite_repository import repo
 from app.core.security import UserRole, AuthUser, get_allowed_classifications
 from app.models.chat import ActionProposal, ExecuteActionRequest, ExecuteActionResult
@@ -22,120 +23,34 @@ class ChatService:
         history: Optional[List[Dict[str, Any]]] = None,
         workspace_context: Optional[str] = None,
     ) -> AsyncGenerator[str, None]:
-        user_role = user.role
-        user_name = user.full_name
-        user_department = user.department
+        user_name = user.full_name or "Authorized Officer"
+        user_department = user.department or "Operations"
 
-        # Check permissions & filter knowledge items
-        allowed_classes = get_allowed_classifications(user_role)
-        all_matches = repo.list_knowledge(query=message)
-        authorized_matches = [k for k in all_matches if k.classification in allowed_classes]
+        # Dynamically retrieve verified company context via CompanyRetrievalService
+        retrieval = company_retrieval_service.build_context(
+            query=message,
+            user=user,
+            workspace_context=workspace_context,
+        )
 
-        # Detect if user attempted to query restricted documents beyond their role
-        restricted_attempt = len(all_matches) > len(authorized_matches) and user_role in (UserRole.GUEST, UserRole.MEMBER)
-
-        context_sources = [k.title for k in authorized_matches[:3]]
-        if not context_sources:
-            context_sources = ["Solian Wolves Organizational Memory", "Operating Cadence Registry"]
-
-        # Fetch relevant operational context
-        projects = repo.list_projects()
-        tasks = repo.list_tasks()
-        meetings = repo.list_meetings()
-
-        # Financial context grounding (for authorized organizational members)
-        financial_summary = None
-        if user_role in (UserRole.MEMBER, UserRole.ADMIN, UserRole.OWNER):
-            try:
-                fin_stats = repo.get_financial_overview()
-                financial_summary = {
-                    "total_recorded_balances": fin_stats.total_recorded_balances,
-                    "monthly_income": fin_stats.monthly_income,
-                    "monthly_expenditure": fin_stats.monthly_expenditure,
-                    "outstanding_receivables": fin_stats.outstanding_receivables,
-                    "outstanding_payables": fin_stats.outstanding_payables,
-                    "budget_total_allocated": fin_stats.budget_total_allocated,
-                    "budget_total_spent": fin_stats.budget_total_spent,
-                    "budget_utilization_percentage": fin_stats.budget_utilization_percentage,
-                    "pending_approvals_count": fin_stats.pending_approvals_count,
-                    "active_accounts": [
-                        {"name": a.name, "type": a.account_type, "balance": a.current_balance, "currency": a.currency}
-                        for a in fin_stats.accounts if a.status == "active"
-                    ],
-                }
-            except Exception:
-                financial_summary = None
-
-        operational_context = {
-            "financial_intelligence": financial_summary,
-            "verified_leadership": [
-                {"name": "Ian Momanyi Nyakundi", "title": "Chief Executive Officer"},
-                {"name": "Hillary Onchwati Isaiah", "title": "Chief Operating Officer"},
-                {"name": "Alice Moraa Nyakundi", "title": "Chief Financial Officer"},
-                {"name": "Noella Maraka Kaatho", "title": "Executive Director / Finance & Administration"},
-                {"name": "Solomon Nyangweso Omwenga", "title": "Chief Technology Officer"},
-            ],
-            "upcoming_meetings": [
-                {
-                    "title": m.title,
-                    "type": m.meeting_type,
-                    "date": m.date,
-                    "time": m.time,
-                    "organizer": m.organizer_name,
-                    "status": m.status,
-                }
-                for m in meetings[:5]
-            ],
-            "projects": [
-                {
-                    "name": p.name,
-                    "status": p.status,
-                    "progress": p.progress,
-                    "lead": p.lead,
-                    "due_date": p.due_date,
-                    "priority": p.priority,
-                    "client": p.client,
-                    "department": p.department,
-                }
-                for p in projects
-            ],
-            "tasks": [
-                {
-                    "title": t.title,
-                    "status": t.status,
-                    "priority": t.priority,
-                    "assignee": t.assignee,
-                    "due_date": t.due_date,
-                    "project_name": t.project_name,
-                }
-                for t in tasks
-            ],
-        }
-
-        knowledge_context = [
-            {
-                "title": k.title,
-                "category": k.category,
-                "classification": k.classification,
-                "snippet": k.snippet,
-                "department": k.department,
-                "author": k.author,
-            }
-            for k in authorized_matches[:3]
-        ]
+        context_sources = retrieval["context_sources"]
+        knowledge_context = retrieval["knowledge_context"]
+        restricted_attempt = retrieval["restricted_attempt"]
+        structured_context = retrieval["formatted_prompt_context"]
 
         # Stream response chunks
         async for chunk in self.llm.stream_executive_response(
             prompt=message,
-            user_role=user_role.value,
-            user_name=user_name,
-            user_department=user_department,
+            user_role=user.role.value,
+            user_name=user.full_name,
+            user_department=user.department,
             context_sources=context_sources,
-            operational_context=operational_context,
+            operational_context=retrieval["verified_facts"],
             knowledge_context=knowledge_context,
             history=history,
             workspace_context=workspace_context,
             restricted_attempt=restricted_attempt,
+            structured_context=structured_context,
         ):
             payload = json.dumps({"content": chunk})
             yield f"data: {payload}\n\n"

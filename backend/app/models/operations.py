@@ -138,6 +138,16 @@ class ClientAccountCreate(BaseModel):
     notes: Optional[str] = None
 
 
+class ClientAccountUpdate(BaseModel):
+    company_name: Optional[str] = Field(None, min_length=2, max_length=150)
+    contact_person: Optional[str] = Field(None, min_length=2, max_length=100)
+    email: Optional[str] = Field(None, min_length=5, max_length=100)
+    status: Optional[str] = None
+    contract_value: Optional[str] = None
+    lead_account_manager: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class CorporateDocument(BaseModel):
     id: str
     organization_id: str = "org-solian-wolves"
@@ -149,6 +159,14 @@ class CorporateDocument(BaseModel):
     owner: str
     department: Optional[str] = None
     is_demo: bool = False
+
+
+class CorporateDocumentCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    type: str = Field(default="PDF", max_length=50)
+    size: str = Field(default="0 KB", max_length=50)
+    classification: str = Field(default="Internal", max_length=50)
+    department: Optional[str] = None
 
 
 class WorkflowRule(BaseModel):

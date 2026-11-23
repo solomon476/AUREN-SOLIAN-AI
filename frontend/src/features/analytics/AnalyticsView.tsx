@@ -93,56 +93,56 @@ export const AnalyticsView: React.FC = () => {
 
           <div className="p-6 md:p-8 rounded-2xl bg-solian-card border border-solian-border space-y-5 shadow-card-elevation">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-              <Activity className="w-4 h-4 text-gold-500" /> Institutional AI Query Density by Department
+              <Activity className="w-4 h-4 text-gold-500" /> Institutional Operational Density by Department
             </h3>
             <div className="space-y-4 text-xs">
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
                   <span className="font-semibold">Technology & AI Systems (TECH)</span>
-                  <span className="font-mono text-gold-400 font-bold">35% (Architecture & AI Systems)</span>
+                  <span className="font-mono text-gold-400 font-bold">{metrics?.departmentDensity?.TECH ?? 0}% (Architecture & AI Systems)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '35%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.departmentDensity?.TECH ?? 0}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
                   <span className="font-semibold">Operations & Delivery (OPS)</span>
-                  <span className="font-mono text-gold-400 font-bold">30% (Cadences & Delivery Protocols)</span>
+                  <span className="font-mono text-gold-400 font-bold">{metrics?.departmentDensity?.OPS ?? 0}% (Cadences & Delivery Protocols)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '30%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.departmentDensity?.OPS ?? 0}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
                   <span className="font-semibold">Finance & Corporate Treasury (FIN)</span>
-                  <span className="font-mono text-gold-400 font-bold">15% (Treasury & Cash Flow)</span>
+                  <span className="font-mono text-gold-400 font-bold">{metrics?.departmentDensity?.FIN ?? 0}% (Treasury & Cash Flow)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '15%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.departmentDensity?.FIN ?? 0}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
                   <span className="font-semibold">Executive Leadership & Governance (EXEC)</span>
-                  <span className="font-mono text-gold-400 font-bold">12% (Strategic Synthesis & Directives)</span>
+                  <span className="font-mono text-gold-400 font-bold">{metrics?.departmentDensity?.EXEC ?? 0}% (Strategic Synthesis & Directives)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '12%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.departmentDensity?.EXEC ?? 0}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
                   <span className="font-semibold">Administration & Corporate Services (ADMIN)</span>
-                  <span className="font-mono text-gold-400 font-bold">8% (Compliance & Facilities)</span>
+                  <span className="font-mono text-gold-400 font-bold">{metrics?.departmentDensity?.ADMIN ?? 0}% (Compliance & Facilities)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '8%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full transition-all duration-500" style={{ width: `${metrics?.departmentDensity?.ADMIN ?? 0}%` }}></div>
                 </div>
               </div>
             </div>

@@ -15,6 +15,7 @@ from app.core.security import UserRole
 from app.models.organization import (
     Department,
     DepartmentCreate,
+    DepartmentUpdate,
     Team,
     OrganizationMember,
     OrganizationProfile,
@@ -36,7 +37,9 @@ from app.models.operations import (
     TaskUpdate,
     ClientAccount,
     ClientAccountCreate,
+    ClientAccountUpdate,
     CorporateDocument,
+    CorporateDocumentCreate,
     WorkflowRule,
     WorkflowRuleCreate,
     CompanyActivityEvent,
@@ -600,7 +603,7 @@ class EnterpriseRepository:
                 "scheduled", "2026-11-22T11:00:00Z", 1
             ),
         ]
-        cur.executemany("INSERT INTO meetings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", meetings)
+        cur.executemany("INSERT OR IGNORE INTO meetings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", meetings)
 
         # 15. Discussions (DEMO)
         discussions = [
@@ -629,7 +632,7 @@ class EnterpriseRepository:
                 None, 0, "2026-11-22T08:30:00Z", 1
             ),
         ]
-        cur.executemany("INSERT INTO discussions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", discussions)
+        cur.executemany("INSERT OR IGNORE INTO discussions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", discussions)
 
         # 16. Notifications (DEMO)
         notifications = [
@@ -637,7 +640,7 @@ class EnterpriseRepository:
             ("notif-2", "org-solian-wolves", "usr-1", "Task Assigned: RLS Tenant Isolation", "You have been assigned to verify RLS tenant isolation across all enterprise tables.", "task_assigned", "tasks", "t-101", 0, "urgent", "2026-11-22T09:30:00Z"),
             ("notif-3", "org-solian-wolves", "all", "Platform Upgrade Notice", "AUREN SOLIAN platform v2.5 unified workspace is active.", "announcement", None, None, 1, "normal", "2026-11-21T12:00:00Z"),
         ]
-        cur.executemany("INSERT INTO notifications VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", notifications)
+        cur.executemany("INSERT OR IGNORE INTO notifications VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", notifications)
 
     def _seed_finance_data(self, conn: sqlite3.Connection):
         cur = conn.cursor()
@@ -664,7 +667,7 @@ class EnterpriseRepository:
                 1, now_iso, now_iso
             ),
         ]
-        cur.executemany("INSERT INTO financial_accounts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", accounts)
+        cur.executemany("INSERT OR REPLACE INTO financial_accounts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", accounts)
 
         # 2. Invoices (24 cols)
         invoices = [
@@ -689,7 +692,7 @@ class EnterpriseRepository:
                 "Net 45 days. Standard enterprise terms.", "Alice Moraa Nyakundi", 1, now_iso, now_iso
             ),
         ]
-        cur.executemany("INSERT INTO invoices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", invoices)
+        cur.executemany("INSERT OR REPLACE INTO invoices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", invoices)
 
         # 3. Accounts Payable (20 cols)
         payables = [
@@ -708,7 +711,7 @@ class EnterpriseRepository:
                 1, now_iso, now_iso
             ),
         ]
-        cur.executemany("INSERT INTO accounts_payable VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", payables)
+        cur.executemany("INSERT OR REPLACE INTO accounts_payable VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", payables)
 
         # 4. Financial Budgets (19 cols)
         budgets = [
@@ -725,7 +728,7 @@ class EnterpriseRepository:
                 "Operational maintenance, facility lease, utilities, and communications.", 1, now_iso, now_iso
             ),
         ]
-        cur.executemany("INSERT INTO financial_budgets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", budgets)
+        cur.executemany("INSERT OR REPLACE INTO financial_budgets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", budgets)
 
         # 5. Financial Transactions (24 cols)
         transactions = [
@@ -758,7 +761,7 @@ class EnterpriseRepository:
                 "Authorized internal liquidity transfer to replenish operating mobile till.", 1, now_iso, now_iso
             ),
         ]
-        cur.executemany("INSERT INTO financial_transactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", transactions)
+        cur.executemany("INSERT OR REPLACE INTO financial_transactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", transactions)
 
         # 6. Expense & Procurement Requests (23 cols)
         requests = [
@@ -778,10 +781,18 @@ class EnterpriseRepository:
                 now_iso, None, None, 1, now_iso, now_iso
             ),
         ]
-        cur.executemany("INSERT INTO expense_requests VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", requests)
+        cur.executemany("INSERT OR REPLACE INTO expense_requests VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", requests)
+        conn.commit()
 
-    def _seed_initial_data(self, conn: sqlite3.Connection):
+    def _seed_initial_data(self, conn: Optional[sqlite3.Connection] = None):
+        owns_conn = False
+        if conn is None:
+            conn = self._get_connection()
+            owns_conn = True
         cur = conn.cursor()
+
+        # Seed finance data (accounts, invoices, payables, budgets, transactions)
+        self._seed_finance_data(conn)
 
         # 1. Organization: Solian Wolves (Neutral, unverified fields set to None)
         cur.execute("""
@@ -812,7 +823,7 @@ class EnterpriseRepository:
             ("op-3", "org-solian-wolves", "[DEMO Template] Strict RBAC & Boundary Isolation", "Institutional and customer data must strictly respect multi-tenant boundaries and security clearance tiers.", 1),
             ("op-4", "org-solian-wolves", "[DEMO Template] Velocity Through Discipline", "Standard Operating Procedures (SOPs) are living operational assets reviewed regularly to prevent drift.", 1),
         ]
-        cur.executemany("INSERT INTO operating_principles VALUES (?, ?, ?, ?, ?);", principles)
+        cur.executemany("INSERT OR REPLACE INTO operating_principles VALUES (?, ?, ?, ?, ?);", principles)
 
         # 3. Operating Cadences (DEMO Templates)
         cadences = [
@@ -821,7 +832,7 @@ class EnterpriseRepository:
             ("cad-3", "org-solian-wolves", "[DEMO Template] Client Operations Triage", "Daily (10:00 UTC)", "Strategic Accounts & Client Leads", "Review client escalation tickets, SLA adherence, and contract milestones.", "[DEMO] Marcus Vance", 1),
             ("cad-4", "org-solian-wolves", "[DEMO Template] Institutional Knowledge Audit", "Monthly (First Friday)", "Compliance & Data Intelligence", "Evaluate stale documentation, update SOP classifications, and audit RBAC matrices.", "[DEMO] Elena Rostova", 1),
         ]
-        cur.executemany("INSERT INTO operating_cadences VALUES (?, ?, ?, ?, ?, ?, ?, ?);", cadences)
+        cur.executemany("INSERT OR REPLACE INTO operating_cadences VALUES (?, ?, ?, ?, ?, ?, ?, ?);", cadences)
 
         # 4. Departments (DEMO Templates)
         departments = [
@@ -831,7 +842,7 @@ class EnterpriseRepository:
             ("dept-arch", "org-solian-wolves", "[DEMO Template] Product Architecture & Governance", "ARCH", "Security architecture, multi-tenant RBAC boundaries, and regulatory SOC2 compliance.", "tm-4", "[DEMO] Elena Rostova", 1, 1, 1),
             ("dept-data", "org-solian-wolves", "[DEMO Template] Data Intelligence & Knowledge Systems", "DATA", "Vector memory stores, institutional SOP ingestion, and semantic search pipelines.", "tm-5", "[DEMO] David Ochieng", 1, 0, 1),
         ]
-        cur.executemany("INSERT INTO departments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", departments)
+        cur.executemany("INSERT OR REPLACE INTO departments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", departments)
 
         # 5. Teams (DEMO Templates)
         teams = [
@@ -841,7 +852,7 @@ class EnterpriseRepository:
             ("team-4", "org-solian-wolves", "dept-arch", "[DEMO Template] Product Architecture & Governance", "[DEMO] Risk & Compliance Operations", "[DEMO] Elena Rostova", "Data classification, RBAC enforcement, and boundary verification.", "Security & Compliance", 1, 1),
             ("team-5", "org-solian-wolves", "dept-data", "[DEMO Template] Data Intelligence & Knowledge Systems", "[DEMO] Knowledge Pipeline Team", "[DEMO] David Ochieng", "Semantic indexing, corporate document ingestion, and search latency.", "Knowledge Retrieval", 1, 1),
         ]
-        cur.executemany("INSERT INTO teams VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", teams)
+        cur.executemany("INSERT OR REPLACE INTO teams VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", teams)
 
         # 6. Members
         # tm-1 is verified Owner (Solomon K.); tm-2 through tm-6 are clearly labeled [DEMO] fixtures
@@ -890,7 +901,7 @@ class EnterpriseRepository:
             ),
         ]
         cur.executemany("""
-        INSERT INTO members (
+        INSERT OR REPLACE INTO members (
             id, user_id, organization_id, name, email, role, title,
             department_id, department, team_id, team, responsibilities,
             reports_to_id, reports_to_name, status, assigned_projects,
@@ -955,7 +966,7 @@ class EnterpriseRepository:
                 json.dumps(["demo", "tasks", "delegation", "ai-proposals", "governance"]), 1
             ),
         ]
-        cur.executemany("INSERT INTO knowledge_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", knowledge)
+        cur.executemany("INSERT OR REPLACE INTO knowledge_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", knowledge)
 
         # 8. Projects (DEMO)
         projects = [
@@ -980,7 +991,7 @@ class EnterpriseRepository:
                 "Demonstration automated intake, classification, and routing of Tier-1 escalations.", 1
             ),
         ]
-        cur.executemany("INSERT INTO projects VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", projects)
+        cur.executemany("INSERT OR REPLACE INTO projects VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", projects)
 
         # 9. Tasks (DEMO)
         tasks = [
@@ -1009,7 +1020,7 @@ class EnterpriseRepository:
                 "[DEMO] David Ochieng", "2026-11-20", "Data Intelligence & Knowledge Systems", "2026-11-18", 1
             ),
         ]
-        cur.executemany("INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", tasks)
+        cur.executemany("INSERT OR REPLACE INTO tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", tasks)
 
         # 10. Clients (DEMO)
         clients = [
@@ -1017,7 +1028,7 @@ class EnterpriseRepository:
             ("c-2", "org-solian-wolves", "[DEMO] Aether Capital Partners", "Beatrice Holt (Demo)", "demo-holt@aethercap.test", "retained", "$360,000 / yr (Demo)", "Solomon K.", "Demonstration private equity partner for testing retained accounts.", 1),
             ("c-3", "org-solian-wolves", "[DEMO] Vanguard Industrial Systems", "Robert Drake (Demo)", "demo-drake@vanguardind.test", "contract_pending", "$180,000 / yr (Demo)", "[DEMO] Marcus Vance", "Demonstration industrial client in contract review stage.", 1),
         ]
-        cur.executemany("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", clients)
+        cur.executemany("INSERT OR REPLACE INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", clients)
 
         # 11. Documents (DEMO)
         documents = [
@@ -1025,7 +1036,7 @@ class EnterpriseRepository:
             ("doc-2", "org-solian-wolves", "[DEMO] Architecture & Data Security Whitepaper.pdf", "PDF Document", "5.1 MB", "Internal", "2026-11-14", "Architecture", "Engineering & AI Operations", 1),
             ("doc-3", "org-solian-wolves", "[DEMO] Q3 Operations & Financial Synthesis.xlsx", "Spreadsheet", "1.2 MB", "Restricted", "2026-10-31", "Executive Board", "Executive Leadership & Strategy", 1),
         ]
-        cur.executemany("INSERT INTO documents VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", documents)
+        cur.executemany("INSERT OR REPLACE INTO documents VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", documents)
 
         # 12. Workflows (DEMO)
         workflows = [
@@ -1033,7 +1044,7 @@ class EnterpriseRepository:
             ("wf-2", "org-solian-wolves", "[DEMO] Weekly Executive Intelligence Digest", "Every Friday at 17:00 UTC", "Compile project velocities, unblockers & budget status", "active", 52, "Executive Leadership & Strategy", 1),
             ("wf-3", "org-solian-wolves", "[DEMO] Knowledge Drift & Stale Policy Audit", "Document untouched for > 90 days", "Assign verification ticket to department author", "active", 18, "Product Architecture & Governance", 1),
         ]
-        cur.executemany("INSERT INTO workflows VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", workflows)
+        cur.executemany("INSERT OR REPLACE INTO workflows VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", workflows)
 
         # 13. Company Activities (DEMO)
         activities = [
@@ -1043,7 +1054,7 @@ class EnterpriseRepository:
             ("act-4", "org-solian-wolves", "Solomon K.", "milestone", "[DEMO] Operations Briefing Prepared", "Demonstration briefing entry.", "2026-11-21 14:00 UTC", "dashboard", 1),
             ("act-5", "org-solian-wolves", "[DEMO] Elena Rostova", "doc_uploaded", "[DEMO] Compliance Whitepaper Uploaded", "Demonstration whitepaper upload in confidential registry.", "2026-11-20 11:20 UTC", "documents", 1),
         ]
-        cur.executemany("INSERT INTO company_activities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", activities)
+        cur.executemany("INSERT OR REPLACE INTO company_activities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", activities)
 
         # 14. Meetings (DEMO)
         meetings = [
@@ -1095,7 +1106,7 @@ class EnterpriseRepository:
                 "scheduled", "2026-11-22T11:00:00Z", 1
             ),
         ]
-        cur.executemany("INSERT INTO meetings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", meetings)
+        cur.executemany("INSERT OR IGNORE INTO meetings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", meetings)
 
         # 15. Discussions (DEMO)
         discussions = [
@@ -1124,7 +1135,7 @@ class EnterpriseRepository:
                 None, 0, "2026-11-22T08:30:00Z", 1
             ),
         ]
-        cur.executemany("INSERT INTO discussions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", discussions)
+        cur.executemany("INSERT OR IGNORE INTO discussions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", discussions)
 
         # 16. Notifications (DEMO)
         notifications = [
@@ -1132,7 +1143,10 @@ class EnterpriseRepository:
             ("notif-2", "org-solian-wolves", "usr-1", "Task Assigned: RLS Tenant Isolation", "You have been assigned to verify RLS tenant isolation across all enterprise tables.", "task_assigned", "tasks", "t-101", 0, "urgent", "2026-11-22T09:30:00Z"),
             ("notif-3", "org-solian-wolves", "all", "Platform Upgrade Notice", "AUREN SOLIAN platform v2.5 unified workspace is active.", "announcement", None, None, 1, "normal", "2026-11-21T12:00:00Z"),
         ]
-        cur.executemany("INSERT INTO notifications VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", notifications)
+        cur.executemany("INSERT OR IGNORE INTO notifications VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", notifications)
+        if owns_conn:
+            conn.commit()
+            conn.close()
 
     def _bootstrap_production_foundation(self, conn: sqlite3.Connection):
         """Bootstraps clean production organizational foundation with verified statutory officers and zero fake demo data."""
@@ -1227,7 +1241,7 @@ class EnterpriseRepository:
             ),
         ]
         cur.executemany("""
-        INSERT INTO members (
+        INSERT OR REPLACE INTO members (
             id, user_id, organization_id, name, email, role, title,
             department_id, department, team_id, team, responsibilities,
             reports_to_id, reports_to_name, status, assigned_projects,
@@ -1237,6 +1251,8 @@ class EnterpriseRepository:
 
     def purge_demo_data(self) -> Dict[str, int]:
         """Purges all demo rows (flagged with is_demo=1 or [DEMO]) from the database."""
+        if settings.is_production:
+            raise RuntimeError("DEMO PURGE VIOLATION: purge_demo_data() is strictly prohibited in production environments.")
         conn = self._get_connection()
         cur = conn.cursor()
         cur.execute("PRAGMA foreign_keys = OFF;")
@@ -1429,26 +1445,91 @@ class EnterpriseRepository:
         import datetime
         with self._lock:
             conn = self._get_connection()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT * FROM departments WHERE code = ? OR name = ? LIMIT 1;", (dept.code.upper(), dept.name))
+                existing = cur.fetchone()
+                if existing:
+                    cur.execute("""
+                    UPDATE departments SET name = ?, description = ?, lead_name = ? WHERE id = ?;
+                    """, (dept.name, dept.description, dept.lead_name, existing["id"]))
+                    conn.commit()
+                    return Department(
+                        id=existing["id"],
+                        organization_id=existing["organization_id"],
+                        name=dept.name,
+                        code=existing["code"],
+                        description=dept.description,
+                        lead_id=existing["lead_id"],
+                        lead_name=dept.lead_name,
+                        member_count=existing["member_count"],
+                        active_initiatives=existing["active_initiatives"],
+                        is_demo=bool(existing["is_demo"]),
+                    )
+                d_id = f"dept-{int(datetime.datetime.now().timestamp() * 1000) % 100000:05d}"
+                cur.execute("""
+                INSERT INTO departments (id, organization_id, name, code, description, lead_id, lead_name, member_count, active_initiatives, is_demo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0);
+                """, (d_id, "org-solian-wolves", dept.name, dept.code.upper(), dept.description, None, dept.lead_name, 1, 0))
+                conn.commit()
+                return Department(
+                    id=d_id,
+                    organization_id="org-solian-wolves",
+                    name=dept.name,
+                    code=dept.code.upper(),
+                    description=dept.description,
+                    lead_id=None,
+                    lead_name=dept.lead_name,
+                    member_count=1,
+                    active_initiatives=0,
+                    is_demo=False,
+                )
+            finally:
+                conn.close()
+
+    def get_department(self, dept_id: str) -> Optional[Department]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM departments WHERE id = ? OR code = ? LIMIT 1;", (dept_id, dept_id.upper()))
+        r = cur.fetchone()
+        conn.close()
+        if not r:
+            return None
+        return Department(
+            id=r["id"],
+            organization_id=r["organization_id"],
+            name=r["name"],
+            code=r["code"],
+            description=r["description"],
+            lead_id=r["lead_id"],
+            lead_name=r["lead_name"],
+            member_count=r["member_count"],
+            active_initiatives=r["active_initiatives"],
+            is_demo=bool(r["is_demo"]),
+        )
+
+    def update_department(self, dept_id: str, updates: dict) -> Optional[Department]:
+        with self._lock:
+            conn = self._get_connection()
             cur = conn.cursor()
-            d_id = f"dept-{int(datetime.datetime.now().timestamp() * 1000) % 100000:05d}"
-            cur.execute("""
-            INSERT INTO departments (id, organization_id, name, code, description, lead_id, lead_name, member_count, active_initiatives, is_demo)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0);
-            """, (d_id, "org-solian-wolves", dept.name, dept.code.upper(), dept.description, None, dept.lead_name, 1, 0))
-            conn.commit()
+            cur.execute("SELECT * FROM departments WHERE id = ? OR code = ? LIMIT 1;", (dept_id, dept_id.upper()))
+            row = cur.fetchone()
+            if not row:
+                conn.close()
+                return None
+            real_id = row["id"]
+            fields = []
+            values = []
+            for k, v in updates.items():
+                if k in ("name", "description", "lead_name", "lead_id", "member_count", "active_initiatives"):
+                    fields.append(f"{k} = ?")
+                    values.append(v)
+            if fields:
+                values.append(real_id)
+                cur.execute(f"UPDATE departments SET {', '.join(fields)} WHERE id = ?;", tuple(values))
+                conn.commit()
             conn.close()
-            return Department(
-                id=d_id,
-                organization_id="org-solian-wolves",
-                name=dept.name,
-                code=dept.code.upper(),
-                description=dept.description,
-                lead_id=None,
-                lead_name=dept.lead_name,
-                member_count=1,
-                active_initiatives=0,
-                is_demo=False,
-            )
+            return self.get_department(real_id)
 
     def list_teams(self, department_id: Optional[str] = None) -> List[Team]:
         conn = self._get_connection()
@@ -1880,6 +1961,39 @@ class EnterpriseRepository:
                 is_demo=bool(updated["is_demo"]),
             )
 
+    def get_project(self, project_id: str) -> Optional[Project]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM projects WHERE id = ? LIMIT 1;", (project_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return None
+        return Project(
+            id=row["id"],
+            organization_id=row["organization_id"],
+            name=row["name"],
+            client=row["client"],
+            status=row["status"],
+            progress=row["progress"],
+            lead=row["lead"],
+            due_date=row["due_date"],
+            priority=row["priority"],
+            department=row["department"],
+            description=row["description"],
+            is_demo=bool(row["is_demo"]),
+        )
+
+    def delete_project(self, project_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM projects WHERE id = ?;", (project_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
+
     def list_tasks(self, status: Optional[str] = None) -> List[Task]:
         conn = self._get_connection()
         cur = conn.cursor()
@@ -1992,6 +2106,40 @@ class EnterpriseRepository:
                     return t
             return None
 
+    def get_task(self, task_id: str) -> Optional[Task]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM tasks WHERE id = ? LIMIT 1;", (task_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return None
+        return Task(
+            id=row["id"],
+            organization_id=row["organization_id"],
+            title=row["title"],
+            description=row["description"] or "",
+            project_id=row["project_id"],
+            project_name=row["project_name"],
+            status=row["status"],
+            priority=row["priority"],
+            assignee=row["assignee"],
+            due_date=row["due_date"],
+            department=row["department"],
+            created_at=row["created_at"],
+            is_demo=bool(row["is_demo"]),
+        )
+
+    def delete_task(self, task_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM tasks WHERE id = ?;", (task_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
+
     # -------------------------------------------------------------------------
     # Clients & Documents & Workflows
     # -------------------------------------------------------------------------
@@ -2066,6 +2214,37 @@ class EnterpriseRepository:
                 is_demo=False,
             )
 
+    def update_client(self, client_id: str, updates: dict) -> Optional[ClientAccount]:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM clients WHERE id = ? LIMIT 1;", (client_id,))
+            if not cur.fetchone():
+                conn.close()
+                return None
+            fields = []
+            values = []
+            for k, v in updates.items():
+                if k in ("company_name", "contact_person", "email", "status", "contract_value", "lead_account_manager", "notes"):
+                    fields.append(f"{k} = ?")
+                    values.append(v)
+            if fields:
+                values.append(client_id)
+                cur.execute(f"UPDATE clients SET {', '.join(fields)} WHERE id = ?;", tuple(values))
+                conn.commit()
+            conn.close()
+            return self.get_client(client_id)
+
+    def delete_client(self, client_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM clients WHERE id = ?;", (client_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
+
     def list_documents(self, allowed_classifications: Optional[List[str]] = None) -> List[CorporateDocument]:
         conn = self._get_connection()
         cur = conn.cursor()
@@ -2094,6 +2273,73 @@ class EnterpriseRepository:
             )
             for r in rows
         ]
+
+    def get_document(self, document_id: str) -> Optional[CorporateDocument]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM documents WHERE id = ? LIMIT 1;", (document_id,))
+        r = cur.fetchone()
+        conn.close()
+        if not r:
+            return None
+        return CorporateDocument(
+            id=r["id"],
+            organization_id=r["organization_id"],
+            name=r["name"],
+            type=r["type"],
+            size=r["size"],
+            classification=r["classification"],
+            updated_at=r["updated_at"],
+            owner=r["owner"],
+            department=r["department"],
+            is_demo=bool(r["is_demo"]),
+        )
+
+    def create_document(self, doc: CorporateDocumentCreate, owner: str = "AUREN SOLIAN") -> CorporateDocument:
+        import datetime, uuid
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            doc_id = f"doc-{datetime.datetime.now().strftime('%m%d%H%M%S')}-{uuid.uuid4().hex[:4]}"
+            today = datetime.datetime.now().strftime("%Y-%m-%d")
+            cur.execute("""
+            INSERT INTO documents (id, organization_id, name, type, size, classification, updated_at, owner, department, is_demo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0);
+            """, (
+                doc_id, "org-solian-wolves", doc.name, doc.type, doc.size, doc.classification, today, owner, doc.department
+            ))
+            self._log_activity_raw(
+                conn,
+                actor_name=owner,
+                action_type="doc_uploaded",
+                title=f"Document Registered: {doc.name}",
+                description=f"Corporate document registered under classification '{doc.classification}'.",
+                module="documents"
+            )
+            conn.commit()
+            conn.close()
+            return CorporateDocument(
+                id=doc_id,
+                organization_id="org-solian-wolves",
+                name=doc.name,
+                type=doc.type,
+                size=doc.size,
+                classification=doc.classification,
+                updated_at=today,
+                owner=owner,
+                department=doc.department,
+                is_demo=False,
+            )
+
+    def delete_document(self, document_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM documents WHERE id = ?;", (document_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
 
     def list_workflows(self) -> List[WorkflowRule]:
         conn = self._get_connection()
@@ -2139,6 +2385,54 @@ class EnterpriseRepository:
                 department=wf.department,
                 is_demo=False,
             )
+
+    def get_workflow(self, workflow_id: str) -> Optional[WorkflowRule]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM workflows WHERE id = ?;", (workflow_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return None
+        return WorkflowRule(
+            id=row["id"],
+            organization_id=row["organization_id"],
+            title=row["title"],
+            trigger=row["trigger"],
+            action=row["action"],
+            status=row["status"],
+            execution_count=row["execution_count"],
+            department=row["department"],
+            is_demo=bool(row["is_demo"]),
+        )
+
+    def update_workflow_status(self, workflow_id: str, status: str) -> Optional[WorkflowRule]:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE workflows SET status = ? WHERE id = ?;", (status, workflow_id))
+            conn.commit()
+            conn.close()
+            return self.get_workflow(workflow_id)
+
+    def trigger_workflow(self, workflow_id: str) -> Optional[WorkflowRule]:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE workflows SET execution_count = execution_count + 1 WHERE id = ?;", (workflow_id,))
+            conn.commit()
+            conn.close()
+            return self.get_workflow(workflow_id)
+
+    def delete_workflow(self, workflow_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM workflows WHERE id = ?;", (workflow_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
 
     # -------------------------------------------------------------------------
     # Activities & Logging
@@ -2261,7 +2555,8 @@ class EnterpriseRepository:
                 )
             )
 
-        velocity_val = "+18.4%" if projects else "0%"
+        completed_tasks = [t for t in tasks if t.status == "completed"]
+        velocity_val = f"{int(round(len(completed_tasks) / len(tasks) * 100))}%" if tasks else "100%"
 
         return DashboardStats(
             active_staff_count=len(members),
@@ -2364,54 +2659,56 @@ class EnterpriseRepository:
     def create_meeting(self, meeting: MeetingCreate, organizer_name: str, organizer_id: Optional[str] = None) -> Meeting:
         with self._lock:
             conn = self._get_connection()
-            cur = conn.cursor()
-            meeting_id = f"mtg-{uuid.uuid4().hex[:8]}"
-            now_iso = datetime.now(timezone.utc).isoformat()
-            agenda_json = json.dumps(meeting.agenda or [])
-            attendees_json = json.dumps(meeting.attendees or [])
-            cur.execute(
-                """
-                INSERT INTO meetings (
-                    id, organization_id, title, meeting_type, organizer_name, organizer_id,
-                    date, time, duration_minutes, location, virtual_link,
-                    related_project_id, related_client_id, agenda, discussion_notes,
-                    decisions, attendees, action_items, status, created_at, is_demo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                """,
-                (
-                    meeting_id,
-                    "org-solian-wolves",
-                    meeting.title,
-                    meeting.meeting_type,
-                    organizer_name,
-                    organizer_id,
-                    meeting.date,
-                    meeting.time,
-                    meeting.duration_minutes,
-                    meeting.location,
-                    meeting.virtual_link,
-                    meeting.related_project_id,
-                    meeting.related_client_id,
-                    agenda_json,
-                    "",
-                    json.dumps([]),
-                    attendees_json,
-                    json.dumps([]),
-                    "scheduled",
-                    now_iso,
-                    0,
-                ),
-            )
-            self._log_activity_raw(
-                conn,
-                actor_name=organizer_name,
-                action_type="meeting_scheduled",
-                title=f"Scheduled Meeting: {meeting.title}",
-                description=f"Meeting '{meeting.title}' scheduled for {meeting.date} at {meeting.time}.",
-                module="meetings",
-            )
-            conn.commit()
-            conn.close()
+            try:
+                cur = conn.cursor()
+                meeting_id = f"mtg-{uuid.uuid4().hex[:8]}"
+                now_iso = datetime.now(timezone.utc).isoformat()
+                agenda_json = json.dumps(meeting.agenda or [])
+                attendees_json = json.dumps(meeting.attendees or [])
+                cur.execute(
+                    """
+                    INSERT INTO meetings (
+                        id, organization_id, title, meeting_type, organizer_name, organizer_id,
+                        date, time, duration_minutes, location, virtual_link,
+                        related_project_id, related_client_id, agenda, discussion_notes,
+                        decisions, attendees, action_items, status, created_at, is_demo
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        meeting_id,
+                        "org-solian-wolves",
+                        meeting.title,
+                        meeting.meeting_type,
+                        organizer_name,
+                        organizer_id,
+                        meeting.date,
+                        meeting.time,
+                        meeting.duration_minutes,
+                        meeting.location,
+                        meeting.virtual_link,
+                        meeting.related_project_id,
+                        meeting.related_client_id,
+                        agenda_json,
+                        "",
+                        json.dumps([]),
+                        attendees_json,
+                        json.dumps([]),
+                        "scheduled",
+                        now_iso,
+                        0,
+                    ),
+                )
+                self._log_activity_raw(
+                    conn,
+                    actor_name=organizer_name,
+                    action_type="meeting_scheduled",
+                    title=f"Scheduled Meeting: {meeting.title}",
+                    description=f"Meeting '{meeting.title}' scheduled for {meeting.date} at {meeting.time}.",
+                    module="meetings",
+                )
+                conn.commit()
+            finally:
+                conn.close()
             return self.get_meeting(meeting_id)
 
     def update_meeting(self, meeting_id: str, update: MeetingUpdate) -> Optional[Meeting]:
@@ -2452,6 +2749,16 @@ class EnterpriseRepository:
                 conn.commit()
             conn.close()
             return self.get_meeting(meeting_id)
+
+    def delete_meeting(self, meeting_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM meetings WHERE id = ?;", (meeting_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
 
     def convert_meeting_action_to_task(self, meeting_id: str, action_item_id: str) -> Optional[Task]:
         meeting = self.get_meeting(meeting_id)
@@ -2684,6 +2991,26 @@ class EnterpriseRepository:
                 created_at=now_iso,
                 is_demo=False,
             )
+
+    def get_discussion_message(self, message_id: str) -> Optional[DiscussionMessage]:
+        conn = self._get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM discussions WHERE id = ? LIMIT 1;", (message_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return None
+        return self._row_to_discussion(row)
+
+    def delete_discussion_message(self, message_id: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM discussions WHERE id = ?;", (message_id,))
+            deleted = cur.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
 
     def list_discussion_channels(self) -> List[DiscussionChannel]:
         channels = [

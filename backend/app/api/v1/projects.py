@@ -64,6 +64,30 @@ async def create_project(
     }
 
 
+@router.get("/{project_id}")
+async def get_project(
+    project_id: str,
+    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+):
+    """Retrieve an initiative by ID."""
+    project = repo.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project initiative not found.")
+    return {
+        "id": project.id,
+        "name": project.name,
+        "client": project.client,
+        "status": project.status,
+        "progress": project.progress,
+        "lead": project.lead,
+        "dueDate": project.due_date,
+        "priority": project.priority,
+        "department": project.department,
+        "description": project.description,
+        "isDemo": project.is_demo,
+    }
+
+
 @router.patch("/{project_id}")
 async def update_project(
     project_id: str,
@@ -87,3 +111,22 @@ async def update_project(
         "description": updated.description,
         "isDemo": updated.is_demo,
     }
+
+
+@router.delete("/{project_id}")
+async def delete_project(
+    project_id: str,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Delete a strategic initiative. Restricted to ADMIN and above."""
+    deleted = repo.delete_project(project_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Project initiative not found.")
+    repo.log_activity(
+        actor_name=user.full_name,
+        action_type="project_deleted",
+        title=f"Project Deleted: {project_id}",
+        description=f"Strategic initiative {project_id} deleted by {user.full_name}.",
+        module="projects",
+    )
+    return {"id": project_id, "message": f"Successfully deleted project {project_id}."}

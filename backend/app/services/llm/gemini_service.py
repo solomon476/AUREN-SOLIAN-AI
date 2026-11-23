@@ -49,6 +49,7 @@ class GeminiService:
         history: Optional[List[Dict[str, Any]]] = None,
         workspace_context: Optional[str] = None,
         restricted_attempt: bool = False,
+        structured_context: Optional[str] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Streams an intelligent executive response chunk-by-chunk using verified LLM providers.
@@ -71,16 +72,18 @@ class GeminiService:
             return
 
         # 2. Build system context message
-        context_preamble = (
-            f"Organizational Operating Context for Solian Wolves:\n"
-            f"- Active User: {user_name} (Role: {user_role.upper()}, Department: {user_department})\n"
-            f"- Active Workspace Module: {workspace_context or 'General Command'}\n"
-            f"- Verified Knowledge Sources: {json.dumps(context_sources or [])}\n"
-            f"- Accessible Company Documentation: {json.dumps(knowledge_context or [])}\n"
-            f"- Operational Records & Financial Intelligence: {json.dumps(operational_context or {})}\n"
-        )
-
-        user_content_prompt = f"{context_preamble}\n\nUser Directive/Query:\n{prompt}"
+        if structured_context:
+            user_content_prompt = f"{structured_context}\n\nUser Directive/Query:\n{prompt}"
+        else:
+            context_preamble = (
+                f"Organizational Operating Context for Solian Wolves:\n"
+                f"- Active User: {user_name} (Role: {user_role.upper()}, Department: {user_department})\n"
+                f"- Active Workspace Module: {workspace_context or 'General Command'}\n"
+                f"- Verified Knowledge Sources: {json.dumps(context_sources or [])}\n"
+                f"- Accessible Company Documentation: {json.dumps(knowledge_context or [])}\n"
+                f"- Operational Records & Financial Intelligence: {json.dumps(operational_context or {})}\n"
+            )
+            user_content_prompt = f"{context_preamble}\n\nUser Directive/Query:\n{prompt}"
 
         # 3. Attempt Google Gemini Stream
         gemini_key = settings.effective_gemini_key
@@ -177,7 +180,7 @@ class GeminiService:
                 json=payload,
                 headers={
                     "Content-Type": "application/json",
-                    "User-Agent": "curl/8.5.0",
+                    "User-Agent": "AurenSolian-Intelligence/1.0",
                 },
             ) as response:
                 if response.status_code != 200:
@@ -236,7 +239,7 @@ class GeminiService:
                 headers={
                     "Authorization": f"Bearer {groq_key}",
                     "Content-Type": "application/json",
-                    "User-Agent": "curl/8.5.0",
+                    "User-Agent": "AurenSolian-Intelligence/1.0",
                 },
             ) as response:
                 if response.status_code != 200:

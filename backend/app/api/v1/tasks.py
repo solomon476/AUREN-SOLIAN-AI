@@ -56,6 +56,31 @@ async def create_task(
     }
 
 
+@router.get("/{task_id}")
+async def get_task(
+    task_id: str,
+    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+):
+    """Retrieve a task by ID."""
+    task = repo.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found.")
+    return {
+        "id": task.id,
+        "title": task.title,
+        "description": task.description,
+        "projectId": task.project_id,
+        "projectName": task.project_name,
+        "status": task.status,
+        "priority": task.priority,
+        "assignee": task.assignee,
+        "dueDate": task.due_date,
+        "department": task.department,
+        "createdAt": task.created_at,
+        "isDemo": task.is_demo,
+    }
+
+
 @router.patch("/{task_id}")
 async def update_task(
     task_id: str,
@@ -80,3 +105,22 @@ async def update_task(
         "createdAt": updated.created_at,
         "isDemo": updated.is_demo,
     }
+
+
+@router.delete("/{task_id}")
+async def delete_task(
+    task_id: str,
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
+):
+    """Delete an operational task. Restricted to MEMBER and above."""
+    deleted = repo.delete_task(task_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Task not found.")
+    repo.log_activity(
+        actor_name=user.full_name,
+        action_type="task_deleted",
+        title=f"Task Deleted: {task_id}",
+        description=f"Task {task_id} deleted by {user.full_name}.",
+        module="tasks",
+    )
+    return {"id": task_id, "message": f"Successfully deleted task {task_id}."}

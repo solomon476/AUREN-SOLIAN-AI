@@ -15,6 +15,7 @@ from app.db.connection import db_manager
 from app.models.organization import (
     Department,
     DepartmentCreate,
+    DepartmentUpdate,
     Team,
     OrganizationMember,
     OrganizationProfile,
@@ -36,7 +37,9 @@ from app.models.operations import (
     TaskUpdate,
     ClientAccount,
     ClientAccountCreate,
+    ClientAccountUpdate,
     CorporateDocument,
+    CorporateDocumentCreate,
     WorkflowRule,
     WorkflowRuleCreate,
     CompanyActivityEvent,
@@ -305,6 +308,47 @@ class PostgresRepository:
                 active_initiatives=0,
                 is_demo=False,
             )
+
+    def get_department(self, dept_id: str) -> Optional[Department]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM departments WHERE organization_id = %s AND (id = %s OR code = %s) LIMIT 1;", (self.organization_id, dept_id, dept_id.upper()))
+            r = cur.fetchone()
+            if not r:
+                return None
+            return Department(
+                id=r["id"],
+                organization_id=r["organization_id"],
+                name=r["name"],
+                code=r["code"],
+                description=r["description"] or "",
+                lead_id=r["lead_id"],
+                lead_name=r["lead_name"] or "",
+                member_count=r["member_count"],
+                active_initiatives=r["active_initiatives"],
+                is_demo=bool(r["is_demo"]),
+            )
+
+    def update_department(self, dept_id: str, updates: dict) -> Optional[Department]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM departments WHERE organization_id = %s AND (id = %s OR code = %s) LIMIT 1;", (self.organization_id, dept_id, dept_id.upper()))
+            row = cur.fetchone()
+            if not row:
+                return None
+            real_id = row["id"]
+            fields = []
+            values = []
+            for k, v in updates.items():
+                if k in ("name", "description", "lead_name", "lead_id", "member_count", "active_initiatives"):
+                    fields.append(f"{k} = %s")
+                    values.append(v)
+            if fields:
+                values.extend([self.organization_id, real_id])
+                cur.execute(f"UPDATE departments SET {', '.join(fields)} WHERE organization_id = %s AND id = %s;", tuple(values))
+            return self.get_department(real_id)
 
     def list_teams(self, department_id: Optional[str] = None) -> List[Team]:
         with db_manager.connection() as conn:
@@ -697,6 +741,36 @@ class PostgresRepository:
                 is_demo=bool(updated["is_demo"]),
             )
 
+    def get_project(self, project_id: str) -> Optional[Project]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM projects WHERE organization_id = %s AND id = %s LIMIT 1;", (self.organization_id, project_id))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return Project(
+                id=row["id"],
+                organization_id=row["organization_id"],
+                name=row["name"],
+                client=row["client"],
+                status=row["status"],
+                progress=row["progress"],
+                lead=row["lead"],
+                due_date=str(row["due_date"]),
+                priority=row["priority"],
+                department=row["department"],
+                description=row["description"] or "",
+                is_demo=bool(row["is_demo"]),
+            )
+
+    def delete_project(self, project_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM projects WHERE organization_id = %s AND id = %s;", (self.organization_id, project_id))
+            return cur.rowcount > 0
+
     # =========================================================================
     # Tasks & Backlog
     # =========================================================================
@@ -816,6 +890,37 @@ class PostgresRepository:
                 is_demo=bool(updated_row["is_demo"]),
             )
 
+    def get_task(self, task_id: str) -> Optional[Task]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM tasks WHERE organization_id = %s AND id = %s LIMIT 1;", (self.organization_id, task_id))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return Task(
+                id=row["id"],
+                organization_id=row["organization_id"],
+                title=row["title"],
+                description=row["description"] or "",
+                project_id=row["project_id"],
+                project_name=row["project_name"],
+                status=row["status"],
+                priority=row["priority"],
+                assignee=row["assignee"],
+                due_date=str(row["due_date"]),
+                department=row["department"],
+                created_at=str(row["created_at"]),
+                is_demo=bool(row["is_demo"]),
+            )
+
+    def delete_task(self, task_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM tasks WHERE organization_id = %s AND id = %s;", (self.organization_id, task_id))
+            return cur.rowcount > 0
+
     # =========================================================================
     # Clients CRM
     # =========================================================================
@@ -888,6 +993,31 @@ class PostgresRepository:
                 is_demo=False,
             )
 
+    def update_client(self, client_id: str, updates: dict) -> Optional[ClientAccount]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM clients WHERE organization_id = %s AND id = %s LIMIT 1;", (self.organization_id, client_id))
+            if not cur.fetchone():
+                return None
+            fields = []
+            values = []
+            for k, v in updates.items():
+                if k in ("company_name", "contact_person", "email", "status", "contract_value", "lead_account_manager", "notes"):
+                    fields.append(f"{k} = %s")
+                    values.append(v)
+            if fields:
+                values.extend([self.organization_id, client_id])
+                cur.execute(f"UPDATE clients SET {', '.join(fields)} WHERE organization_id = %s AND id = %s;", tuple(values))
+            return self.get_client(client_id)
+
+    def delete_client(self, client_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM clients WHERE organization_id = %s AND id = %s;", (self.organization_id, client_id))
+            return cur.rowcount > 0
+
     # =========================================================================
     # Corporate Documents Registry
     # =========================================================================
@@ -921,6 +1051,67 @@ class PostgresRepository:
                 )
                 for r in rows
             ]
+
+    def get_document(self, document_id: str) -> Optional[CorporateDocument]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM documents WHERE organization_id = %s AND id = %s LIMIT 1;", (self.organization_id, document_id))
+            r = cur.fetchone()
+            if not r:
+                return None
+            return CorporateDocument(
+                id=r["id"],
+                organization_id=r["organization_id"],
+                name=r["name"],
+                type=r["type"],
+                size=r["size"],
+                classification=r["classification"],
+                updated_at=str(r["updated_at"]),
+                owner=r["owner"],
+                department=r["department"],
+                is_demo=bool(r["is_demo"]),
+            )
+
+    def create_document(self, doc: CorporateDocumentCreate, owner: str = "AUREN SOLIAN") -> CorporateDocument:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            doc_id = f"doc-{datetime.now().strftime('%m%d%H%M%S')}-{uuid.uuid4().hex[:4]}"
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            cur.execute("""
+                INSERT INTO documents (id, organization_id, name, type, size, classification, updated_at, owner, department, is_demo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            """, (
+                doc_id, self.organization_id, doc.name, doc.type, doc.size, doc.classification, today, owner, doc.department, False
+            ))
+            self._log_activity_raw(
+                conn,
+                actor_name=owner,
+                action_type="doc_uploaded",
+                title=f"Document Registered: {doc.name}",
+                description=f"Corporate document registered under classification '{doc.classification}'.",
+                module="documents"
+            )
+            return CorporateDocument(
+                id=doc_id,
+                organization_id=self.organization_id,
+                name=doc.name,
+                type=doc.type,
+                size=doc.size,
+                classification=doc.classification,
+                updated_at=today,
+                owner=owner,
+                department=doc.department,
+                is_demo=False,
+            )
+
+    def delete_document(self, document_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM documents WHERE organization_id = %s AND id = %s;", (self.organization_id, document_id))
+            return cur.rowcount > 0
 
     # =========================================================================
     # Workflows & Automation
@@ -967,6 +1158,47 @@ class PostgresRepository:
                 department=wf.department,
                 is_demo=False,
             )
+
+    def get_workflow(self, workflow_id: str) -> Optional[WorkflowRule]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM workflows WHERE id = %s AND organization_id = %s;", (workflow_id, self.organization_id))
+            r = cur.fetchone()
+            if not r:
+                return None
+            return WorkflowRule(
+                id=r["id"],
+                organization_id=r["organization_id"],
+                title=r["title"],
+                trigger=r["trigger"],
+                action=r["action"],
+                status=r["status"],
+                execution_count=r["execution_count"] or 0,
+                department=r["department"],
+                is_demo=bool(r["is_demo"]),
+            )
+
+    def update_workflow_status(self, workflow_id: str, status: str) -> Optional[WorkflowRule]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("UPDATE workflows SET status = %s WHERE id = %s AND organization_id = %s;", (status, workflow_id, self.organization_id))
+            return self.get_workflow(workflow_id)
+
+    def trigger_workflow(self, workflow_id: str) -> Optional[WorkflowRule]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("UPDATE workflows SET execution_count = COALESCE(execution_count, 0) + 1 WHERE id = %s AND organization_id = %s;", (workflow_id, self.organization_id))
+            return self.get_workflow(workflow_id)
+
+    def delete_workflow(self, workflow_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM workflows WHERE id = %s AND organization_id = %s;", (workflow_id, self.organization_id))
+            return cur.rowcount > 0
 
     # =========================================================================
     # Activities & Dashboard
@@ -1258,6 +1490,13 @@ class PostgresRepository:
 
         return self.get_meeting(meeting_id)
 
+    def delete_meeting(self, meeting_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM meetings WHERE organization_id = %s AND id = %s;", (self.organization_id, meeting_id))
+            return cur.rowcount > 0
+
     def convert_meeting_action_to_task(self, meeting_id: str, action_item_id: str) -> Optional[Task]:
         meeting = self.get_meeting(meeting_id)
         if not meeting:
@@ -1484,6 +1723,23 @@ class PostgresRepository:
             created_at=now_iso,
             is_demo=False,
         )
+
+    def get_discussion_message(self, message_id: str) -> Optional[DiscussionMessage]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM discussions WHERE organization_id = %s AND id = %s LIMIT 1;", (self.organization_id, message_id))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return self._row_to_discussion(row)
+
+    def delete_discussion_message(self, message_id: str) -> bool:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("DELETE FROM discussions WHERE organization_id = %s AND id = %s;", (self.organization_id, message_id))
+            return cur.rowcount > 0
 
     def list_discussion_channels(self) -> List[DiscussionChannel]:
         channels = [
@@ -2749,6 +3005,8 @@ class PostgresRepository:
 
     def purge_demo_data(self) -> Dict[str, int]:
         """Purges all demo rows from the active tenant in PostgreSQL."""
+        if settings.is_production:
+            raise RuntimeError("DEMO PURGE VIOLATION: purge_demo_data() is strictly prohibited in production environments.")
         purged = {}
         tables_with_conditions = [
             ("financial_transactions", "is_demo = TRUE OR reference LIKE '%DEMO%'"),

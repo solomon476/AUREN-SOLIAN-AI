@@ -24,6 +24,13 @@ class DepartmentCreate(BaseModel):
     lead_name: str = Field(min_length=2, max_length=100)
 
 
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    description: Optional[str] = None
+    lead_name: Optional[str] = None
+    lead_id: Optional[str] = None
+
+
 class Team(BaseModel):
     id: str
     organization_id: str

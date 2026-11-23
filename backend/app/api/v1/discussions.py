@@ -72,3 +72,49 @@ async def create_message(
         "message": "Message posted successfully.",
     }
 
+
+@router.get("/messages/{message_id}")
+async def get_message(
+    message_id: str,
+    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+):
+    """Retrieve a single discussion message by ID."""
+    msg = repo.get_discussion_message(message_id)
+    if not msg:
+        raise HTTPException(status_code=404, detail="Discussion message not found.")
+    return {
+        "id": msg.id,
+        "organizationId": msg.organization_id,
+        "channelType": msg.channel_type,
+        "channelId": msg.channel_id,
+        "channelName": msg.channel_name,
+        "authorId": msg.author_id,
+        "authorName": msg.author_name,
+        "authorRole": msg.author_role,
+        "title": msg.title,
+        "content": msg.content,
+        "parentId": msg.parent_id,
+        "isPinned": msg.is_pinned,
+        "createdAt": msg.created_at,
+        "isDemo": msg.is_demo,
+    }
+
+
+@router.delete("/messages/{message_id}")
+async def delete_message(
+    message_id: str,
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
+):
+    """Delete a discussion message. Restricted to author or ADMIN."""
+    msg = repo.get_discussion_message(message_id)
+    if not msg:
+        raise HTTPException(status_code=404, detail="Discussion message not found.")
+    is_admin = user.role in (UserRole.ADMIN, UserRole.OWNER)
+    is_author = user.id == msg.author_id or user.full_name == msg.author_name
+    if not (is_admin or is_author):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only delete your own discussion messages.")
+    deleted = repo.delete_discussion_message(message_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Discussion message not found.")
+    return {"id": message_id, "message": "Discussion message deleted successfully."}
+

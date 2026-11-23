@@ -2,7 +2,13 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.security import require_role, UserRole, AuthUser, ROLE_HIERARCHY
-from app.models.organization import MemberRoleUpdate, MemberStatusUpdate, MemberInviteCreate
+from app.models.organization import (
+    MemberRoleUpdate,
+    MemberStatusUpdate,
+    MemberInviteCreate,
+    DepartmentCreate,
+    DepartmentUpdate,
+)
 from app.services.storage.sqlite_repository import repo
 
 router = APIRouter()
@@ -194,6 +200,79 @@ async def list_departments(user: AuthUser = Depends(require_role(UserRole.GUEST)
         }
         for d in departments
     ]
+
+
+@router.get("/departments/{dept_id}")
+async def get_department(
+    dept_id: str,
+    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+):
+    """Retrieve departmental profile by ID or Code."""
+    dept = repo.get_department(dept_id)
+    if not dept:
+        raise HTTPException(status_code=404, detail="Department not found.")
+    return {
+        "id": dept.id,
+        "name": dept.name,
+        "code": dept.code,
+        "description": dept.description,
+        "leadId": dept.lead_id,
+        "leadName": dept.lead_name,
+        "memberCount": dept.member_count,
+        "activeInitiatives": dept.active_initiatives,
+        "isDemo": dept.is_demo,
+    }
+
+
+@router.post("/departments", status_code=status.HTTP_201_CREATED)
+async def create_department(
+    body: DepartmentCreate,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Create a new corporate division/department. Restricted to ADMIN and above."""
+    dept = repo.create_department(body)
+    repo.log_activity(
+        actor_name=user.full_name,
+        action_type="department_created",
+        title=f"Department Established: {dept.name}",
+        description=f"Department '{dept.name}' ({dept.code}) established by {user.full_name}.",
+        module="teams",
+    )
+    return {
+        "id": dept.id,
+        "name": dept.name,
+        "code": dept.code,
+        "description": dept.description,
+        "leadName": dept.lead_name,
+        "message": f"Successfully created department '{dept.name}'.",
+    }
+
+
+@router.patch("/departments/{dept_id}")
+async def update_department(
+    dept_id: str,
+    body: DepartmentUpdate,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Update department details or assigned leadership. Restricted to ADMIN and above."""
+    updated = repo.update_department(dept_id, body.model_dump(exclude_unset=True))
+    if not updated:
+        raise HTTPException(status_code=404, detail="Department not found.")
+    repo.log_activity(
+        actor_name=user.full_name,
+        action_type="department_updated",
+        title=f"Department Updated: {updated.name}",
+        description=f"Department '{updated.name}' modified by {user.full_name}.",
+        module="teams",
+    )
+    return {
+        "id": updated.id,
+        "name": updated.name,
+        "code": updated.code,
+        "description": updated.description,
+        "leadName": updated.lead_name,
+        "message": f"Successfully updated department '{updated.name}'.",
+    }
 
 
 @router.get("/teams")

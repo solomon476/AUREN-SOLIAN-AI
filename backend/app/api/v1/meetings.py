@@ -111,6 +111,25 @@ async def update_meeting(
     }
 
 
+@router.delete("/{meeting_id}")
+async def delete_meeting(
+    meeting_id: str,
+    user: AuthUser = Depends(require_role(UserRole.MANAGER)),
+):
+    """Delete a scheduled meeting or minutes record. Restricted to MANAGER and above."""
+    deleted = repo.delete_meeting(meeting_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+    repo.log_activity(
+        actor_name=user.full_name,
+        action_type="meeting_deleted",
+        title=f"Meeting Removed: {meeting_id}",
+        description=f"Meeting {meeting_id} deleted by {user.full_name}.",
+        module="meetings",
+    )
+    return {"id": meeting_id, "message": f"Successfully deleted meeting {meeting_id}."}
+
+
 @router.post("/{meeting_id}/action-items/{action_item_id}/convert-to-task")
 async def convert_action_item_to_task(
     meeting_id: str,
