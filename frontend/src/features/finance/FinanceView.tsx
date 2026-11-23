@@ -25,6 +25,7 @@ import {
   Check,
   X,
   ExternalLink,
+  FileText,
 } from 'lucide-react';
 import { SolianApiClient } from '../../api/client';
 import {
@@ -666,27 +667,37 @@ export const FinanceView: React.FC = () => {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {accounts.map((acc) => (
-                <div key={acc.id} className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-3 hover:border-[#D4AF37]/40 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-slate-300 uppercase font-medium">
-                      {acc.accountType}
-                    </span>
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      {acc.status}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">{acc.name}</div>
-                    <div className="text-xs text-slate-400 font-mono mt-0.5">{acc.accountNumber || 'Primary Operational Safe'}</div>
-                  </div>
-                  <div className="border-t border-[#1F2633] pt-2 flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Current Balance:</span>
-                    <span className="text-base font-bold text-[#D4AF37]">{formatKES(acc.currentBalance)}</span>
-                  </div>
+              {accounts.length === 0 ? (
+                <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                  <Landmark className="w-8 h-8 text-slate-500 mx-auto" />
+                  <div className="text-sm font-bold text-white">No Corporate Accounts Recorded</div>
+                  <p className="text-slate-400 max-w-sm mx-auto">
+                    Add verified corporate bank accounts, mobile business tills, or escrow safes to begin automated cash flow tracking.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                accounts.map((acc) => (
+                  <div key={acc.id} className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-3 hover:border-[#D4AF37]/40 transition-all">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-slate-300 uppercase font-medium">
+                        {acc.accountType}
+                      </span>
+                      <span className="text-xs text-emerald-400 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        {acc.status}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">{acc.name}</div>
+                      <div className="text-xs text-slate-400 font-mono mt-0.5">{acc.accountNumber || 'Primary Operational Safe'}</div>
+                    </div>
+                    <div className="border-t border-[#1F2633] pt-2 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Current Balance:</span>
+                      <span className="text-base font-bold text-[#D4AF37]">{formatKES(acc.currentBalance)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -992,70 +1003,80 @@ export const FinanceView: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {invoices.map((inv) => (
-              <div
-                key={inv.id}
-                className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-[#D4AF37]/30 transition-all space-y-4"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-white text-base">{inv.invoiceNumber}</span>
-                      <span
-                        className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                          inv.status === 'paid'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                            : inv.status === 'partially_paid'
-                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                        }`}
-                      >
-                        {inv.status}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      Client: <span className="text-slate-200 font-medium">{inv.clientName}</span> | Due: {inv.dueDate}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {inv.status !== 'paid' && (
-                      <button
-                        onClick={() => {
-                          setTargetInvoice(inv);
-                          setPayAmount(String(inv.balanceDue));
-                          setIsInvoicePaymentOpen(true);
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/20 transition-all"
-                      >
-                        Record Payment
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <span className="text-slate-400">Total Billed:</span>
-                    <div className="text-white font-mono font-bold text-sm">{formatKES(inv.totalAmount)}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Amount Paid:</span>
-                    <div className="text-emerald-400 font-mono font-bold text-sm">{formatKES(inv.amountPaid)}</div>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Balance Due:</span>
-                    <div className="text-blue-400 font-mono font-bold text-sm">{formatKES(inv.balanceDue)}</div>
-                  </div>
-                </div>
-
-                {inv.notes && (
-                  <div className="p-2.5 rounded-lg bg-[#0D0F12] text-xs text-slate-400 border border-[#1F2633]">
-                    {inv.notes}
-                  </div>
-                )}
+            {invoices.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                <Receipt className="w-8 h-8 text-slate-500 mx-auto" />
+                <div className="text-sm font-bold text-white">No Invoices Issued</div>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  Issue customer invoices to monitor accounts receivable, track due dates, and record payments.
+                </p>
               </div>
-            ))}
+            ) : (
+              invoices.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-[#D4AF37]/30 transition-all space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-white text-base">{inv.invoiceNumber}</span>
+                        <span
+                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                            inv.status === 'paid'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : inv.status === 'partially_paid'
+                              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                          }`}
+                        >
+                          {inv.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        Client: <span className="text-slate-200 font-medium">{inv.clientName}</span> | Due: {inv.dueDate}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {inv.status !== 'paid' && (
+                        <button
+                          onClick={() => {
+                            setTargetInvoice(inv);
+                            setPayAmount(String(inv.balanceDue));
+                            setIsInvoicePaymentOpen(true);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/20 transition-all"
+                        >
+                          Record Payment
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400">Total Billed:</span>
+                      <div className="text-white font-mono font-bold text-sm">{formatKES(inv.totalAmount)}</div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Amount Paid:</span>
+                      <div className="text-emerald-400 font-mono font-bold text-sm">{formatKES(inv.amountPaid)}</div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Balance Due:</span>
+                      <div className="text-blue-400 font-mono font-bold text-sm">{formatKES(inv.balanceDue)}</div>
+                    </div>
+                  </div>
+
+                  {inv.notes && (
+                    <div className="p-2.5 rounded-lg bg-[#0D0F12] text-xs text-slate-400 border border-[#1F2633]">
+                      {inv.notes}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1075,62 +1096,72 @@ export const FinanceView: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {payables.map((p) => (
-              <div
-                key={p.id}
-                className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-amber-500/30 transition-all space-y-3"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-white">{p.reference}</span>
-                      <span className="text-xs text-slate-400">|</span>
-                      <span className="font-semibold text-slate-200">{p.supplierName}</span>
-                      <span
-                        className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                          p.status === 'paid'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                        }`}
-                      >
-                        {p.status}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      {p.description} (Category: {p.category}) — Due: {p.dueDate}
-                    </div>
-                  </div>
-
-                  {p.status !== 'paid' && (
-                    <button
-                      onClick={() => {
-                        setTargetPayable(p);
-                        setPayAmount(String(p.balanceDue));
-                        setIsPayablePaymentOpen(true);
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition-all"
-                    >
-                      Settle Bill
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <div>
-                    <span className="text-slate-400">Obligation: </span>
-                    <span className="text-white font-bold">{formatKES(p.amountDue)}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Paid: </span>
-                    <span className="text-emerald-400 font-bold">{formatKES(p.amountPaid)}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Balance: </span>
-                    <span className="text-amber-400 font-bold">{formatKES(p.balanceDue)}</span>
-                  </div>
-                </div>
+            {payables.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                <CreditCard className="w-8 h-8 text-slate-500 mx-auto" />
+                <div className="text-sm font-bold text-white">No Supplier Bills Recorded</div>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  Record supplier obligations, vendor invoices, and track accounts payable settlements.
+                </p>
               </div>
-            ))}
+            ) : (
+              payables.map((p) => (
+                <div
+                  key={p.id}
+                  className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-amber-500/30 transition-all space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-white">{p.reference}</span>
+                        <span className="text-xs text-slate-400">|</span>
+                        <span className="font-semibold text-slate-200">{p.supplierName}</span>
+                        <span
+                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                            p.status === 'paid'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {p.description} (Category: {p.category}) — Due: {p.dueDate}
+                      </div>
+                    </div>
+
+                    {p.status !== 'paid' && (
+                      <button
+                        onClick={() => {
+                          setTargetPayable(p);
+                          setPayAmount(String(p.balanceDue));
+                          setIsPayablePaymentOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition-all"
+                      >
+                        Settle Bill
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <div>
+                      <span className="text-slate-400">Obligation: </span>
+                      <span className="text-white font-bold">{formatKES(p.amountDue)}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Paid: </span>
+                      <span className="text-emerald-400 font-bold">{formatKES(p.amountPaid)}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Balance: </span>
+                      <span className="text-amber-400 font-bold">{formatKES(p.balanceDue)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1150,47 +1181,57 @@ export const FinanceView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {budgets.map((b) => (
-              <div key={b.id} className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="font-bold text-white text-base">{b.name}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      Period: <span className="text-slate-300 capitalize">{b.period}</span> ({b.startDate} to {b.endDate})
+            {budgets.length === 0 ? (
+              <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                <PieChart className="w-8 h-8 text-slate-500 mx-auto" />
+                <div className="text-sm font-bold text-white">No Departmental Budgets Configured</div>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  Create departmental operating budgets with allocated spending caps and utilization tracking.
+                </p>
+              </div>
+            ) : (
+              budgets.map((b) => (
+                <div key={b.id} className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-bold text-white text-base">{b.name}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        Period: <span className="text-slate-300 capitalize">{b.period}</span> ({b.startDate} to {b.endDate})
+                      </div>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-[#D4AF37] font-semibold">
+                      {b.status}
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs text-slate-300">
+                      <span>Spent: {formatKES(b.spentAmount)}</span>
+                      <span className="font-bold">{b.utilizationPercentage}%</span>
+                    </div>
+                    <div className="w-full bg-[#0D0F12] h-2 rounded-full overflow-hidden border border-[#1F2633]">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          b.utilizationPercentage > 90
+                            ? 'bg-rose-500'
+                            : b.utilizationPercentage > 70
+                            ? 'bg-amber-500'
+                            : 'bg-[#D4AF37]'
+                        }`}
+                        style={{ width: `${Math.min(100, b.utilizationPercentage)}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-slate-400">
+                      <span>Remaining: {formatKES(b.remainingAmount)}</span>
+                      <span>Cap: {formatKES(b.allocatedAmount)}</span>
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-[#D4AF37] font-semibold">
-                    {b.status}
-                  </span>
-                </div>
 
-                {/* Progress Bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs text-slate-300">
-                    <span>Spent: {formatKES(b.spentAmount)}</span>
-                    <span className="font-bold">{b.utilizationPercentage}%</span>
-                  </div>
-                  <div className="w-full bg-[#0D0F12] h-2 rounded-full overflow-hidden border border-[#1F2633]">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        b.utilizationPercentage > 90
-                          ? 'bg-rose-500'
-                          : b.utilizationPercentage > 70
-                          ? 'bg-amber-500'
-                          : 'bg-[#D4AF37]'
-                      }`}
-                      style={{ width: `${Math.min(100, b.utilizationPercentage)}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-[11px] text-slate-400">
-                    <span>Remaining: {formatKES(b.remainingAmount)}</span>
-                    <span>Cap: {formatKES(b.allocatedAmount)}</span>
-                  </div>
+                  {b.notes && <div className="text-xs text-slate-400 italic">{b.notes}</div>}
                 </div>
-
-                {b.notes && <div className="text-xs text-slate-400 italic">{b.notes}</div>}
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1210,79 +1251,89 @@ export const FinanceView: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {expenseRequests.map((req) => (
-              <div
-                key={req.id}
-                className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-[#D4AF37]/30 transition-all space-y-3"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white text-base">{req.title}</span>
-                      <span
-                        className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                          req.urgency === 'critical'
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                            : req.urgency === 'urgent'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                            : 'bg-slate-500/20 text-slate-300 border border-slate-500/40'
-                        }`}
-                      >
-                        {req.urgency}
-                      </span>
-                      <span
-                        className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                          req.status === 'approved'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                            : req.status === 'paid'
-                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-                            : req.status === 'rejected'
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                        }`}
-                      >
-                        {req.status}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      Requested by <span className="text-slate-200 font-medium">{req.requestedByName}</span> | Category: {req.category}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {req.status === 'submitted' && (user?.role === 'admin' || user?.role === 'owner') && (
-                      <button
-                        onClick={() => {
-                          setTargetRequest(req);
-                          setIsReviewRequestOpen(true);
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-semibold hover:bg-[#D4AF37]/30 transition-all"
-                      >
-                        Review Sign-Off
-                      </button>
-                    )}
-                    {req.status === 'approved' && (user?.role === 'admin' || user?.role === 'owner') && (
-                      <button
-                        onClick={() => {
-                          setTargetRequest(req);
-                          setIsPayRequestOpen(true);
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/30 transition-all"
-                      >
-                        Disburse Funds
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="text-xs text-slate-300">{req.description}</div>
-                <div className="flex items-center justify-between text-xs border-t border-[#1F2633] pt-2">
-                  <span className="text-slate-400">Required Amount:</span>
-                  <span className="font-mono font-bold text-white text-sm">{formatKES(req.amount)}</span>
-                </div>
+            {expenseRequests.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                <FileText className="w-8 h-8 text-slate-500 mx-auto" />
+                <div className="text-sm font-bold text-white">No Expense Requisitions Submitted</div>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  Submit internal expense requests and procurement requisitions for management approval and disbursement.
+                </p>
               </div>
-            ))}
+            ) : (
+              expenseRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-[#D4AF37]/30 transition-all space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-base">{req.title}</span>
+                        <span
+                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                            req.urgency === 'critical'
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                              : req.urgency === 'urgent'
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                              : 'bg-slate-500/20 text-slate-300 border border-slate-500/40'
+                          }`}
+                        >
+                          {req.urgency}
+                        </span>
+                        <span
+                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                            req.status === 'approved'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : req.status === 'paid'
+                              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                              : req.status === 'rejected'
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                          }`}
+                        >
+                          {req.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        Requested by <span className="text-slate-200 font-medium">{req.requestedByName}</span> | Category: {req.category}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {req.status === 'submitted' && (user?.role === 'admin' || user?.role === 'owner') && (
+                        <button
+                          onClick={() => {
+                            setTargetRequest(req);
+                            setIsReviewRequestOpen(true);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-semibold hover:bg-[#D4AF37]/30 transition-all"
+                        >
+                          Review Sign-Off
+                        </button>
+                      )}
+                      {req.status === 'approved' && (user?.role === 'admin' || user?.role === 'owner') && (
+                        <button
+                          onClick={() => {
+                            setTargetRequest(req);
+                            setIsPayRequestOpen(true);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/30 transition-all"
+                        >
+                          Disburse Funds
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-300">{req.description}</div>
+                  <div className="flex items-center justify-between text-xs border-t border-[#1F2633] pt-2">
+                    <span className="text-slate-400">Required Amount:</span>
+                    <span className="font-mono font-bold text-white text-sm">{formatKES(req.amount)}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1302,42 +1353,52 @@ export const FinanceView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {accounts.map((acc) => (
-              <div key={acc.id} className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-lg bg-[#0D0F12] border border-[#1F2633] text-[#D4AF37]">
-                    {acc.accountType === 'bank' ? (
-                      <Building className="w-5 h-5" />
-                    ) : acc.accountType === 'mobile_money' ? (
-                      <CreditCard className="w-5 h-5" />
-                    ) : (
-                      <Banknote className="w-5 h-5" />
-                    )}
-                  </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold uppercase">
-                    {acc.status}
-                  </span>
-                </div>
-
-                <div>
-                  <div className="font-bold text-white text-base">{acc.name}</div>
-                  <div className="text-xs text-slate-400 font-mono mt-0.5">{acc.accountNumber || 'Non-banking ledger'}</div>
-                </div>
-
-                <div className="text-xs text-slate-400">{acc.description}</div>
-
-                <div className="border-t border-[#1F2633] pt-3 space-y-1 text-xs">
-                  <div className="flex justify-between text-slate-400">
-                    <span>Opening Balance:</span>
-                    <span className="font-mono text-slate-300">{formatKES(acc.openingBalance)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-200 font-bold">
-                    <span>Reconciled Balance:</span>
-                    <span className="font-mono text-[#D4AF37] text-sm">{formatKES(acc.currentBalance)}</span>
-                  </div>
-                </div>
+            {accounts.length === 0 ? (
+              <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                <Landmark className="w-8 h-8 text-slate-500 mx-auto" />
+                <div className="text-sm font-bold text-white">No Corporate Accounts Registered</div>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  Click 'New Account' above to register company banking or treasury holding accounts.
+                </p>
               </div>
-            ))}
+            ) : (
+              accounts.map((acc) => (
+                <div key={acc.id} className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-[#0D0F12] border border-[#1F2633] text-[#D4AF37]">
+                      {acc.accountType === 'bank' ? (
+                        <Building className="w-5 h-5" />
+                      ) : acc.accountType === 'mobile_money' ? (
+                        <CreditCard className="w-5 h-5" />
+                      ) : (
+                        <Banknote className="w-5 h-5" />
+                      )}
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold uppercase">
+                      {acc.status}
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="font-bold text-white text-base">{acc.name}</div>
+                    <div className="text-xs text-slate-400 font-mono mt-0.5">{acc.accountNumber || 'Non-banking ledger'}</div>
+                  </div>
+
+                  <div className="text-xs text-slate-400">{acc.description}</div>
+
+                  <div className="border-t border-[#1F2633] pt-3 space-y-1 text-xs">
+                    <div className="flex justify-between text-slate-400">
+                      <span>Opening Balance:</span>
+                      <span className="font-mono text-slate-300">{formatKES(acc.openingBalance)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-200 font-bold">
+                      <span>Reconciled Balance:</span>
+                      <span className="font-mono text-[#D4AF37] text-sm">{formatKES(acc.currentBalance)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

@@ -2746,3 +2746,39 @@ class PostgresRepository:
             outstanding_revenue=outstanding_revenue,
             transactions=txs[:20],
         )
+
+    def purge_demo_data(self) -> Dict[str, int]:
+        """Purges all demo rows from the active tenant in PostgreSQL."""
+        purged = {}
+        tables_with_conditions = [
+            ("financial_transactions", "is_demo = TRUE OR reference LIKE '%DEMO%'"),
+            ("invoices", "is_demo = TRUE OR invoice_number LIKE '%DEMO%'"),
+            ("accounts_payable", "is_demo = TRUE OR reference LIKE '%DEMO%'"),
+            ("financial_budgets", "is_demo = TRUE"),
+            ("expense_requests", "is_demo = TRUE"),
+            ("financial_accounts", "is_demo = TRUE"),
+            ("tasks", "is_demo = TRUE OR title LIKE '%[DEMO]%'"),
+            ("projects", "is_demo = TRUE OR name LIKE '%[DEMO]%'"),
+            ("knowledge_items", "is_demo = TRUE OR title LIKE '%[DEMO]%'"),
+            ("documents", "is_demo = TRUE OR name LIKE '%[DEMO]%'"),
+            ("workflows", "is_demo = TRUE OR title LIKE '%[DEMO]%'"),
+            ("clients", "is_demo = TRUE OR company_name LIKE '%[DEMO]%'"),
+            ("meetings", "is_demo = TRUE OR title LIKE '%[DEMO]%'"),
+            ("discussions", "is_demo = TRUE OR title LIKE '%[DEMO]%'"),
+            ("teams", "is_demo = TRUE OR name LIKE '%[DEMO]%'"),
+            ("departments", "is_demo = TRUE OR name LIKE '%[DEMO]%'"),
+            ("members", "is_demo = TRUE OR name LIKE '%[DEMO]%'"),
+            ("operating_principles", "is_demo = TRUE"),
+            ("operating_cadences", "is_demo = TRUE"),
+            ("company_activities", "is_demo = TRUE OR title LIKE '%[DEMO]%'"),
+        ]
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            for table, condition in tables_with_conditions:
+                try:
+                    cur.execute(f"DELETE FROM {table} WHERE organization_id = %s AND ({condition});", (self.organization_id,))
+                    purged[table] = cur.rowcount
+                except Exception as exc:
+                    purged[table] = 0
+            conn.commit()
+        return purged

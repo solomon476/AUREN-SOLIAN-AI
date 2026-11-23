@@ -1,7 +1,7 @@
 """Company chat service handling SSE formatting, permission boundaries, and action proposals."""
 import json
 import asyncio
-from typing import AsyncGenerator, Dict, Any, List
+from typing import AsyncGenerator, Dict, Any, List, Optional
 from app.services.llm.gemini_service import GeminiService
 from app.services.knowledge.knowledge_service import knowledge_service
 from app.services.storage.sqlite_repository import repo

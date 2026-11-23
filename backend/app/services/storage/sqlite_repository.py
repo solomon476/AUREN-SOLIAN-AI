@@ -1,11 +1,14 @@
 """SQLite repository for Solian Wolves Enterprise Organizational Intelligence."""
 import json
+import logging
 import os
 import sqlite3
 import threading
 import uuid
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 from app.core.security import UserRole
@@ -525,21 +528,21 @@ class EnterpriseRepository:
             cur.execute("SELECT COUNT(*) as count FROM organizations;")
             count = cur.fetchone()["count"]
             if count == 0:
-                if settings.ENABLE_DEMO_FIXTURES and not settings.is_production:
+                if (settings.ENABLE_DEMO_FIXTURES or not settings.is_production) and not settings.is_production:
                     self._seed_initial_data(conn)
                 else:
                     self._bootstrap_production_foundation(conn)
             else:
                 cur.execute("SELECT 1 FROM meetings WHERE id = 'mtg-1' LIMIT 1;")
                 if not cur.fetchone():
-                    if settings.ENABLE_DEMO_FIXTURES and not settings.is_production:
+                    if (settings.ENABLE_DEMO_FIXTURES or not settings.is_production) and not settings.is_production:
                         self._seed_new_modules(conn)
 
             # Seed financial records if accounts table is empty
             cur.execute("SELECT COUNT(*) as count FROM financial_accounts;")
             fin_count = cur.fetchone()["count"]
             if fin_count == 0:
-                if settings.ENABLE_DEMO_FIXTURES and not settings.is_production:
+                if (settings.ENABLE_DEMO_FIXTURES or not settings.is_production) and not settings.is_production:
                     self._seed_finance_data(conn)
 
             conn.commit()
@@ -782,7 +785,7 @@ class EnterpriseRepository:
 
         # 1. Organization: Solian Wolves (Neutral, unverified fields set to None)
         cur.execute("""
-        INSERT INTO organizations (
+        INSERT OR REPLACE INTO organizations (
             id, name, code, tagline, mission, vision, operating_model,
             headquarters, founded_year, primary_timezone, fiscal_year, tier, total_members
         ) VALUES (
@@ -886,7 +889,14 @@ class EnterpriseRepository:
                 "tm-3", "[DEMO] Marcus Vance", "active", 0, "2024-08-01", 1
             ),
         ]
-        cur.executemany("INSERT INTO members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", members)
+        cur.executemany("""
+        INSERT INTO members (
+            id, user_id, organization_id, name, email, role, title,
+            department_id, department, team_id, team, responsibilities,
+            reports_to_id, reports_to_name, status, assigned_projects,
+            joined_date, is_demo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """, members)
 
         # 7. Knowledge Items (DEMO Templates - explicitly is_verified = 0, is_demo = 1)
         knowledge = [
@@ -1130,7 +1140,7 @@ class EnterpriseRepository:
 
         # 1. Organization: Solian Wolves
         cur.execute("""
-        INSERT INTO organizations (
+        INSERT OR REPLACE INTO organizations (
             id, name, code, tagline, mission, vision, operating_model,
             headquarters, founded_year, primary_timezone, fiscal_year, tier, total_members
         ) VALUES (
@@ -1216,47 +1226,54 @@ class EnterpriseRepository:
                 "tm-1", "Ian Momanyi Nyakundi", "active", 0, "2024-01-01", 0
             ),
         ]
-        cur.executemany("INSERT INTO members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", members)
+        cur.executemany("""
+        INSERT INTO members (
+            id, user_id, organization_id, name, email, role, title,
+            department_id, department, team_id, team, responsibilities,
+            reports_to_id, reports_to_name, status, assigned_projects,
+            joined_date, is_demo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """, members)
 
     def purge_demo_data(self) -> Dict[str, int]:
         """Purges all demo rows (flagged with is_demo=1 or [DEMO]) from the database."""
         conn = self._get_connection()
         cur = conn.cursor()
+        cur.execute("PRAGMA foreign_keys = OFF;")
         purged = {}
 
-        tables_with_is_demo = [
-            ("members", "is_demo = 1"),
-            ("departments", "is_demo = 1"),
-            ("teams", "is_demo = 1"),
-            ("projects", "is_demo = 1"),
-            ("tasks", "is_demo = 1"),
-            ("knowledge_vault", "is_demo = 1"),
-            ("client_accounts", "is_demo = 1"),
-            ("corporate_documents", "is_demo = 1"),
-            ("workflows", "is_demo = 1"),
-            ("operating_principles", "is_demo = 1"),
-            ("operating_cadences", "is_demo = 1"),
-            ("financial_accounts", "is_demo = 1"),
-            ("financial_transactions", "is_demo = 1"),
-            ("invoices", "is_demo = 1"),
-            ("accounts_payable", "is_demo = 1"),
+        tables_with_conditions = [
+            ("financial_transactions", "is_demo = 1 OR reference LIKE '%DEMO%'"),
+            ("invoices", "is_demo = 1 OR invoice_number LIKE '%DEMO%'"),
+            ("accounts_payable", "is_demo = 1 OR reference LIKE '%DEMO%'"),
             ("financial_budgets", "is_demo = 1"),
             ("expense_requests", "is_demo = 1"),
+            ("financial_accounts", "is_demo = 1"),
+            ("tasks", "is_demo = 1 OR title LIKE '%[DEMO]%'"),
+            ("projects", "is_demo = 1 OR name LIKE '%[DEMO]%'"),
+            ("knowledge_items", "is_demo = 1 OR title LIKE '%[DEMO]%'"),
+            ("documents", "is_demo = 1 OR name LIKE '%[DEMO]%'"),
+            ("workflows", "is_demo = 1 OR title LIKE '%[DEMO]%'"),
+            ("clients", "is_demo = 1 OR company_name LIKE '%[DEMO]%'"),
+            ("meetings", "is_demo = 1 OR title LIKE '%[DEMO]%'"),
+            ("discussions", "is_demo = 1 OR title LIKE '%[DEMO]%'"),
+            ("teams", "is_demo = 1 OR name LIKE '%[DEMO]%'"),
+            ("departments", "is_demo = 1 OR name LIKE '%[DEMO]%'"),
+            ("members", "is_demo = 1 OR name LIKE '%[DEMO]%'"),
+            ("operating_principles", "is_demo = 1"),
+            ("operating_cadences", "is_demo = 1"),
+            ("company_activities", "is_demo = 1 OR title LIKE '%[DEMO]%'"),
         ]
 
-        for table, condition in tables_with_is_demo:
+        for table, condition in tables_with_conditions:
             try:
                 cur.execute(f"DELETE FROM {table} WHERE {condition};")
                 purged[table] = cur.rowcount
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning(f"Error purging demo data from {table}: {exc}")
+                purged[table] = 0
 
-        try:
-            cur.execute("DELETE FROM meetings WHERE title LIKE '%[DEMO]%';")
-            purged["meetings"] = cur.rowcount
-        except Exception:
-            pass
-
+        cur.execute("PRAGMA foreign_keys = ON;")
         conn.commit()
         conn.close()
         return purged
@@ -2148,7 +2165,8 @@ class EnterpriseRepository:
 
     def _log_activity_raw(self, conn: sqlite3.Connection, actor_name: str, action_type: str, title: str, description: str, module: str):
         import datetime
-        act_id = f"act-{int(datetime.datetime.now().timestamp() * 1000) % 100000:05d}"
+        import uuid
+        act_id = f"act-{datetime.datetime.now().strftime('%m%d%H%M%S%f')}-{uuid.uuid4().hex[:4]}"
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M UTC")
         conn.execute("""
         INSERT INTO company_activities (id, organization_id, actor_name, action_type, title, description, timestamp, module, is_demo)

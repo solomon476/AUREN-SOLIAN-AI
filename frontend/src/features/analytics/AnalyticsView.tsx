@@ -18,14 +18,14 @@ export const AnalyticsView: React.FC = () => {
   const cards = [
     {
       title: 'Operations Velocity',
-      value: metrics?.operationsVelocity || '+18.4%',
+      value: metrics?.operationsVelocity || '100%',
       change: 'On-schedule delivery rate',
       desc: 'Milestone tracking across active initiatives',
     },
     {
       title: 'Active Initiatives',
-      value: metrics?.activeProjectsCount ?? 4,
-      change: '100% SLA adherence',
+      value: metrics?.activeProjectsCount ?? 0,
+      change: metrics?.activeProjectsCount ? 'Active execution' : 'Backlog ready',
       desc: 'Active roadmaps across departments',
     },
     {
@@ -36,9 +36,9 @@ export const AnalyticsView: React.FC = () => {
     },
     {
       title: 'Departmental Alignment',
-      value: metrics?.departmentalAlignment || '98.5%',
-      change: 'All 5 divisions synchronized',
-      desc: 'Cross-functional ticket resolution',
+      value: metrics?.departmentalAlignment || '100%',
+      change: 'All 5 statutory divisions synchronized',
+      desc: 'Cross-functional operational governance',
     },
   ];
 
@@ -98,41 +98,51 @@ export const AnalyticsView: React.FC = () => {
             <div className="space-y-4 text-xs">
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
-                  <span className="font-semibold">Engineering & AI Operations</span>
-                  <span className="font-mono text-gold-400 font-bold">42% (SOP-401 & System Mesh)</span>
+                  <span className="font-semibold">Technology & AI Systems (TECH)</span>
+                  <span className="font-mono text-gold-400 font-bold">35% (Architecture & AI Systems)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '42%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '35%' }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
-                  <span className="font-semibold">Strategic Advisory & Client Accounts</span>
-                  <span className="font-mono text-gold-400 font-bold">29% (PB-105 & Contract SLAs)</span>
+                  <span className="font-semibold">Operations & Delivery (OPS)</span>
+                  <span className="font-mono text-gold-400 font-bold">30% (Cadences & Delivery Protocols)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '29%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '30%' }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
-                  <span className="font-semibold">Product Architecture & Governance</span>
-                  <span className="font-mono text-gold-400 font-bold">18% (POL-202 & RBAC Matrices)</span>
+                  <span className="font-semibold">Finance & Corporate Treasury (FIN)</span>
+                  <span className="font-mono text-gold-400 font-bold">15% (Treasury & Cash Flow)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '18%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '15%' }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1.5">
-                  <span className="font-semibold">Executive Leadership</span>
-                  <span className="font-mono text-gold-400 font-bold">11% (Strategic Synthesis & Directives)</span>
+                  <span className="font-semibold">Executive Leadership & Governance (EXEC)</span>
+                  <span className="font-mono text-gold-400 font-bold">12% (Strategic Synthesis & Directives)</span>
                 </div>
                 <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
-                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '11%' }}></div>
+                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '12%' }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-slate-300 mb-1.5">
+                  <span className="font-semibold">Administration & Corporate Services (ADMIN)</span>
+                  <span className="font-mono text-gold-400 font-bold">8% (Compliance & Facilities)</span>
+                </div>
+                <div className="w-full bg-solian-surface h-2.5 rounded-full overflow-hidden border border-solian-border">
+                  <div className="bg-gold-500 h-full rounded-full" style={{ width: '8%' }}></div>
                 </div>
               </div>
             </div>
