@@ -15,7 +15,12 @@ import io
 import re
 from pathlib import Path
 from typing import Optional, Tuple
-from PIL import Image
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    Image = None
+    HAS_PIL = False
 
 # Max upload limit: 5 Megabytes
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5,242,880 bytes
@@ -54,6 +59,22 @@ class AvatarStorageService:
         """
         if len(file_bytes) > MAX_FILE_SIZE:
             raise ValueError(f"File size exceeds limit of {MAX_FILE_SIZE // (1024 * 1024)}MB.")
+
+        if not HAS_PIL:
+            # Resilient fallback when PIL is not installed
+            safe_uid = self._sanitize_user_id(user_id)
+            timestamp = int(time.time())
+            unique_token = uuid.uuid4().hex[:8]
+            ext = ".jpg" if mime_type == "image/jpeg" else ".png" if mime_type == "image/png" else ".webp"
+            filename = f"avatar_{safe_uid}_{timestamp}_{unique_token}{ext}"
+            target_path = (self.storage_dir / filename).resolve()
+            if not str(target_path).startswith(str(self.storage_dir)):
+                raise ValueError("Security rejection: Invalid path destination.")
+            with open(target_path, "wb") as f:
+                f.write(file_bytes)
+            self._cleanup_old_avatars(user_id, keep_filename=filename)
+            relative_url = f"/api/v1/auth/avatars/{filename}"
+            return relative_url, str(target_path)
 
         try:
             image = Image.open(io.BytesIO(file_bytes))
