@@ -75,7 +75,7 @@ describe('AUREN SOLIAN Company Foundation Components', () => {
 
     expect(screen.getByText(/Organization Identity & Governance/i)).toBeDefined();
     expect(screen.getByText(/Enterprise Profile & Identity/i)).toBeDefined();
-    expect(screen.getByText(/Role-Based Access Control \(RBAC\) Governance Matrix/i)).toBeDefined();
+    expect(screen.getByText(/Access Roles & Permissions/i)).toBeDefined();
   });
 
   it('renders ClientsView with CRM accounts and creation capability', async () => {

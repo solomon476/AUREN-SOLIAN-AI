@@ -187,7 +187,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               Solian Wolves Executive Access
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Enterprise Identity & Cryptographic Authentication
+              Corporate Account Access & Onboarding
             </p>
           </div>
 

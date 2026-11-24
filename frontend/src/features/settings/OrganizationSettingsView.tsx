@@ -278,65 +278,53 @@ export const OrganizationSettingsView: React.FC = () => {
 
       {/* Role-Based Access Control (RBAC) Governance */}
       <div className="p-6 md:p-8 rounded-2xl bg-solian-card border border-solian-border space-y-4 shadow-card-elevation">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-          <Shield className="w-4 h-4 text-gold-500" /> Role-Based Access Control (RBAC) Governance Matrix
+        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+          <Shield className="w-4 h-4 text-amber-600" /> Access Roles & Permissions
         </h3>
-        <p className="text-xs text-graphite-300">
-          Strict organizational tier enforcement on both frontend and FastAPI backend boundaries.
+        <p className="text-xs text-slate-600">
+          Organizational roles and operational authority across Solian Wolves.
         </p>
 
         <div className="space-y-2.5 text-xs">
-          <div className="p-3.5 rounded-xl bg-solian-surface border border-gold-500/30 flex justify-between items-center">
+          <div className="p-3.5 rounded-xl bg-solian-surface border border-amber-500/30 flex justify-between items-center">
             <div>
-              <span className="font-bold text-gold-400 uppercase text-xs">OWNER (Level 50)</span>
-              <p className="text-graphite-300 text-[11px] mt-0.5">
-                Full authority: organization configuration, capital parameters, user clearance assignment, system architecture.
+              <span className="font-bold text-amber-800 uppercase text-xs">OWNER</span>
+              <p className="text-slate-600 text-[11px] mt-0.5">
+                Full company authority: organization settings, financial governance, personnel roles, and system oversight.
               </p>
             </div>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 shrink-0">
-              Enforced ✓
-            </span>
           </div>
 
           <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border flex justify-between items-center">
             <div>
-              <span className="font-bold text-purple-400 uppercase text-xs">ADMIN (Level 40)</span>
-              <p className="text-graphite-300 text-[11px] mt-0.5">
-                Engineering & Operations leadership: manages staff clearance up to Admin, reviews confidential records, updates org profile.
+              <span className="font-bold text-purple-700 uppercase text-xs">ADMIN</span>
+              <p className="text-slate-600 text-[11px] mt-0.5">
+                Executive leadership: manages team onboarding and roles, reviews company records, updates organization profile.
               </p>
             </div>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 shrink-0">
-              Enforced ✓
-            </span>
           </div>
 
           <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border flex justify-between items-center">
             <div>
-              <span className="font-bold text-blue-400 uppercase text-xs">MANAGER (Level 30)</span>
-              <p className="text-graphite-300 text-[11px] mt-0.5">
-                Departmental lead: indexes new SOPs, registers projects, accesses confidential client CRM records, manages automation rules.
+              <span className="font-bold text-blue-700 uppercase text-xs">MANAGER</span>
+              <p className="text-slate-600 text-[11px] mt-0.5">
+                Departmental lead: manages projects, SOPs, client accounts, and operational workflows.
               </p>
             </div>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 shrink-0">
-              Enforced ✓
-            </span>
           </div>
 
           <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border flex justify-between items-center">
             <div>
-              <span className="font-bold text-slate-300 uppercase text-xs">MEMBER (Level 20)</span>
-              <p className="text-graphite-300 text-[11px] mt-0.5">
-                Core organizational staff: executes tasks, searches internal SOPs, collaborates on projects, consults Company AI.
+              <span className="font-bold text-slate-700 uppercase text-xs">MEMBER</span>
+              <p className="text-slate-600 text-[11px] mt-0.5">
+                Company staff: executes tasks, accesses internal knowledge, collaborates on projects, and consults Auren AI.
               </p>
             </div>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 shrink-0">
-              Enforced ✓
-            </span>
           </div>
 
           <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border flex justify-between items-center">
             <div>
-              <span className="font-bold text-zinc-400 uppercase text-xs">GUEST (Level 10)</span>
+              <span className="font-bold text-zinc-600 uppercase text-xs">GUEST</span>
               <p className="text-graphite-300 text-[11px] mt-0.5">
                 External advisor: read-only visibility into public company policies. Internal SOPs and confidential documents restricted.
               </p>

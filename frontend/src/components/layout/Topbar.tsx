@@ -167,8 +167,8 @@ export const Topbar: React.FC = () => {
             <div className="flex items-center gap-2 bg-solian-surface px-2.5 py-1 rounded-lg border border-emerald-500/40 min-h-[36px]">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <div className="flex flex-col text-left">
-                <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold leading-tight">
-                  Supabase Auth
+                <span className="text-[9px] uppercase tracking-wider text-emerald-700 font-bold leading-tight">
+                  Verified Session
                 </span>
                 <span className="text-xs font-bold text-white truncate max-w-[140px]">
                   {user.fullName}
@@ -384,7 +384,7 @@ export const Topbar: React.FC = () => {
                         : 'bg-amber-500/15 text-amber-800 border-amber-500/40'
                     }`}
                   >
-                    {authMode === 'SUPABASE_JWT' ? 'SUPABASE JWT' : 'DEV SIMULATION'}
+                    {authMode === 'SUPABASE_JWT' ? 'VERIFIED SESSION' : 'DEV SIMULATION'}
                   </span>
                 </div>
               </div>
@@ -433,7 +433,7 @@ export const Topbar: React.FC = () => {
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-amber-50 text-slate-800 hover:text-amber-800 border border-slate-300 hover:border-amber-400 text-xs font-bold transition min-h-[44px] cursor-pointer"
               >
                 <KeyRound className="w-4 h-4 text-amber-700" />
-                <span>Corporate Sign In (Supabase Auth)</span>
+                <span>Sign In to Corporate Account</span>
               </button>
 
               {authMode === 'SUPABASE_JWT' && user.id !== 'guest' && (

@@ -144,32 +144,32 @@ export const DashboardView: React.FC = () => {
         {/* Public Operating Pillars */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 sm:p-5 rounded-xl bg-solian-card border border-solian-border space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400">
+            <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-amber-700">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Cryptographic RBAC</h3>
-            <p className="text-xs text-graphite-400 leading-relaxed">
-              Every operation, ledger entry, and decision matrix is cryptographically authenticated with rigorous role separation.
+            <h3 className="text-sm font-bold text-slate-900">Role-Based Access</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Structured permissions across executive leadership, department leads, and team members.
             </p>
           </div>
 
           <div className="p-4 sm:p-5 rounded-xl bg-solian-card border border-solian-border space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-700">
               <Brain className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Organizational Intelligence</h3>
-            <p className="text-xs text-graphite-400 leading-relaxed">
-              High-velocity enterprise knowledge mesh synthesizing SOPs, execution matrices, and strategic capital governance.
+            <h3 className="text-sm font-bold text-slate-900">Organizational Intelligence</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Unified company knowledge, operational playbooks, and strategic initiative tracking in one workspace.
             </p>
           </div>
 
           <div className="p-4 sm:p-5 rounded-xl bg-solian-card border border-solian-border space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-700">
               <Building2 className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Sovereign Architecture</h3>
-            <p className="text-xs text-graphite-400 leading-relaxed">
-              Air-gapped database partitioning, zero client role override, and dedicated enterprise multi-tenant isolation.
+            <h3 className="text-sm font-bold text-slate-900">Private Workspace</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Protected access to internal company projects, financial records, and leadership communications.
             </p>
           </div>
         </div>
