@@ -70,12 +70,12 @@ export const NotificationCenter: React.FC = () => {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         title="Operational Notifications"
-        className="relative p-2 rounded-lg bg-solian-surface text-slate-400 hover:text-white border border-solian-border transition cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
+        className="relative p-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
         aria-label="Operational Notifications"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold-500 text-solian-obsidian font-bold text-[9px] flex items-center justify-center animate-pulse">
+          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold-500 text-slate-950 font-bold text-[9px] flex items-center justify-center animate-pulse shadow-sm">
             {unreadCount}
           </span>
         )}
@@ -89,15 +89,15 @@ export const NotificationCenter: React.FC = () => {
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] bg-solian-card border border-gold-500/30 rounded-2xl shadow-2xl p-4 z-50 space-y-3 animate-fadeIn">
+          <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 z-50 space-y-3 animate-fadeIn text-slate-900">
             {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-solian-border">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                   Operational Dispatch
                 </span>
                 {unreadCount > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-gold-500/20 text-gold-400 border border-gold-500/30">
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-800 border border-amber-500/30">
                     {unreadCount} new
                   </span>
                 )}
@@ -137,24 +137,24 @@ export const NotificationCenter: React.FC = () => {
                     onClick={() => handleMarkAsRead(notif)}
                     className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 min-h-[44px] ${
                       notif.isRead
-                        ? 'bg-solian-surface/50 border-solian-border/60 opacity-75'
-                        : 'bg-solian-surface border-gold-500/40 shadow-sm'
+                        ? 'bg-slate-50 border-slate-200 opacity-75'
+                        : 'bg-white border-amber-500/40 shadow-sm'
                     }`}
                   >
                     {getIcon(notif.type, notif.priority)}
 
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-white truncate">{notif.title}</span>
+                        <span className="text-xs font-bold text-slate-900 truncate">{notif.title}</span>
                         {!notif.isRead && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-gold-500 shrink-0"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-300 leading-snug">{notif.message}</p>
-                      <div className="flex items-center justify-between pt-1 text-[10px] text-graphite-400">
+                      <p className="text-[11px] text-slate-600 leading-snug">{notif.message}</p>
+                      <div className="flex items-center justify-between pt-1 text-[10px] text-slate-500">
                         <span>{new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {notif.linkModule && (
-                          <span className="text-gold-400 hover:underline flex items-center gap-0.5">
+                          <span className="text-amber-700 hover:underline flex items-center gap-0.5">
                             View in {notif.linkModule}
                             <ExternalLink className="w-2.5 h-2.5" />
                           </span>

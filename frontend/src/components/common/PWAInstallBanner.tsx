@@ -129,19 +129,19 @@ export const PWAInstallBanner: React.FC = () => {
       {/* Floating Bottom Install Banner (shown on mobile/uninstalled devices) */}
       {!isStandalone && !dismissed && isInstallable && (
         <div className="fixed bottom-16 md:bottom-4 left-3 right-3 md:left-auto md:right-6 md:w-96 z-40 animate-fadeIn">
-          <div className="p-3.5 rounded-xl bg-solian-card/95 backdrop-blur-md border border-gold-500/30 shadow-2xl shadow-black/80 flex items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 rounded-xl bg-white/95 backdrop-blur-md border border-amber-500/30 shadow-xl flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400 shrink-0">
-                <Smartphone className="w-5 h-5 text-gold-400" />
+              <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shrink-0">
+                <Smartphone className="w-5 h-5 text-amber-600" />
               </div>
               <div className="min-w-0">
-                <div className="font-bold text-white tracking-tight flex items-center gap-1.5 truncate">
+                <div className="font-bold text-slate-900 tracking-tight flex items-center gap-1.5 truncate">
                   <span>Install AUREN SOLIAN</span>
-                  <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-gold-500/20 text-gold-300">
+                  <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-800">
                     App
                   </span>
                 </div>
-                <div className="text-[11px] text-graphite-300 truncate">
+                <div className="text-[11px] text-slate-500 truncate">
                   Add to home screen for native mobile experience
                 </div>
               </div>
@@ -150,14 +150,14 @@ export const PWAInstallBanner: React.FC = () => {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={handleInstallClick}
-                className="px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-solian-darkest font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-glow-gold"
+                className="px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-sm"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Install</span>
               </button>
               <button
                 onClick={() => setDismissed(true)}
-                className="p-1.5 text-graphite-400 hover:text-white rounded-lg hover:bg-solian-surface transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition cursor-pointer"
                 aria-label="Dismiss install banner"
               >
                 <X className="w-4 h-4" />
@@ -169,16 +169,16 @@ export const PWAInstallBanner: React.FC = () => {
 
       {/* Interactive Mobile Installation Guide Modal */}
       {showGuide && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-solian-card border border-gold-500/30 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl animate-fadeIn">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl animate-fadeIn text-slate-900">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <Smartphone className="w-4 h-4 text-gold-400" />
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                <Smartphone className="w-4 h-4 text-amber-600" />
                 <span>Install AUREN SOLIAN</span>
               </div>
               <button
                 onClick={() => setShowGuide(false)}
-                className="text-graphite-400 hover:text-white p-1 rounded-lg hover:bg-solian-surface transition"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition"
                 aria-label="Close guide"
               >
                 <X className="w-4 h-4" />
@@ -186,7 +186,7 @@ export const PWAInstallBanner: React.FC = () => {
             </div>
 
             {/* Platform Selector Tabs */}
-            <div className="flex rounded-lg bg-solian-darkest p-1 border border-solian-border">
+            <div className="flex rounded-lg bg-slate-100 p-1 border border-slate-200">
               <button
                 onClick={() => setActiveTab('android')}
                 className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer ${
@@ -215,31 +215,31 @@ export const PWAInstallBanner: React.FC = () => {
                   Install AUREN SOLIAN on your Android phone as a standalone application:
                 </p>
 
-                <div className="space-y-2.5 text-xs text-slate-200 bg-solian-obsidian/70 p-3.5 rounded-xl border border-solian-border">
+                <div className="space-y-2.5 text-xs text-slate-700 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                   <div className="flex items-start gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gold-500/10 text-gold-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-800 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       1
                     </div>
                     <div>
-                      Tap the <strong className="text-white">three dots</strong> (<MoreVertical className="w-3.5 h-3.5 inline text-gold-400" />) in Chrome's top-right corner.
+                      Tap the <strong className="text-slate-900">three dots</strong> (<MoreVertical className="w-3.5 h-3.5 inline text-amber-600" />) in Chrome's top-right corner.
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gold-500/10 text-gold-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-800 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       2
                     </div>
                     <div>
-                      Tap <strong className="text-white">Install app</strong> (or <strong className="text-white">Add to Home screen</strong>).
+                      Tap <strong className="text-slate-900">Install app</strong> (or <strong className="text-slate-900">Add to Home screen</strong>).
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gold-500/10 text-gold-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-800 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       3
                     </div>
                     <div>
-                      Tap <strong className="text-white">Install</strong>. The Solian Wolves corporate icon will appear directly in your home screen and app launcher.
+                      Tap <strong className="text-slate-900">Install</strong>. The Solian Wolves corporate icon will appear directly in your home screen and app launcher.
                     </div>
                   </div>
                 </div>
@@ -250,36 +250,36 @@ export const PWAInstallBanner: React.FC = () => {
                   Apple Safari requires adding apps to your Home Screen using the share menu:
                 </p>
 
-                <div className="space-y-2.5 text-xs text-slate-200 bg-solian-obsidian/70 p-3.5 rounded-xl border border-solian-border">
+                <div className="space-y-2.5 text-xs text-slate-700 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                   <div className="flex items-start gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gold-500/10 text-gold-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-800 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       1
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span>Tap the</span>
-                      <Share2 className="w-4 h-4 text-gold-400 inline" />
-                      <strong className="text-white">Share button</strong>
+                      <Share2 className="w-4 h-4 text-amber-600 inline" />
+                      <strong className="text-slate-900">Share button</strong>
                       <span>in Safari's bottom toolbar</span>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gold-500/10 text-gold-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-800 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       2
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span>Scroll down & tap</span>
-                      <PlusSquare className="w-4 h-4 text-gold-400 inline" />
-                      <strong className="text-white">Add to Home Screen</strong>
+                      <PlusSquare className="w-4 h-4 text-amber-600 inline" />
+                      <strong className="text-slate-900">Add to Home Screen</strong>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-gold-500/10 text-gold-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-amber-500/10 text-amber-800 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                       3
                     </div>
                     <div>
-                      Tap <strong className="text-white">Add</strong> in the top right corner.
+                      Tap <strong className="text-slate-900">Add</strong> in the top right corner.
                     </div>
                   </div>
                 </div>

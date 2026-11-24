@@ -36,10 +36,10 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
       {showText && (
         <div className="flex flex-col">
-          <div className={`font-extrabold tracking-wider leading-none text-white ${textSizes[size]}`}>
-            AUREN <span className="text-gold-500">SOLIAN</span>
+          <div className={`font-extrabold tracking-wider leading-none text-slate-900 ${textSizes[size]}`}>
+            AUREN <span className="text-amber-600">SOLIAN</span>
           </div>
-          <span className="text-[9px] tracking-widest font-semibold uppercase text-gold-400/90 mt-1">
+          <span className="text-[9px] tracking-widest font-bold uppercase text-amber-800 mt-1">
             Organizational Intelligence
           </span>
         </div>

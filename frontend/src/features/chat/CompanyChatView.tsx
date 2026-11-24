@@ -359,10 +359,10 @@ export const CompanyChatView: React.FC = () => {
             <img src="/favicon.svg" alt="Wolf" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white flex items-center gap-1.5">
-              AUREN SOLIAN AI <span className="w-2 h-2 rounded-full bg-gold-500"></span>
+            <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              AUREN SOLIAN AI <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             </div>
-            <div className="text-[10px] text-graphite-400">
+            <div className="text-[10px] text-slate-500">
               Organizational Intelligence • Solian Wolves Knowledge Mesh
             </div>
           </div>
@@ -372,27 +372,27 @@ export const CompanyChatView: React.FC = () => {
           <button
             onClick={handleResetConversation}
             title="Reset current conversation thread"
-            className="px-2.5 py-1 rounded-lg bg-solian-card hover:bg-solian-surface border border-solian-border text-[11px] text-slate-300 hover:text-white flex items-center gap-1.5 transition cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-[11px] text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-gold-400" />
+            <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
             <span className="hidden xs:inline">New Thread</span>
           </button>
           {isGuest ? (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-mono font-bold uppercase text-graphite-300 bg-solian-card px-2 py-0.5 rounded border border-solian-border">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                 Visitor Mode
               </span>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
-                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gold-500 text-solian-darkest hover:bg-gold-400 transition cursor-pointer"
+                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gold-500 text-slate-950 hover:bg-gold-400 transition cursor-pointer"
               >
                 Sign In
               </button>
             </div>
           ) : (
             <>
-              <span className="text-[11px] text-graphite-400 hidden sm:inline">Clearance:</span>
-              <span className="text-[10px] font-mono font-bold uppercase text-gold-400 bg-solian-card px-2 py-0.5 rounded border border-gold-500/30">
+              <span className="text-[11px] text-slate-500 hidden sm:inline">Clearance:</span>
+              <span className="text-[10px] font-mono font-bold uppercase text-amber-800 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
                 {user.role} {user.department ? `(${user.department})` : ''}
               </span>
             </>
@@ -410,17 +410,17 @@ export const CompanyChatView: React.FC = () => {
               className={`flex gap-3 md:gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}
             >
               {!isUser && (
-                <div className="w-9 h-9 rounded-xl bg-solian-card border border-gold-500/30 p-1.5 shrink-0 flex items-center justify-center shadow-glow-subtle mt-1">
+                <div className="w-9 h-9 rounded-xl bg-white border border-amber-500/30 p-1.5 shrink-0 flex items-center justify-center shadow-sm mt-1">
                   <img src="/favicon.svg" alt="Wolf" className="w-full h-full object-contain" />
                 </div>
               )}
 
               <div className="max-w-[88%] md:max-w-[82%] space-y-2">
                 <div
-                  className={`p-4 md:p-5 rounded-2xl text-xs md:text-sm leading-relaxed shadow-card-elevation ${
+                  className={`p-4 md:p-5 rounded-2xl text-xs md:text-sm leading-relaxed shadow-sm ${
                     isUser
-                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-solian-darkest font-semibold rounded-br-none'
-                      : 'bg-solian-card border border-solian-border text-slate-100 rounded-bl-none'
+                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-slate-950 font-semibold rounded-br-none'
+                      : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'
                   }`}
                 >
                   {/* Attachments */}
@@ -472,21 +472,21 @@ export const CompanyChatView: React.FC = () => {
                     {msg.actionProposals.map((prop) => (
                       <div
                         key={prop.id}
-                        className="p-3 sm:p-3.5 rounded-xl bg-solian-surface border border-gold-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                        className="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs"
                       >
                         <div className="flex items-start sm:items-center gap-2 min-w-0">
-                          <ListTodo className="w-4 h-4 text-gold-500 shrink-0 mt-0.5 sm:mt-0" />
-                          <span className="font-semibold text-slate-200 break-words leading-relaxed">{prop.title}</span>
+                          <ListTodo className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+                          <span className="font-semibold text-slate-900 break-words leading-relaxed">{prop.title}</span>
                         </div>
                         {prop.status === 'executed' ? (
-                          <span className="flex items-center gap-1 text-emerald-400 font-bold text-[10px] uppercase shrink-0">
+                          <span className="flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase shrink-0">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Action Executed ✓
                           </span>
                         ) : (
                           <button
                             onClick={() => handleExecuteAction(msg.id, prop)}
                             disabled={executingProposalId === prop.id}
-                            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer shrink-0 disabled:opacity-50 min-h-[38px] flex items-center justify-center"
+                            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gold-500 text-slate-950 font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer shrink-0 disabled:opacity-50 min-h-[38px] flex items-center justify-center shadow-xs"
                           >
                             {executingProposalId === prop.id ? 'Executing...' : 'Execute Action'}
                           </button>
@@ -668,7 +668,7 @@ export const CompanyChatView: React.FC = () => {
                     : 'Consult AUREN SOLIAN on initiatives, SOPs, or delegate tasks...')
             }
             disabled={isStreaming}
-            className="flex-1 bg-transparent text-xs md:text-sm text-slate-100 placeholder-graphite-400 focus:outline-none"
+            className="flex-1 bg-transparent text-xs md:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           <button
             type="submit"

@@ -29,11 +29,11 @@ const ICON_SIZES = {
 };
 
 const ROLE_BORDER_COLORS: Record<UserRole, string> = {
-  owner: 'border-gold-500/50 text-gold-400 bg-gold-500/10',
-  admin: 'border-amber-500/50 text-amber-400 bg-amber-500/10',
-  manager: 'border-blue-500/50 text-blue-400 bg-blue-500/10',
-  member: 'border-slate-500/40 text-slate-300 bg-slate-500/10',
-  guest: 'border-graphite-600/40 text-graphite-400 bg-graphite-800/40',
+  owner: 'border-amber-500/50 text-amber-800 bg-amber-500/15',
+  admin: 'border-amber-600/50 text-amber-800 bg-amber-500/15',
+  manager: 'border-blue-500/50 text-blue-800 bg-blue-500/15',
+  member: 'border-slate-400 text-slate-700 bg-slate-100',
+  guest: 'border-slate-300 text-slate-600 bg-slate-100',
 };
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({
@@ -96,7 +96,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
       {showRoleBadge && role && (
         <span
-          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-solian-darkest"
+          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white"
           style={{
             backgroundColor:
               role === 'owner' ? '#eab308' : role === 'admin' ? '#f59e0b' : role === 'manager' ? '#3b82f6' : '#94a3b8',

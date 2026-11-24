@@ -42,11 +42,11 @@ export const Topbar: React.FC = () => {
   }, []);
 
   const roleColors: Record<UserRole, string> = {
-    owner: 'bg-gold-500/20 text-gold-400 border-gold-500/40',
-    admin: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
-    manager: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-    member: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
-    guest: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/40',
+    owner: 'bg-amber-500/15 text-amber-900 border-amber-500/30',
+    admin: 'bg-purple-500/15 text-purple-900 border-purple-500/30',
+    manager: 'bg-blue-500/15 text-blue-900 border-blue-500/30',
+    member: 'bg-slate-100 text-slate-700 border-slate-300',
+    guest: 'bg-zinc-100 text-zinc-700 border-zinc-300',
   };
 
   const moduleTitles: Record<string, string> = {
@@ -105,20 +105,20 @@ export const Topbar: React.FC = () => {
         </div>
 
         {/* Organization identity badge */}
-        <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 py-0.5 rounded bg-solian-surface border border-gold-500/30 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse"></span>
-          <span className="text-xs font-bold tracking-wide text-gold-400 uppercase hidden sm:inline">
+        <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 py-0.5 rounded bg-slate-50 border border-amber-500/30 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span className="text-xs font-bold tracking-wide text-amber-800 uppercase hidden sm:inline">
             {currentOrg.name}
           </span>
-          <span className="text-[10px] px-1.5 py-0.5 bg-gold-500/20 text-gold-300 rounded font-mono font-bold">
+          <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/15 text-amber-900 rounded font-mono font-bold">
             {currentOrg.code}
           </span>
         </div>
 
-        <div className="h-3.5 w-px bg-solian-border shrink-0 hidden xs:block"></div>
+        <div className="h-3.5 w-px bg-slate-200 shrink-0 hidden xs:block"></div>
 
         {/* Page / Workspace title */}
-        <h1 className="text-xs sm:text-sm font-semibold text-slate-200 truncate min-w-0">
+        <h1 className="text-xs sm:text-sm font-semibold text-slate-800 truncate min-w-0">
           <span className="hidden md:inline">{moduleTitles[activeModule] || 'Enterprise Hub'}</span>
           <span className="md:hidden">{mobileModuleTitles[activeModule] || 'Command'}</span>
         </h1>
@@ -129,22 +129,22 @@ export const Topbar: React.FC = () => {
         {/* Mobile Search Button (touch target >= 38px) */}
         <button
           onClick={() => setIsCommandPaletteOpen(true)}
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-solian-surface hover:bg-white/5 text-slate-300 hover:text-white border border-solian-border lg:hidden flex items-center justify-center shrink-0 cursor-pointer transition min-h-[38px] min-w-[38px] active:scale-95"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 lg:hidden flex items-center justify-center shrink-0 cursor-pointer transition min-h-[38px] min-w-[38px] active:scale-95"
           aria-label="Search company intelligence"
           title="Search (⌘K)"
         >
-          <Search className="w-4 h-4 text-gold-400" />
+          <Search className="w-4 h-4 text-amber-700" />
         </button>
 
         {/* Mobile Quick Install App Button (visible on mobile browsers when not yet installed) */}
         {!isStandalone && (
           <button
             onClick={triggerInstall}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500/25 border border-gold-500/30 text-gold-400 text-xs font-bold cursor-pointer transition min-h-[36px] active:scale-95"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 text-xs font-bold cursor-pointer transition min-h-[36px] active:scale-95"
             title="Install AUREN SOLIAN on your device"
             aria-label="Install App"
           >
-            <Download className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+            <Download className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span className="hidden xs:inline">Install</span>
           </button>
         )}
@@ -290,20 +290,20 @@ export const Topbar: React.FC = () => {
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 md:hidden animate-fadeIn"
             onClick={() => setIsMobileProfileOpen(false)}
           />
-          <div className="fixed bottom-0 inset-x-0 bg-solian-darkest border-t border-gold-500/30 rounded-t-2xl p-5 pb-[max(env(safe-area-inset-bottom,0px),1.5rem)] z-50 md:hidden max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl animate-slideUp">
+          <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 rounded-t-2xl p-5 pb-[max(env(safe-area-inset-bottom,0px),1.5rem)] z-50 md:hidden max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl animate-slideUp text-slate-900">
             {/* Sheet Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-solian-border">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-gold-500/10 border border-gold-500/30 flex items-center justify-center p-0.5">
+                <div className="w-6 h-6 rounded bg-amber-500/10 border border-amber-500/30 flex items-center justify-center p-0.5">
                   <img src="/favicon.svg" alt="Solian Emblem" className="w-full h-full object-contain" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-white">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
                   {user.role === 'guest' ? 'Visitor Access' : 'Executive Identity & Clearance'}
                 </span>
               </div>
               <button
                 onClick={() => setIsMobileProfileOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
                 aria-label="Close profile drawer"
               >
                 <X className="w-5 h-5" />
@@ -312,17 +312,17 @@ export const Topbar: React.FC = () => {
 
             {/* Profile Information Card */}
             {user.role === 'guest' ? (
-              <div className="p-4 rounded-xl bg-solian-surface border border-solian-border space-y-3">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-solian-card border border-solian-border flex items-center justify-center text-sm font-bold text-graphite-300">
+                  <div className="w-12 h-12 rounded-full bg-white border border-slate-300 flex items-center justify-center text-sm font-bold text-slate-600">
                     V
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Public Visitor</h3>
-                    <p className="text-xs text-graphite-400 mt-0.5">Visitor Session (Public Access)</p>
+                    <h3 className="text-sm font-bold text-slate-900">Public Visitor</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Visitor Session (Public Access)</p>
                   </div>
                 </div>
-                <p className="text-xs text-graphite-300 leading-relaxed pt-1">
+                <p className="text-xs text-slate-600 leading-relaxed pt-1">
                   Access to institutional memory, strategic project matrices, financial records, and operational execution requires an authorized corporate account.
                 </p>
                 <button
@@ -330,14 +330,14 @@ export const Topbar: React.FC = () => {
                     setIsMobileProfileOpen(false);
                     setIsAuthModalOpen(true);
                   }}
-                  className="w-full py-2 rounded-lg bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer min-h-[40px] flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 rounded-lg bg-gold-500 text-slate-950 font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer min-h-[40px] flex items-center justify-center gap-1.5 shadow-sm"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   <span>Sign In to Corporate Account</span>
                 </button>
               </div>
             ) : (
-              <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border space-y-3">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <UserAvatar
@@ -348,13 +348,13 @@ export const Topbar: React.FC = () => {
                       className="shrink-0"
                     />
                     <div>
-                      <h3 className="text-sm font-bold text-white leading-tight">
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
                         {user.fullName}
                       </h3>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-600 mt-0.5">
                         {user.title}
                       </p>
-                      <p className="text-[10px] text-gold-400/80 font-mono mt-0.5">
+                      <p className="text-[10px] text-amber-700 font-mono mt-0.5">
                         {user.email || 'No institutional email'}
                       </p>
                     </div>
@@ -368,20 +368,20 @@ export const Topbar: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-solian-border/60 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Department</span>
-                  <span className="text-slate-200 font-medium text-right truncate max-w-[200px]">
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500">Department</span>
+                  <span className="text-slate-800 font-medium text-right truncate max-w-[200px]">
                     {user.department}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Auth Mode</span>
+                  <span className="text-slate-500">Auth Mode</span>
                   <span
                     className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
                       authMode === 'SUPABASE_JWT'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                        ? 'bg-emerald-500/15 text-emerald-800 border-emerald-500/40'
+                        : 'bg-amber-500/15 text-amber-800 border-amber-500/40'
                     }`}
                   >
                     {authMode === 'SUPABASE_JWT' ? 'SUPABASE JWT' : 'DEV SIMULATION'}
@@ -392,13 +392,13 @@ export const Topbar: React.FC = () => {
 
             {/* Dev Persona Switcher (Only in Dev Simulation Mode) */}
             {isDevSimulation && (
-              <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+              <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
                     <span>Switch Test Identity</span>
                   </span>
-                  <span className="text-[9px] font-mono text-amber-400/70">RBAC SIMULATION</span>
+                  <span className="text-[9px] font-mono text-amber-700">RBAC SIMULATION</span>
                 </div>
                 <select
                   value={user.userId || user.id}
@@ -412,10 +412,10 @@ export const Topbar: React.FC = () => {
                     }
                   }}
                   aria-label="Switch development user"
-                  className="w-full bg-solian-surface border border-solian-border rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-gold-500 transition cursor-pointer"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                 >
                   {availableUsers.map((u) => (
-                    <option key={u.id} value={u.userId || u.id} className="bg-solian-card text-white">
+                    <option key={u.id} value={u.userId || u.id} className="bg-white text-slate-900">
                       {u.isDemo ? '[DEMO] ' : ''}{u.fullName} — {u.title} ({u.role.toUpperCase()})
                     </option>
                   ))}
@@ -430,9 +430,9 @@ export const Topbar: React.FC = () => {
                   setIsMobileProfileOpen(false);
                   setIsAuthModalOpen(true);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-solian-surface hover:bg-gold-500/10 text-slate-200 hover:text-gold-400 border border-solian-border hover:border-gold-500/40 text-xs font-bold transition min-h-[44px] cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-amber-50 text-slate-800 hover:text-amber-800 border border-slate-300 hover:border-amber-400 text-xs font-bold transition min-h-[44px] cursor-pointer"
               >
-                <KeyRound className="w-4 h-4 text-gold-400" />
+                <KeyRound className="w-4 h-4 text-amber-700" />
                 <span>Corporate Sign In (Supabase Auth)</span>
               </button>
 
@@ -442,7 +442,7 @@ export const Topbar: React.FC = () => {
                     await signOut();
                     setIsMobileProfileOpen(false);
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition min-h-[44px] cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold transition min-h-[44px] cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out of Corporate Session</span>

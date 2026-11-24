@@ -9,13 +9,13 @@ export default {
     extend: {
       colors: {
         solian: {
-          darkest: '#07090E',
-          obsidian: '#0B0D13',
-          surface: '#11151F',
-          card: '#161C2A',
-          cardHover: '#1D2537',
-          border: '#242F46',
-          borderSubtle: '#1A2234',
+          darkest: '#0f172a',      /* Primary high-contrast slate text and dark accents */
+          obsidian: '#ffffff',     /* Main Application Canvas Background (Pure Executive White) */
+          surface: '#f8fafc',      /* Crisp light slate surface for inputs, secondary bars & sub-panels */
+          card: '#ffffff',         /* Pure White Card Background */
+          cardHover: '#f8fafc',    /* Light slate hover state */
+          border: '#e2e8f0',       /* Crisp Slate-200 border */
+          borderSubtle: '#f1f5f9', /* Subtle Slate-100 border */
         },
         gold: {
           50: '#FDFBF7',
@@ -32,16 +32,16 @@ export default {
           light: '#F7E7B4',
         },
         graphite: {
-          50: '#F5F7FA',
-          100: '#E4E7EB',
-          200: '#CBD2D9',
-          300: '#9AA5B1',
-          400: '#7B8794',
-          500: '#616E7C',
-          600: '#52606D',
-          700: '#3E4C59',
-          800: '#323F4B',
-          900: '#1F2933',
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#64748B', /* Slate-500 for WCAG AA readability on white */
+          400: '#64748B', /* Slate-500 for WCAG AA readability on white */
+          500: '#475569', /* Slate-600 */
+          600: '#334155', /* Slate-700 */
+          700: '#1E293B', /* Slate-800 */
+          800: '#0F172A', /* Slate-900 */
+          900: '#020617', /* Slate-950 */
         }
       },
       fontFamily: {
@@ -49,10 +49,10 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
       },
       boxShadow: {
-        'glow-gold': '0 0 24px -4px rgba(212, 175, 55, 0.22)',
-        'glow-subtle': '0 0 16px -2px rgba(212, 175, 55, 0.12)',
-        'solian-elevation': '0 8px 32px -4px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(212, 175, 55, 0.15)',
-        'card-elevation': '0 6px 20px -2px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+        'glow-gold': '0 0 20px -3px rgba(212, 175, 55, 0.28)',
+        'glow-subtle': '0 0 12px -2px rgba(212, 175, 55, 0.16)',
+        'solian-elevation': '0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9)',
+        'card-elevation': '0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.85)',
       },
     },
   },

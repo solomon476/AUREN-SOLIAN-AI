@@ -93,11 +93,11 @@ export const Sidebar: React.FC = () => {
         }`}
       >
         {/* Brand Header */}
-        <div className="p-4 sm:p-5 border-b border-solian-border/80 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-solian-border bg-white flex items-center justify-between">
           <BrandLogo size="md" />
           <button
             onClick={closeMobileNav}
-            className="md:hidden text-graphite-400 hover:text-white p-2 rounded-lg cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="md:hidden text-slate-500 hover:text-slate-900 p-2 rounded-lg cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close mobile menu"
           >
             <X className="w-5 h-5" />
@@ -105,10 +105,10 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Nav List */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin bg-white">
           {navSections.map((section) => (
             <div key={section.title} className="space-y-1">
-              <div className="px-3 text-[10px] font-bold tracking-widest text-graphite-400 uppercase">
+              <div className="px-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 {section.title}
               </div>
               {section.items.map((item) => {
@@ -120,16 +120,16 @@ export const Sidebar: React.FC = () => {
                     onClick={() => handleSelectModule(item.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer min-h-[44px] ${
                       isActive
-                        ? 'bg-solian-card text-gold-400 border border-gold-500/40 shadow-glow-subtle'
-                        : 'text-slate-300 hover:bg-solian-surface hover:text-white'
+                        ? 'bg-amber-500/10 text-amber-900 font-bold border border-amber-500/30'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-gold-500' : 'text-slate-400'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-600' : 'text-slate-400'}`} />
                       <span className="truncate">{item.label}</span>
                     </div>
                     {item.badge && (
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-gold-500/10 text-gold-400 border border-gold-500/20 shrink-0">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 border border-amber-500/30 shrink-0">
                         {item.badge}
                       </span>
                     )}
@@ -142,37 +142,37 @@ export const Sidebar: React.FC = () => {
 
         {/* Install Mobile App Button */}
         {!isStandalone && (
-          <div className="px-3 pb-2 pt-1">
+          <div className="px-3 pb-2 pt-1 bg-white">
             <button
               onClick={async () => {
                 closeMobileNav();
                 await triggerInstall();
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-gold-400 transition-all cursor-pointer min-h-[40px] text-xs font-semibold"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-800 transition-all cursor-pointer min-h-[40px] text-xs font-semibold"
             >
               <div className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-gold-400" />
+                <Smartphone className="w-4 h-4 text-amber-700" />
                 <span>Install Mobile App</span>
               </div>
-              <Download className="w-3.5 h-3.5 text-gold-400" />
+              <Download className="w-3.5 h-3.5 text-amber-700" />
             </button>
           </div>
         )}
 
         {/* User / RBAC Badge Footer */}
         <div
-          className="p-3 border-t border-solian-border bg-solian-darkest/60"
+          className="p-3 border-t border-solian-border bg-slate-50"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}
         >
           {user.role === 'guest' ? (
-            <div className="flex items-center justify-between p-2 rounded-lg bg-solian-surface/80 border border-solian-border/60">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 shadow-sm">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-solian-card border border-solian-border flex items-center justify-center text-xs font-bold text-graphite-300 shrink-0">
+                <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
                   V
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-slate-200 truncate">Public Visitor</div>
-                  <div className="text-[10px] text-graphite-400 truncate">Visitor Access</div>
+                  <div className="text-xs font-semibold text-slate-800 truncate">Public Visitor</div>
+                  <div className="text-[10px] text-slate-500 truncate">Visitor Access</div>
                 </div>
               </div>
               <button
@@ -180,13 +180,13 @@ export const Sidebar: React.FC = () => {
                   closeMobileNav();
                   window.dispatchEvent(new CustomEvent('open-auth-modal'));
                 }}
-                className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-gold-500 text-solian-darkest hover:bg-gold-400 transition cursor-pointer shrink-0 ml-1"
+                className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-gold-500 text-slate-950 hover:bg-gold-400 transition cursor-pointer shrink-0 ml-1"
               >
                 Sign In
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-2 rounded-lg bg-solian-surface/80 border border-solian-border/60">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 shadow-sm">
               <div className="flex items-center gap-2.5 min-w-0">
                 <UserAvatar
                   name={user.fullName}
@@ -195,11 +195,11 @@ export const Sidebar: React.FC = () => {
                   size="sm"
                 />
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-slate-200 truncate">{user.fullName}</div>
-                  <div className="text-[10px] text-graphite-400 truncate">{user.title}</div>
+                  <div className="text-xs font-semibold text-slate-800 truncate">{user.fullName}</div>
+                  <div className="text-[10px] text-slate-500 truncate">{user.title}</div>
                 </div>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gold-500/15 text-gold-400 border border-gold-500/30 shrink-0 ml-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 border border-amber-500/30 shrink-0 ml-1">
                 {user.role}
               </span>
             </div>

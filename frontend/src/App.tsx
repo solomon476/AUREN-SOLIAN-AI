@@ -95,7 +95,7 @@ export const AppContent: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex h-screen h-[100dvh] bg-solian-obsidian text-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen h-[100dvh] bg-solian-obsidian text-slate-900 overflow-hidden font-sans">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {isOffline && (

@@ -470,7 +470,7 @@ export const FinanceView: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1F2633] pb-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-solian-border pb-5">
         <div>
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37]">
@@ -501,14 +501,14 @@ export const FinanceView: React.FC = () => {
           </button>
           <button
             onClick={() => setIsCreateInvoiceOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#181F2C] border border-[#2B3545] text-slate-200 font-medium text-sm hover:bg-[#20293A] transition-all"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-solian-surface border border-solian-border text-slate-200 font-medium text-sm hover:bg-solian-cardHover transition-all"
           >
             <Receipt className="w-4 h-4 text-emerald-400" />
             New Invoice
           </button>
           <button
             onClick={() => setIsCreateRequestOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#181F2C] border border-[#2B3545] text-slate-200 font-medium text-sm hover:bg-[#20293A] transition-all"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-solian-surface border border-solian-border text-slate-200 font-medium text-sm hover:bg-solian-cardHover transition-all"
           >
             <Banknote className="w-4 h-4 text-[#D4AF37]" />
             Request Funds
@@ -517,7 +517,7 @@ export const FinanceView: React.FC = () => {
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex overflow-x-auto gap-2 border-b border-[#1F2633] pb-2 scrollbar-thin">
+      <div className="flex overflow-x-auto gap-2 border-b border-solian-border pb-2 scrollbar-thin">
         {[
           { id: 'overview', label: 'Treasury Overview', icon: PieChart },
           { id: 'transactions', label: 'Transaction Ledger', icon: FileSpreadsheet, count: transactions.length },
@@ -535,8 +535,8 @@ export const FinanceView: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                 isActive
-                  ? 'bg-[#181F2C] border border-[#D4AF37]/50 text-[#D4AF37] shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#13171F]'
+                  ? 'bg-solian-surface border border-[#D4AF37]/50 text-[#D4AF37] shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-solian-card'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -544,7 +544,7 @@ export const FinanceView: React.FC = () => {
               {tab.count !== undefined && (
                 <span
                   className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-[#181F2C] text-slate-400'
+                    isActive ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-solian-surface text-slate-400'
                   }`}
                 >
                   {tab.count}
@@ -561,7 +561,7 @@ export const FinanceView: React.FC = () => {
           {/* Executive Telemetry Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Balance */}
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-2">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
                 <span>Active Treasury Balance</span>
                 <Landmark className="w-4 h-4 text-[#D4AF37]" />
@@ -575,7 +575,7 @@ export const FinanceView: React.FC = () => {
             </div>
 
             {/* Monthly Inflow */}
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-2">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
                 <span>Monthly Cash Inflow</span>
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -587,7 +587,7 @@ export const FinanceView: React.FC = () => {
             </div>
 
             {/* Monthly Outflow */}
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-2">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
                 <span>Monthly Expenditure</span>
                 <TrendingDown className="w-4 h-4 text-rose-400" />
@@ -599,7 +599,7 @@ export const FinanceView: React.FC = () => {
             </div>
 
             {/* Net Movement */}
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-2">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider">
                 <span>Outstanding Receivables</span>
                 <ArrowUpRight className="w-4 h-4 text-blue-400" />
@@ -615,7 +615,7 @@ export const FinanceView: React.FC = () => {
 
           {/* Secondary Telemetry: Payables & Budgets */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold uppercase text-slate-400">Pending Payables (Bills)</div>
                 <div className="text-xl font-bold text-amber-400 mt-1">{formatKES(overview?.outstandingPayables)}</div>
@@ -624,7 +624,7 @@ export const FinanceView: React.FC = () => {
               <Clock className="w-8 h-8 text-amber-400/40" />
             </div>
 
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold uppercase text-slate-400">Budget Spent / Allocated</div>
                 <div className="text-xl font-bold text-white mt-1">
@@ -639,7 +639,7 @@ export const FinanceView: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold uppercase text-slate-400">Pending Approvals</div>
                 <div className="text-xl font-bold text-[#D4AF37] mt-1">
@@ -668,7 +668,7 @@ export const FinanceView: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {accounts.length === 0 ? (
-                <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+                <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border space-y-2">
                   <Landmark className="w-8 h-8 text-slate-500 mx-auto" />
                   <div className="text-sm font-bold text-white">No Corporate Accounts Recorded</div>
                   <p className="text-slate-400 max-w-sm mx-auto">
@@ -677,9 +677,9 @@ export const FinanceView: React.FC = () => {
                 </div>
               ) : (
                 accounts.map((acc) => (
-                  <div key={acc.id} className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-3 hover:border-[#D4AF37]/40 transition-all">
+                  <div key={acc.id} className="p-4 rounded-xl bg-solian-card border border-solian-border space-y-3 hover:border-[#D4AF37]/40 transition-all">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-slate-300 uppercase font-medium">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-solian-surface border border-solian-border text-slate-300 uppercase font-medium">
                         {acc.accountType}
                       </span>
                       <span className="text-xs text-emerald-400 flex items-center gap-1">
@@ -691,7 +691,7 @@ export const FinanceView: React.FC = () => {
                       <div className="font-semibold text-white">{acc.name}</div>
                       <div className="text-xs text-slate-400 font-mono mt-0.5">{acc.accountNumber || 'Primary Operational Safe'}</div>
                     </div>
-                    <div className="border-t border-[#1F2633] pt-2 flex items-center justify-between">
+                    <div className="border-t border-solian-border pt-2 flex items-center justify-between">
                       <span className="text-xs text-slate-400">Current Balance:</span>
                       <span className="text-base font-bold text-[#D4AF37]">{formatKES(acc.currentBalance)}</span>
                     </div>
@@ -704,14 +704,14 @@ export const FinanceView: React.FC = () => {
           {/* Cash Flow Trends & Category Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Cash Flow Trend */}
-            <div className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
+            <div className="p-5 rounded-xl bg-solian-card border border-solian-border space-y-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                 Monthly Cash Flow Performance
               </h3>
               <div className="space-y-3">
                 {overview?.cashFlowTrend.map((cft, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-[#0D0F12] border border-[#1F2633] space-y-2">
+                  <div key={idx} className="p-3 rounded-lg bg-solian-surface border border-solian-border space-y-2">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
                       <span>{cft.month}</span>
                       <span className={cft.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
@@ -728,7 +728,7 @@ export const FinanceView: React.FC = () => {
             </div>
 
             {/* Expenditure by Category */}
-            <div className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
+            <div className="p-5 rounded-xl bg-solian-card border border-solian-border space-y-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <PieChart className="w-4 h-4 text-[#D4AF37]" />
                 Expenditure by Operating Category
@@ -741,7 +741,7 @@ export const FinanceView: React.FC = () => {
                   const maxExpense = Math.max(...(overview?.expenseByCategory.map((c) => c.amount) || [1]));
                   const pct = Math.round((cat.amount / maxExpense) * 100);
                   return (
-                    <div key={idx} className="p-2.5 rounded-lg bg-[#0D0F12] border border-[#1F2633] space-y-1.5">
+                    <div key={idx} className="p-2.5 rounded-lg bg-solian-surface border border-solian-border space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-medium text-slate-200">{cat.category}</span>
                         <span className="font-semibold text-rose-400">{formatKES(cat.amount)}</span>
@@ -762,7 +762,7 @@ export const FinanceView: React.FC = () => {
       {activeTab === 'transactions' && (
         <div className="space-y-4">
           {/* Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-xl bg-[#13171F] border border-[#1F2633]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-xl bg-solian-card border border-solian-border">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -770,7 +770,7 @@ export const FinanceView: React.FC = () => {
                 placeholder="Search by reference, description, category..."
                 value={txSearch}
                 onChange={(e) => setTxSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-[#0D0F12] border border-[#1F2633] rounded-lg text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                className="w-full pl-9 pr-3 py-1.5 bg-solian-surface border border-solian-border rounded-lg text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -778,7 +778,7 @@ export const FinanceView: React.FC = () => {
               <select
                 value={txTypeFilter}
                 onChange={(e) => setTxTypeFilter(e.target.value)}
-                className="bg-[#0D0F12] border border-[#1F2633] rounded-lg text-xs py-1.5 px-3 text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                className="bg-solian-surface border border-solian-border rounded-lg text-xs py-1.5 px-3 text-slate-200 focus:outline-none focus:border-[#D4AF37]"
               >
                 <option value="all">All Types</option>
                 <option value="income">Income Only</option>
@@ -791,7 +791,7 @@ export const FinanceView: React.FC = () => {
           {/* Mobile Transaction Cards (Hidden on Desktop) */}
           <div className="md:hidden space-y-2.5">
             {filteredTxs.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633]">
+              <div className="p-6 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border">
                 No transactions found matching criteria.
               </div>
             ) : (
@@ -803,7 +803,7 @@ export const FinanceView: React.FC = () => {
                 return (
                   <div
                     key={t.id}
-                    className="p-3.5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-2 min-h-[48px]"
+                    className="p-3.5 rounded-xl bg-solian-card border border-solian-border space-y-2 min-h-[48px]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
@@ -842,7 +842,7 @@ export const FinanceView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#1F2633]/60 text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-solian-border/60 text-slate-400">
                       <div className="flex items-center gap-1.5 truncate max-w-[180px]">
                         <span className="truncate">{t.accountName || t.accountId}</span>
                         {isTransfer && t.destinationAccountName && (
@@ -852,7 +852,7 @@ export const FinanceView: React.FC = () => {
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#181F2C] border border-[#2B3545] text-slate-300">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-solian-surface border border-solian-border text-slate-300">
                           {t.category}
                         </span>
                         {!isReversed && (user?.role === 'admin' || user?.role === 'owner') && (
@@ -876,9 +876,9 @@ export const FinanceView: React.FC = () => {
           </div>
 
           {/* Desktop Ledger Table */}
-          <div className="hidden md:block overflow-x-auto rounded-xl border border-[#1F2633] bg-[#13171F]">
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-solian-border bg-solian-card">
             <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-[#0D0F12] text-slate-400 uppercase text-[11px] font-semibold border-b border-[#1F2633]">
+              <thead className="bg-solian-surface text-slate-400 uppercase text-[11px] font-semibold border-b border-solian-border">
                 <tr>
                   <th className="py-3 px-4">Ref & Date</th>
                   <th className="py-3 px-4">Description</th>
@@ -903,7 +903,7 @@ export const FinanceView: React.FC = () => {
                   const isTransfer = t.transactionType === 'transfer';
                   const isReversed = t.status === 'reversed';
                   return (
-                    <tr key={t.id} className="hover:bg-[#181F2C]/50 transition-colors">
+                    <tr key={t.id} className="hover:bg-solian-surface/50 transition-colors">
                       <td className="py-3 px-4 font-mono">
                         <div className="font-bold text-white">{t.reference}</div>
                         <div className="text-slate-400 text-[10px]">{t.date}</div>
@@ -913,7 +913,7 @@ export const FinanceView: React.FC = () => {
                         {t.notes && <div className="text-[10px] text-slate-400 truncate">{t.notes}</div>}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-[10px] text-slate-300">
+                        <span className="px-2 py-0.5 rounded-full bg-solian-surface border border-solian-border text-[10px] text-slate-300">
                           {t.category}
                         </span>
                       </td>
@@ -982,19 +982,19 @@ export const FinanceView: React.FC = () => {
       {activeTab === 'invoices' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633]">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border">
               <div className="text-xs text-slate-400 uppercase font-semibold">Total Invoiced</div>
               <div className="text-xl font-bold text-white mt-1">
                 {formatKES(invoices.reduce((acc, inv) => acc + inv.totalAmount, 0))}
               </div>
             </div>
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633]">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border">
               <div className="text-xs text-slate-400 uppercase font-semibold">Total Collected</div>
               <div className="text-xl font-bold text-emerald-400 mt-1">
                 {formatKES(invoices.reduce((acc, inv) => acc + inv.amountPaid, 0))}
               </div>
             </div>
-            <div className="p-4 rounded-xl bg-[#13171F] border border-[#1F2633]">
+            <div className="p-4 rounded-xl bg-solian-card border border-solian-border">
               <div className="text-xs text-slate-400 uppercase font-semibold">Outstanding Balance</div>
               <div className="text-xl font-bold text-blue-400 mt-1">
                 {formatKES(invoices.reduce((acc, inv) => acc + inv.balanceDue, 0))}
@@ -1004,7 +1004,7 @@ export const FinanceView: React.FC = () => {
 
           <div className="space-y-3">
             {invoices.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+              <div className="p-8 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border space-y-2">
                 <Receipt className="w-8 h-8 text-slate-500 mx-auto" />
                 <div className="text-sm font-bold text-white">No Invoices Issued</div>
                 <p className="text-slate-400 max-w-sm mx-auto">
@@ -1015,9 +1015,9 @@ export const FinanceView: React.FC = () => {
               invoices.map((inv) => (
                 <div
                   key={inv.id}
-                  className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-[#D4AF37]/30 transition-all space-y-4"
+                  className="p-5 rounded-xl bg-solian-card border border-solian-border hover:border-[#D4AF37]/30 transition-all space-y-4"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-solian-border pb-3">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-white text-base">{inv.invoiceNumber}</span>
@@ -1070,7 +1070,7 @@ export const FinanceView: React.FC = () => {
                   </div>
 
                   {inv.notes && (
-                    <div className="p-2.5 rounded-lg bg-[#0D0F12] text-xs text-slate-400 border border-[#1F2633]">
+                    <div className="p-2.5 rounded-lg bg-solian-surface text-xs text-slate-400 border border-solian-border">
                       {inv.notes}
                     </div>
                   )}
@@ -1097,7 +1097,7 @@ export const FinanceView: React.FC = () => {
 
           <div className="space-y-3">
             {payables.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+              <div className="p-8 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border space-y-2">
                 <CreditCard className="w-8 h-8 text-slate-500 mx-auto" />
                 <div className="text-sm font-bold text-white">No Supplier Bills Recorded</div>
                 <p className="text-slate-400 max-w-sm mx-auto">
@@ -1108,9 +1108,9 @@ export const FinanceView: React.FC = () => {
               payables.map((p) => (
                 <div
                   key={p.id}
-                  className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-amber-500/30 transition-all space-y-3"
+                  className="p-5 rounded-xl bg-solian-card border border-solian-border hover:border-amber-500/30 transition-all space-y-3"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-solian-border pb-3">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-white">{p.reference}</span>
@@ -1182,7 +1182,7 @@ export const FinanceView: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {budgets.length === 0 ? (
-              <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+              <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border space-y-2">
                 <PieChart className="w-8 h-8 text-slate-500 mx-auto" />
                 <div className="text-sm font-bold text-white">No Departmental Budgets Configured</div>
                 <p className="text-slate-400 max-w-sm mx-auto">
@@ -1191,7 +1191,7 @@ export const FinanceView: React.FC = () => {
               </div>
             ) : (
               budgets.map((b) => (
-                <div key={b.id} className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
+                <div key={b.id} className="p-5 rounded-xl bg-solian-card border border-solian-border space-y-4">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="font-bold text-white text-base">{b.name}</div>
@@ -1199,7 +1199,7 @@ export const FinanceView: React.FC = () => {
                         Period: <span className="text-slate-300 capitalize">{b.period}</span> ({b.startDate} to {b.endDate})
                       </div>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#181F2C] border border-[#2B3545] text-[#D4AF37] font-semibold">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-solian-surface border border-solian-border text-[#D4AF37] font-semibold">
                       {b.status}
                     </span>
                   </div>
@@ -1210,7 +1210,7 @@ export const FinanceView: React.FC = () => {
                       <span>Spent: {formatKES(b.spentAmount)}</span>
                       <span className="font-bold">{b.utilizationPercentage}%</span>
                     </div>
-                    <div className="w-full bg-[#0D0F12] h-2 rounded-full overflow-hidden border border-[#1F2633]">
+                    <div className="w-full bg-solian-surface h-2 rounded-full overflow-hidden border border-solian-border">
                       <div
                         className={`h-full rounded-full transition-all ${
                           b.utilizationPercentage > 90
@@ -1252,7 +1252,7 @@ export const FinanceView: React.FC = () => {
 
           <div className="space-y-3">
             {expenseRequests.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+              <div className="p-8 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border space-y-2">
                 <FileText className="w-8 h-8 text-slate-500 mx-auto" />
                 <div className="text-sm font-bold text-white">No Expense Requisitions Submitted</div>
                 <p className="text-slate-400 max-w-sm mx-auto">
@@ -1263,9 +1263,9 @@ export const FinanceView: React.FC = () => {
               expenseRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] hover:border-[#D4AF37]/30 transition-all space-y-3"
+                  className="p-5 rounded-xl bg-solian-card border border-solian-border hover:border-[#D4AF37]/30 transition-all space-y-3"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#1F2633] pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-solian-border pb-3">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-white text-base">{req.title}</span>
@@ -1327,7 +1327,7 @@ export const FinanceView: React.FC = () => {
                   </div>
 
                   <div className="text-xs text-slate-300">{req.description}</div>
-                  <div className="flex items-center justify-between text-xs border-t border-[#1F2633] pt-2">
+                  <div className="flex items-center justify-between text-xs border-t border-solian-border pt-2">
                     <span className="text-slate-400">Required Amount:</span>
                     <span className="font-mono font-bold text-white text-sm">{formatKES(req.amount)}</span>
                   </div>
@@ -1354,7 +1354,7 @@ export const FinanceView: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {accounts.length === 0 ? (
-              <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-[#13171F] rounded-xl border border-[#1F2633] space-y-2">
+              <div className="col-span-full p-8 text-center text-slate-400 text-xs bg-solian-card rounded-xl border border-solian-border space-y-2">
                 <Landmark className="w-8 h-8 text-slate-500 mx-auto" />
                 <div className="text-sm font-bold text-white">No Corporate Accounts Registered</div>
                 <p className="text-slate-400 max-w-sm mx-auto">
@@ -1363,9 +1363,9 @@ export const FinanceView: React.FC = () => {
               </div>
             ) : (
               accounts.map((acc) => (
-                <div key={acc.id} className="p-5 rounded-xl bg-[#13171F] border border-[#1F2633] space-y-4">
+                <div key={acc.id} className="p-5 rounded-xl bg-solian-card border border-solian-border space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 rounded-lg bg-[#0D0F12] border border-[#1F2633] text-[#D4AF37]">
+                    <div className="p-2 rounded-lg bg-solian-surface border border-solian-border text-[#D4AF37]">
                       {acc.accountType === 'bank' ? (
                         <Building className="w-5 h-5" />
                       ) : acc.accountType === 'mobile_money' ? (
@@ -1386,7 +1386,7 @@ export const FinanceView: React.FC = () => {
 
                   <div className="text-xs text-slate-400">{acc.description}</div>
 
-                  <div className="border-t border-[#1F2633] pt-3 space-y-1 text-xs">
+                  <div className="border-t border-solian-border pt-3 space-y-1 text-xs">
                     <div className="flex justify-between text-slate-400">
                       <span>Opening Balance:</span>
                       <span className="font-mono text-slate-300">{formatKES(acc.openingBalance)}</span>
@@ -1410,8 +1410,8 @@ export const FinanceView: React.FC = () => {
       {/* 1. Record Transaction Modal */}
       {isRecordTxOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] border-t sm:border rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto w-full max-w-lg p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#1F2633] pb-3">
+          <div className="bg-solian-card border border-solian-border border-t sm:border rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto w-full max-w-lg p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-solian-border pb-3">
               <h3 className="font-bold text-white text-lg flex items-center gap-2">
                 <FileSpreadsheet className="w-5 h-5 text-[#D4AF37]" />
                 Record Financial Transaction
@@ -1428,7 +1428,7 @@ export const FinanceView: React.FC = () => {
                   <select
                     value={txType}
                     onChange={(e) => setTxType(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   >
                     <option value="expense">Expense (Outflow)</option>
                     <option value="income">Income (Inflow)</option>
@@ -1441,7 +1441,7 @@ export const FinanceView: React.FC = () => {
                     type="date"
                     value={txDate}
                     onChange={(e) => setTxDate(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -1455,7 +1455,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. 150000"
                   value={txAmount}
                   onChange={(e) => setTxAmount(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -1467,7 +1467,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="Brief summary of payment or receipt"
                   value={txDesc}
                   onChange={(e) => setTxDesc(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -1479,7 +1479,7 @@ export const FinanceView: React.FC = () => {
                   <select
                     value={txAccount}
                     onChange={(e) => setTxAccount(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   >
                     {accounts.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -1495,7 +1495,7 @@ export const FinanceView: React.FC = () => {
                     <select
                       value={txDestAccount}
                       onChange={(e) => setTxDestAccount(e.target.value)}
-                      className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                     >
                       <option value="">Select Destination</option>
                       {accounts
@@ -1514,7 +1514,7 @@ export const FinanceView: React.FC = () => {
                       type="text"
                       value={txCategory}
                       onChange={(e) => setTxCategory(e.target.value)}
-                      className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                      className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
                 )}
@@ -1525,7 +1525,7 @@ export const FinanceView: React.FC = () => {
                 <select
                   value={txMethod}
                   onChange={(e) => setTxMethod(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 >
                   <option value="bank_transfer">Bank Transfer (RTGS / EFT)</option>
                   <option value="mobile_money">M-Pesa Business Till / Paybill</option>
@@ -1534,11 +1534,11 @@ export const FinanceView: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-[#1F2633]">
+              <div className="flex justify-end gap-3 pt-3 border-t border-solian-border">
                 <button
                   type="button"
                   onClick={() => setIsRecordTxOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-[#181F2C] text-slate-300 text-sm font-medium hover:bg-[#20293A]"
+                  className="px-4 py-2 rounded-lg bg-solian-surface text-slate-300 text-sm font-medium hover:bg-solian-cardHover"
                 >
                   Cancel
                 </button>
@@ -1557,7 +1557,7 @@ export const FinanceView: React.FC = () => {
       {/* 2. Reverse Transaction Modal */}
       {isReverseTxOpen && targetTx && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-rose-400">
               <RotateCcw className="w-5 h-5" />
               Reverse Transaction: {targetTx.reference}
@@ -1575,7 +1575,7 @@ export const FinanceView: React.FC = () => {
                   value={reverseReason}
                   onChange={(e) => setReverseReason(e.target.value)}
                   placeholder="e.g. Duplicate entry, erroneous disbursement, or client request"
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500"
                 ></textarea>
               </div>
 
@@ -1583,7 +1583,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsReverseTxOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -1602,7 +1602,7 @@ export const FinanceView: React.FC = () => {
       {/* 3. Record Payment on Invoice Modal */}
       {isInvoicePaymentOpen && targetInvoice && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-emerald-400">
               <Receipt className="w-5 h-5" />
               Record Payment on {targetInvoice.invoiceNumber}
@@ -1621,7 +1621,7 @@ export const FinanceView: React.FC = () => {
                   required
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1630,7 +1630,7 @@ export const FinanceView: React.FC = () => {
                 <select
                   value={payAccount}
                   onChange={(e) => setPayAccount(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -1647,7 +1647,7 @@ export const FinanceView: React.FC = () => {
                     type="date"
                     value={payDate}
                     onChange={(e) => setPayDate(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -1655,7 +1655,7 @@ export const FinanceView: React.FC = () => {
                   <select
                     value={payMethod}
                     onChange={(e) => setPayMethod(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="bank_transfer">Bank Transfer (RTGS)</option>
                     <option value="mobile_money">M-Pesa Business Till</option>
@@ -1668,7 +1668,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsInvoicePaymentOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -1687,7 +1687,7 @@ export const FinanceView: React.FC = () => {
       {/* 4. Settle Bill / Payable Modal */}
       {isPayablePaymentOpen && targetPayable && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-amber-400">
               <Clock className="w-5 h-5" />
               Settle Supplier Bill: {targetPayable.reference}
@@ -1706,7 +1706,7 @@ export const FinanceView: React.FC = () => {
                   required
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -1715,7 +1715,7 @@ export const FinanceView: React.FC = () => {
                 <select
                   value={payAccount}
                   onChange={(e) => setPayAccount(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -1729,7 +1729,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsPayablePaymentOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -1748,8 +1748,8 @@ export const FinanceView: React.FC = () => {
       {/* 5. Create Invoice Modal */}
       {isCreateInvoiceOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] border-t sm:border rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto w-full max-w-lg p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#1F2633] pb-3">
+          <div className="bg-solian-card border border-solian-border border-t sm:border rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto w-full max-w-lg p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-solian-border pb-3">
               <h3 className="font-bold text-white text-base flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-emerald-400" />
                 Issue Enterprise Client Invoice
@@ -1768,7 +1768,7 @@ export const FinanceView: React.FC = () => {
                     placeholder="e.g. INV-2026-003"
                     value={invNumber}
                     onChange={(e) => setInvNumber(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
@@ -1778,7 +1778,7 @@ export const FinanceView: React.FC = () => {
                     required
                     value={invClientName}
                     onChange={(e) => setInvClientName(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -1790,7 +1790,7 @@ export const FinanceView: React.FC = () => {
                     type="date"
                     value={invIssueDate}
                     onChange={(e) => setInvIssueDate(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
@@ -1799,7 +1799,7 @@ export const FinanceView: React.FC = () => {
                     type="date"
                     value={invDueDate}
                     onChange={(e) => setInvDueDate(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -1815,7 +1815,7 @@ export const FinanceView: React.FC = () => {
                     updated[0].description = e.target.value;
                     setInvItems(updated);
                   }}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -1834,7 +1834,7 @@ export const FinanceView: React.FC = () => {
                       updated[0].subtotal = val * updated[0].quantity;
                       setInvItems(updated);
                     }}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
@@ -1844,7 +1844,7 @@ export const FinanceView: React.FC = () => {
                     step="0.1"
                     value={invTaxRate}
                     onChange={(e) => setInvTaxRate(parseFloat(e.target.value || '0'))}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -1853,7 +1853,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreateInvoiceOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -1872,7 +1872,7 @@ export const FinanceView: React.FC = () => {
       {/* 6. Create Payable Modal */}
       {isCreatePayableOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-amber-400">
               <Clock className="w-5 h-5" />
               Record Supplier Payable / Bill
@@ -1886,7 +1886,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. AWS EMEA / Safaricom"
                   value={paySupplier}
                   onChange={(e) => setPaySupplier(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -1898,7 +1898,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. Cloud server monthly reserved instance"
                   value={payBillDesc}
                   onChange={(e) => setPayBillDesc(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -1911,7 +1911,7 @@ export const FinanceView: React.FC = () => {
                     required
                     value={payBillAmount}
                     onChange={(e) => setPayBillAmount(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -1920,7 +1920,7 @@ export const FinanceView: React.FC = () => {
                     type="date"
                     value={payBillDueDate}
                     onChange={(e) => setPayBillDueDate(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -1929,7 +1929,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreatePayableOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -1948,7 +1948,7 @@ export const FinanceView: React.FC = () => {
       {/* 7. Create Budget Modal */}
       {isCreateBudgetOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-[#D4AF37]">
               <Landmark className="w-5 h-5" />
               Create Operational Budget
@@ -1962,7 +1962,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. Q1 2027 R&D Compute Scaling"
                   value={bgtName}
                   onChange={(e) => setBgtName(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -1972,7 +1972,7 @@ export const FinanceView: React.FC = () => {
                   <select
                     value={bgtPeriod}
                     onChange={(e) => setBgtPeriod(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   >
                     <option value="quarterly">Quarterly</option>
                     <option value="monthly">Monthly</option>
@@ -1987,7 +1987,7 @@ export const FinanceView: React.FC = () => {
                     required
                     value={bgtAllocated}
                     onChange={(e) => setBgtAllocated(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -1996,7 +1996,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreateBudgetOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -2015,7 +2015,7 @@ export const FinanceView: React.FC = () => {
       {/* 8. Submit Expense Request Modal */}
       {isCreateRequestOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-[#D4AF37]">
               <Banknote className="w-5 h-5" />
               Requisition / Expense Approval Request
@@ -2029,7 +2029,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. Regional Field Travel Fuel & Per Diem"
                   value={reqTitle}
                   onChange={(e) => setReqTitle(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -2040,7 +2040,7 @@ export const FinanceView: React.FC = () => {
                   rows={2}
                   value={reqDesc}
                   onChange={(e) => setReqDesc(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 ></textarea>
               </div>
 
@@ -2053,7 +2053,7 @@ export const FinanceView: React.FC = () => {
                     required
                     value={reqAmount}
                     onChange={(e) => setReqAmount(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
@@ -2061,7 +2061,7 @@ export const FinanceView: React.FC = () => {
                   <select
                     value={reqUrgency}
                     onChange={(e) => setReqUrgency(e.target.value as any)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   >
                     <option value="normal">Normal</option>
                     <option value="urgent">Urgent</option>
@@ -2074,7 +2074,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreateRequestOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -2093,7 +2093,7 @@ export const FinanceView: React.FC = () => {
       {/* 9. Review Sign-off Modal */}
       {isReviewRequestOpen && targetRequest && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-[#D4AF37]">
               <ShieldCheck className="w-5 h-5" />
               Executive Review: {targetRequest.title}
@@ -2110,7 +2110,7 @@ export const FinanceView: React.FC = () => {
                 value={reviewComments}
                 onChange={(e) => setReviewComments(e.target.value)}
                 placeholder="Approval rationale or rejection feedback..."
-                className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-[#D4AF37]"
               ></textarea>
             </div>
 
@@ -2118,7 +2118,7 @@ export const FinanceView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsReviewRequestOpen(false)}
-                className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
               >
                 Cancel
               </button>
@@ -2146,7 +2146,7 @@ export const FinanceView: React.FC = () => {
       {/* 10. Disburse Funds Modal */}
       {isPayRequestOpen && targetRequest && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-emerald-400">
               <Banknote className="w-5 h-5" />
               Disburse Funds: {targetRequest.title}
@@ -2161,7 +2161,7 @@ export const FinanceView: React.FC = () => {
                 <select
                   value={payAccount}
                   onChange={(e) => setPayAccount(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -2176,7 +2176,7 @@ export const FinanceView: React.FC = () => {
                 <select
                   value={payMethod}
                   onChange={(e) => setPayMethod(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="bank_transfer">Bank Transfer (RTGS / EFT)</option>
                   <option value="mobile_money">M-Pesa Business Till</option>
@@ -2188,7 +2188,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsPayRequestOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>
@@ -2207,7 +2207,7 @@ export const FinanceView: React.FC = () => {
       {/* 11. Add Account Modal */}
       {isCreateAccountOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-[#13171F] border border-[#1F2633] rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-solian-card border border-solian-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-base flex items-center gap-2 text-[#D4AF37]">
               <CreditCard className="w-5 h-5" />
               Register Treasury Account
@@ -2221,7 +2221,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. Stanbic Corporate USD Treasury"
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -2231,7 +2231,7 @@ export const FinanceView: React.FC = () => {
                   <select
                     value={accType}
                     onChange={(e) => setAccType(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                   >
                     <option value="bank">Commercial Bank</option>
                     <option value="mobile_money">Merchant Mobile Till</option>
@@ -2245,7 +2245,7 @@ export const FinanceView: React.FC = () => {
                     step="0.01"
                     value={accOpening}
                     onChange={(e) => setAccOpening(e.target.value)}
-                    className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -2257,7 +2257,7 @@ export const FinanceView: React.FC = () => {
                   placeholder="e.g. •••• 9812 or Till 982142"
                   value={accNumber}
                   onChange={(e) => setAccNumber(e.target.value)}
-                  className="w-full mt-1 bg-[#0D0F12] border border-[#1F2633] rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
+                  className="w-full mt-1 bg-solian-surface border border-solian-border rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
@@ -2265,7 +2265,7 @@ export const FinanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreateAccountOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#181F2C] text-slate-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface text-slate-300 text-xs"
                 >
                   Cancel
                 </button>

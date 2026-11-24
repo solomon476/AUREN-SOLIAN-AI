@@ -95,29 +95,29 @@ export const DashboardView: React.FC = () => {
     return (
       <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-5xl mx-auto">
         {/* Visitor Hero Card */}
-        <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-solian-surface via-solian-card to-solian-darkest border border-gold-500/30 shadow-card-elevation relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="p-6 md:p-8 rounded-2xl bg-white border border-gold-500/40 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center p-1.5 shadow-glow-subtle">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center p-1.5 shadow-sm">
                   <img src="/favicon.svg" alt="Solian Emblem" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">
+                  <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
                     {currentOrg.name}
                   </h1>
-                  <p className="text-xs text-graphite-400">
+                  <p className="text-xs text-slate-500">
                     {currentOrg.tagline || 'Organizational Intelligence & High-Trust Autonomous Operations'}
                   </p>
                 </div>
               </div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-solian-surface text-graphite-300 border border-solian-border">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
                 Visitor Access
               </span>
             </div>
 
-            <p className="text-xs md:text-sm text-slate-300 leading-relaxed max-w-2xl">
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed max-w-2xl">
               AUREN SOLIAN serves as the centralized institutional operating system for corporate strategy,
               autonomous workflow dispatch, and intelligence synthesis across Solian Enterprise Group.
             </p>
@@ -125,16 +125,16 @@ export const DashboardView: React.FC = () => {
             <div className="pt-2 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setActiveModule('chat')}
-                className="px-4 py-2.5 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                className="px-4 py-2.5 rounded-xl bg-gold-500 text-slate-950 font-bold text-xs uppercase hover:bg-gold-400 transition shadow-sm flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
               >
                 <Bot className="w-4 h-4" />
                 <span>Consult AUREN SOLIAN AI (Visitor Mode)</span>
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
-                className="px-4 py-2.5 rounded-xl bg-solian-surface hover:bg-solian-surface/80 border border-gold-500/40 text-gold-300 font-bold text-xs uppercase transition flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-gold-500/50 text-amber-800 font-bold text-xs uppercase transition flex items-center justify-center gap-2 cursor-pointer min-h-[44px] shadow-sm"
               >
-                <LogIn className="w-4 h-4 text-gold-400" />
+                <LogIn className="w-4 h-4 text-amber-700" />
                 <span>Sign In to Corporate Account</span>
               </button>
             </div>
@@ -285,13 +285,13 @@ export const DashboardView: React.FC = () => {
       )}
 
       {/* Mobile-Only Segmented Control (to avoid infinite vertical scroll on phones) */}
-      <div className="md:hidden flex items-center gap-1.5 p-1 bg-solian-card rounded-xl border border-solian-border">
+      <div className="md:hidden flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
         <button
           onClick={() => setMobileTab('focus')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all min-h-[40px] flex items-center justify-center gap-1.5 ${
             mobileTab === 'focus'
-              ? 'bg-gold-500 text-solian-darkest shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gold-500 text-slate-950 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <ListTodo className="w-3.5 h-3.5" />
@@ -301,8 +301,8 @@ export const DashboardView: React.FC = () => {
           onClick={() => setMobileTab('priority')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all min-h-[40px] flex items-center justify-center gap-1.5 ${
             mobileTab === 'priority'
-              ? 'bg-gold-500 text-solian-darkest shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gold-500 text-slate-950 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Flame className="w-3.5 h-3.5" />
@@ -312,8 +312,8 @@ export const DashboardView: React.FC = () => {
           onClick={() => setMobileTab('overview')}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all min-h-[40px] flex items-center justify-center gap-1.5 ${
             mobileTab === 'overview'
-              ? 'bg-gold-500 text-solian-darkest shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gold-500 text-slate-950 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Briefcase className="w-3.5 h-3.5" />

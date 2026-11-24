@@ -84,28 +84,28 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-start justify-center p-4 pt-16 md:pt-24 z-50 animate-fadeIn">
-      <div className="bg-solian-card border border-gold-500/40 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 pt-16 md:pt-24 z-50 animate-fadeIn">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-slate-900">
         {/* Search Input Box */}
-        <div className="p-4 border-b border-solian-border flex items-center gap-3 bg-solian-surface">
-          <Search className="w-5 h-5 text-gold-400 shrink-0" />
+        <div className="p-4 border-b border-slate-200 flex items-center gap-3 bg-slate-50">
+          <Search className="w-5 h-5 text-amber-700 shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search company knowledge, SOPs, tasks, meetings, people (⌘K)..."
-            className="w-full bg-transparent text-sm text-white placeholder-graphite-400 focus:outline-none"
+            className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="text-graphite-400 hover:text-white p-1"
+              className="text-slate-400 hover:text-slate-700 p-1"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-block text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-solian-darkest text-graphite-400 border border-solian-border">
+          <kbd className="hidden sm:inline-block text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
             ESC
           </kbd>
         </div>
@@ -294,10 +294,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-solian-border bg-solian-darkest flex items-center justify-between text-[11px] text-graphite-400">
+        <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-[11px] text-slate-500">
           <div className="flex items-center gap-2">
             <span>Navigation:</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-solian-surface border border-solian-border text-[10px]">
+            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] text-slate-700">
               Click to view
             </kbd>
           </div>
