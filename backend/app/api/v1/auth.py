@@ -45,6 +45,11 @@ async def corporate_login(body: CorporateLoginRequest):
 
     is_valid = repo.verify_member_password(member.id, body.password)
     if not is_valid:
+        if getattr(member, "activation_status", None) in ("created", "invitation_pending", "invitation_sent"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account has not been activated yet. Please use the Activate Account tab with your invitation or bootstrap token to set your password.",
+            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password for corporate account.",

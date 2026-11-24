@@ -104,10 +104,10 @@ export const Topbar: React.FC = () => {
           <img src="/favicon.svg" alt="Solian Wolves Emblem" className="w-full h-full object-contain" />
         </div>
 
-        {/* Organization identity badge */}
-        <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 py-0.5 rounded bg-slate-50 border border-amber-500/30 shrink-0">
+        {/* Organization identity badge (visible on sm+ to preserve mobile header space) */}
+        <div className="hidden sm:flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-slate-50 border border-amber-500/30 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-          <span className="text-xs font-bold tracking-wide text-amber-800 uppercase hidden sm:inline">
+          <span className="text-xs font-bold tracking-wide text-amber-800 uppercase">
             {currentOrg.name}
           </span>
           <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/15 text-amber-900 rounded font-mono font-bold">
@@ -115,7 +115,7 @@ export const Topbar: React.FC = () => {
           </span>
         </div>
 
-        <div className="h-3.5 w-px bg-slate-200 shrink-0 hidden xs:block"></div>
+        <div className="h-3.5 w-px bg-slate-200 shrink-0 hidden sm:block"></div>
 
         {/* Page / Workspace title */}
         <h1 className="text-xs sm:text-sm font-semibold text-slate-800 truncate min-w-0">
@@ -136,16 +136,16 @@ export const Topbar: React.FC = () => {
           <Search className="w-4 h-4 text-amber-700" />
         </button>
 
-        {/* Mobile Quick Install App Button (visible on mobile browsers when not yet installed) */}
+        {/* Quick Install App Button (visible on sm+ when not yet installed; mobile uses More drawer or Dashboard banner) */}
         {!isStandalone && (
           <button
             onClick={triggerInstall}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 text-xs font-bold cursor-pointer transition min-h-[36px] active:scale-95"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-800 text-xs font-bold cursor-pointer transition min-h-[36px] active:scale-95"
             title="Install AUREN SOLIAN on your device"
             aria-label="Install App"
           >
             <Download className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span className="hidden xs:inline">Install</span>
+            <span>Install</span>
           </button>
         )}
 

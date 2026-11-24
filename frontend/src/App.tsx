@@ -68,7 +68,9 @@ const ModuleRouter: React.FC = () => {
 };
 
 export const AppContent: React.FC = () => {
+  const { activeModule } = useOrganization();
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const isChatView = activeModule === 'chat';
 
   // Monitor network status for mobile resilience
   useEffect(() => {
@@ -105,7 +107,13 @@ export const AppContent: React.FC = () => {
           </div>
         )}
         <Topbar />
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
+        <main
+          className={
+            isChatView
+              ? 'flex-1 min-h-0 flex flex-col overflow-hidden pb-[calc(3.25rem+env(safe-area-inset-bottom,0px))] md:pb-0'
+              : 'flex-1 overflow-y-auto pb-20 md:pb-6'
+          }
+        >
           <ModuleRouter />
         </main>
         <PWAInstallBanner />

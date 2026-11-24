@@ -70,7 +70,7 @@ const verifiedLeadershipUsers: UserProfile[] = [
   {
     id: 'tm-4',
     userId: 'usr-4',
-    email: 'noella.kaatho@solianwolves.co',
+    email: 'noella.maraka@solianwolves.co',
     fullName: 'Noella Maraka Kaatho',
     title: 'Executive Director / Finance & Administration',
     role: 'admin',

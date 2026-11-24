@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Send,
   Sparkles,
@@ -351,9 +353,9 @@ export const CompanyChatView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-7.5rem)] md:h-[calc(100vh-4rem)] bg-solian-obsidian">
+    <div className="flex flex-col flex-1 h-full min-h-0 bg-solian-obsidian overflow-hidden">
       {/* Chat Sub-bar */}
-      <div className="px-4 md:px-6 py-2.5 border-b border-solian-border bg-solian-surface/60 flex items-center justify-between flex-wrap gap-2">
+      <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 border-b border-solian-border bg-white/95 shrink-0 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center p-1">
             <img src="/favicon.svg" alt="Wolf" className="w-full h-full object-contain" />
@@ -401,23 +403,23 @@ export const CompanyChatView: React.FC = () => {
       </div>
 
       {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-4xl w-full mx-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 max-w-4xl w-full mx-auto">
         {messages.map((msg) => {
           const isUser = msg.role === 'user';
           return (
             <div
               key={msg.id}
-              className={`flex gap-3 md:gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-2.5 sm:gap-3 md:gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}
             >
               {!isUser && (
-                <div className="w-9 h-9 rounded-xl bg-white border border-amber-500/30 p-1.5 shrink-0 flex items-center justify-center shadow-sm mt-1">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white border border-amber-500/30 p-1.5 shrink-0 flex items-center justify-center shadow-sm mt-1">
                   <img src="/favicon.svg" alt="Wolf" className="w-full h-full object-contain" />
                 </div>
               )}
 
-              <div className="max-w-[88%] md:max-w-[82%] space-y-2">
+              <div className="max-w-[90%] sm:max-w-[85%] md:max-w-[82%] space-y-2 min-w-0">
                 <div
-                  className={`p-4 md:p-5 rounded-2xl text-xs md:text-sm leading-relaxed shadow-sm ${
+                  className={`p-3.5 sm:p-4 md:p-5 rounded-2xl text-xs md:text-sm leading-relaxed shadow-sm break-words ${
                     isUser
                       ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-slate-950 font-semibold rounded-br-none'
                       : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'
@@ -455,7 +457,15 @@ export const CompanyChatView: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="whitespace-pre-wrap">{msg.content || 'Synthesizing response...'}</div>
+                  {isUser ? (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  ) : (
+                    <div className="space-y-2 [&>p]:leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:space-y-1 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:space-y-1 [&>h1]:text-base [&>h1]:font-bold [&>h2]:text-sm [&>h2]:font-bold [&>h3]:text-xs [&>h3]:font-bold [&>h3]:uppercase [&>h3]:tracking-wide [&_strong]:font-bold [&_strong]:text-slate-900 [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[11px] [&_code]:font-mono [&>pre]:bg-slate-900 [&>pre]:text-slate-100 [&>pre]:p-3 [&>pre]:rounded-xl [&>pre]:overflow-x-auto [&>blockquote]:border-l-2 [&>blockquote]:border-amber-500 [&>blockquote]:pl-3 [&>blockquote]:text-slate-600">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content || 'Synthesizing response...'}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
 
                 {/* Context Sources */}
@@ -552,14 +562,14 @@ export const CompanyChatView: React.FC = () => {
       </div>
 
       {/* Quick Prompts Strip */}
-      <div className="max-w-4xl w-full mx-auto px-4 pb-2">
+      <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 pb-1.5 sm:pb-2 shrink-0">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
           {quickPrompts.map((qp, idx) => (
             <button
               key={idx}
               onClick={() => handleSendPrompt(qp)}
               disabled={isStreaming}
-              className="px-2.5 py-1 rounded-lg bg-solian-card hover:bg-solian-surface border border-solian-border text-[11px] text-graphite-300 hover:text-gold-400 transition whitespace-nowrap cursor-pointer shrink-0"
+              className="px-2.5 py-1.5 rounded-lg bg-solian-card hover:bg-solian-surface border border-solian-border text-[11px] text-graphite-300 hover:text-amber-800 transition whitespace-nowrap cursor-pointer shrink-0"
             >
               {qp}
             </button>
@@ -568,7 +578,7 @@ export const CompanyChatView: React.FC = () => {
       </div>
 
       {/* Input Box Footer */}
-      <div className="p-3 md:p-4 border-t border-solian-border bg-solian-surface/90 max-w-4xl w-full mx-auto mb-3 rounded-2xl border space-y-2">
+      <div className="p-2.5 sm:p-3 md:p-4 border-t border-solian-border bg-solian-surface/90 max-w-4xl w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] mx-auto mb-2 md:mb-3 rounded-2xl border space-y-2 shrink-0 shadow-sm">
         {selectedDocs.length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
             {selectedDocs.map((doc, idx) => (

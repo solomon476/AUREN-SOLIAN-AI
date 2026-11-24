@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Download, X, Share2, PlusSquare, Smartphone, MoreVertical, CheckCircle, ShieldCheck } from 'lucide-react';
+import { useOrganization } from '../../context/OrganizationContext';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -94,6 +95,7 @@ export const usePWAInstall = () => {
 };
 
 export const PWAInstallBanner: React.FC = () => {
+  const { activeModule } = useOrganization();
   const { isStandalone, isIOS, isInstallable, triggerInstall } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -126,8 +128,8 @@ export const PWAInstallBanner: React.FC = () => {
 
   return (
     <>
-      {/* Floating Bottom Install Banner (shown on mobile/uninstalled devices) */}
-      {!isStandalone && !dismissed && isInstallable && (
+      {/* Floating Bottom Install Banner (hidden on chat view so it never overlaps input/send controls) */}
+      {!isStandalone && !dismissed && isInstallable && activeModule !== 'chat' && (
         <div className="fixed bottom-16 md:bottom-4 left-3 right-3 md:left-auto md:right-6 md:w-96 z-40 animate-fadeIn">
           <div className="p-3.5 rounded-xl bg-white/95 backdrop-blur-md border border-amber-500/30 shadow-xl flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-3 min-w-0">

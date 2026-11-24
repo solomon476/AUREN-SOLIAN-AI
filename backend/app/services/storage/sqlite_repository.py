@@ -1961,9 +1961,8 @@ class EnterpriseRepository:
         return f"{salt}${key.hex()}"
 
     def verify_password_hash(self, stored_hash: Optional[str], password: str) -> bool:
-        if not stored_hash:
-            # If no password explicitly set yet, allow initial leadership onboarding password
-            return password in ("Solian2026!", "SolianWolves2026!", "Admin2026!")
+        if not stored_hash or not password:
+            return False
         try:
             salt, key_hex = stored_hash.split("$", 1)
             test_key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
@@ -1981,13 +1980,7 @@ class EnterpriseRepository:
                 if not row:
                     return False
                 stored = row["password_hash"] if "password_hash" in row.keys() else None
-                is_valid = self.verify_password_hash(stored, password)
-                if is_valid and not stored:
-                    # Automatically persist hashed password on first successful authentication
-                    p_hash = self.hash_password(password)
-                    cur.execute("UPDATE members SET password_hash = ? WHERE id = ?;", (p_hash, member_id))
-                    conn.commit()
-                return is_valid
+                return self.verify_password_hash(stored, password)
             finally:
                 conn.close()
 

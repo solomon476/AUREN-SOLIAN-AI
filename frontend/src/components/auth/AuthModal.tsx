@@ -196,10 +196,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <Shield className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
             <div className="leading-relaxed">
               <span className="font-semibold block text-slate-900">Solian Wolves Corporate Access</span>
-              Sign in with your official company email. Initial executive password:{' '}
-              <code className="bg-white border border-amber-300 px-1.5 py-0.5 rounded text-amber-800 font-mono text-[11px] font-bold shadow-xs">
-                Solian2026!
-              </code>
+              Sign in with your company email and personal password. New personnel or first-time setup should use the{' '}
+              <strong className="text-slate-900">Activate Account</strong> tab with an invitation or bootstrap token.
             </div>
           </div>
 

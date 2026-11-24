@@ -626,8 +626,8 @@ class PostgresRepository:
         return f"{salt}${key.hex()}"
 
     def verify_password_hash(self, stored_hash: Optional[str], password: str) -> bool:
-        if not stored_hash:
-            return password in ("Solian2026!", "SolianWolves2026!", "Admin2026!")
+        if not stored_hash or not password:
+            return False
         try:
             salt, key_hex = stored_hash.split("$", 1)
             test_key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
@@ -645,15 +645,7 @@ class PostgresRepository:
                 stored = row["password_hash"] if row and "password_hash" in row.keys() else None
             except Exception:
                 stored = None
-            is_valid = self.verify_password_hash(stored, password)
-            if is_valid and not stored:
-                try:
-                    p_hash = self.hash_password(password)
-                    cur.execute("UPDATE members SET password_hash = %s WHERE organization_id = %s AND id = %s;", (p_hash, self.organization_id, member_id))
-                    conn.commit()
-                except Exception:
-                    pass
-            return is_valid
+            return self.verify_password_hash(stored, password)
 
     def activate_member_account(self, token: str, auth_user_id: str, password: Optional[str] = None) -> Optional[OrganizationMember]:
         member = self.get_member_by_invitation_token(token)

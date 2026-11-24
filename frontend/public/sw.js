@@ -1,5 +1,5 @@
 // AUREN SOLIAN — PWA Service Worker
-const CACHE_NAME = 'auren-solian-shell-v5';
+const CACHE_NAME = 'auren-solian-shell-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
