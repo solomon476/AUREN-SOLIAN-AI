@@ -1,5 +1,5 @@
 // AUREN SOLIAN — PWA Service Worker
-const CACHE_NAME = 'auren-solian-shell-v1';
+const CACHE_NAME = 'auren-solian-shell-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -36,6 +36,12 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -44,15 +50,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML documents
+  // Network-first with fresh revalidation for HTML documents so updates arrive instantly
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-cache' })
         .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
           return response;
         })
         .catch(() => caches.match('/index.html') || caches.match(event.request))
@@ -60,7 +68,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first with network fallback for static static assets
+  // Cache-first with background network update for static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

@@ -144,8 +144,9 @@ export const Sidebar: React.FC = () => {
         {!isStandalone && (
           <div className="px-3 pb-2 pt-1">
             <button
-              onClick={() => {
-                triggerInstall();
+              onClick={async () => {
+                closeMobileNav();
+                await triggerInstall();
               }}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-gold-400 transition-all cursor-pointer min-h-[40px] text-xs font-semibold"
             >
