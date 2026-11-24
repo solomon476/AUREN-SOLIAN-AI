@@ -1,11 +1,14 @@
 """Integration tests for Supabase Auth, Bearer Token Verification, and Role Resolution (Phase 3B.1)."""
 from datetime import datetime, timedelta, timezone
 import pytest
+import uuid
 import jwt
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.core.security import UserRole, get_current_user, verify_jwt_token
+from app.models.organization import PersonnelCreate
+from app.services.storage.sqlite_repository import repo
 from app.main import app
 
 client = TestClient(app)
@@ -43,21 +46,21 @@ def generate_supabase_jwt(
 
 def test_supabase_auth_verified_owner_session():
     """
-    Verifies that a Supabase token for Solomon K. maps directly to the verified
+    Verifies that a Supabase token for the verified company owner maps directly to the verified
     database record with OWNER role and organizational authority.
     """
     token = generate_supabase_jwt(
         sub="usr-1",
-        email="solomon@solian.ai",
-        full_name="Solomon K.",
+        email="ian.nyakundi@solianwolves.co",
+        full_name="Ian Momanyi Nyakundi",
     )
 
     response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     data = response.json()
     assert data["userId"] == "usr-1"
-    assert data["email"] == "solomon@solian.ai"
-    assert data["fullName"] == "Solomon K."
+    assert data["email"] == "ian.nyakundi@solianwolves.co"
+    assert data["fullName"] == "Ian Momanyi Nyakundi"
     assert data["role"] == "owner"
     assert data["authMode"] == "SUPABASE_JWT"
     assert data["isDemoUser"] is False
@@ -65,13 +68,25 @@ def test_supabase_auth_verified_owner_session():
 
 def test_supabase_auth_verified_staff_member_session():
     """
-    Verifies that a Supabase token for David Ochieng maps to his database role (MEMBER),
+    Verifies that a Supabase token for a staff member maps to their database role,
     even if the client attempts to inject custom role headers.
     """
+    # Create or lookup dedicated staff member
+    test_email = f"staff.{uuid.uuid4().hex[:6]}@solianwolves.co"
+    staff = repo.create_personnel_record(
+        PersonnelCreate(
+            name="Test Staff Member",
+            email=test_email,
+            title="Systems Specialist",
+            department="Operations & Delivery",
+            role=UserRole.MEMBER,
+        ),
+        creator_name="Admin",
+    )
     token = generate_supabase_jwt(
-        sub="usr-5",
-        email="d.ochieng@solian.ai",
-        full_name="[DEMO] David Ochieng",
+        sub=staff.user_id,
+        email=staff.email,
+        full_name=staff.name,
     )
 
     response = client.get(
@@ -83,7 +98,7 @@ def test_supabase_auth_verified_staff_member_session():
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["userId"] == "usr-5"
+    assert data["userId"] == staff.user_id
     assert data["role"] == "member"  # Server-side DB authority prevails!
     assert data["authMode"] == "SUPABASE_JWT"
 

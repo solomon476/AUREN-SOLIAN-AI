@@ -523,6 +523,13 @@ export class SolianApiClient {
     return await this.request<InvitationCheckResponse>(`/auth/invitation/${encodeURIComponent(token)}`);
   }
 
+  static async corporateLogin(data: { email: string; password?: string }): Promise<any> {
+    return await this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   static async activateAccount(data: {
     token: string;
     password: string;

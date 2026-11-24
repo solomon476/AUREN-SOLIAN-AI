@@ -173,16 +173,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </p>
         </div>
 
-        {/* Remote Supabase Notice if not configured */}
-        {!isSupabaseConfigured && (
-          <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold block">Supabase Notice:</span>
-              Remote Supabase credentials (VITE_SUPABASE_URL) are not set. Operating in verified cryptographic token mode.
-            </div>
+        {/* Corporate Access Notice */}
+        <div className="mb-4 p-3 rounded-lg bg-gold-500/10 border border-gold-500/20 text-gold-300 text-xs flex items-start gap-2.5">
+          <Shield className="w-4 h-4 shrink-0 mt-0.5 text-gold-400" />
+          <div className="leading-relaxed">
+            <span className="font-semibold block text-white">Solian Wolves Corporate Access</span>
+            Sign in with your official company email. Initial executive password: <code className="bg-solian-obsidian px-1.5 py-0.5 rounded text-gold-400 font-mono text-[11px] font-bold">Solian2026!</code>
           </div>
-        )}
+        </div>
 
         {/* Tabs */}
         <div className="flex rounded-lg bg-solian-obsidian p-1 mb-5 border border-solian-border text-xs font-semibold">

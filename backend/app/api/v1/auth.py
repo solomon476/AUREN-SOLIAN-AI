@@ -2,6 +2,7 @@
 import os
 import uuid
 from typing import Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from app.core.security import get_current_user, require_role, AuthUser, UserRole, create_access_token
@@ -15,6 +16,63 @@ from app.services.storage.sqlite_repository import repo
 from app.services.storage.avatar_storage import avatar_storage
 
 router = APIRouter()
+
+
+class CorporateLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@router.post("/login")
+async def corporate_login(body: CorporateLoginRequest):
+    """
+    Direct corporate authentication endpoint.
+    Verifies corporate email and password, returning a signed JWT corporate session.
+    """
+    email_clean = body.email.strip().lower()
+    member = repo.get_member_by_email(email_clean)
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Corporate credentials not recognized. Please check your official email address.",
+        )
+
+    if getattr(member, "activation_status", "active") == "suspended":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account suspended. Please contact organization administration.",
+        )
+
+    is_valid = repo.verify_member_password(member.id, body.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password for corporate account.",
+        )
+
+    auth_uid = getattr(member, "auth_user_id", None) or f"usr-auth-{member.id}"
+    session_token = create_access_token({
+        "sub": auth_uid,
+        "email": member.email,
+        "role": member.role.value,
+        "name": member.name,
+    })
+
+    return {
+        "success": True,
+        "message": f"Welcome back, {member.name}.",
+        "accessToken": session_token,
+        "user": {
+            "id": member.id,
+            "userId": member.user_id,
+            "email": member.email,
+            "fullName": member.name,
+            "role": member.role.value,
+            "title": member.title,
+            "department": member.department,
+            "avatarUrl": getattr(member, "avatar_url", None),
+        },
+    }
 
 
 @router.get("/invitation/{token}", response_model=InvitationCheckResponse)
@@ -79,7 +137,7 @@ async def activate_account(body: AccountActivateRequest):
     if not auth_uid:
         auth_uid = f"usr-auth-{uuid.uuid4().hex[:12]}"
 
-    activated_member = repo.activate_member_account(body.token.strip(), auth_uid)
+    activated_member = repo.activate_member_account(body.token.strip(), auth_uid, password=body.password)
     if not activated_member:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -142,7 +200,7 @@ async def bootstrap_owner(body: OwnerBootstrapRequest):
         auth_uid = f"usr-owner-{uuid.uuid4().hex[:12]}"
 
     try:
-        owner = repo.bootstrap_owner(body.bootstrap_token.strip(), auth_uid)
+        owner = repo.bootstrap_owner(body.bootstrap_token.strip(), auth_uid, password=body.password)
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

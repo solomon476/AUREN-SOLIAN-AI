@@ -205,11 +205,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const res = await supabaseAuthService.signIn(email, password);
-    if (!res.error && res.session?.access_token) {
-      await handleActiveSession(res.session.access_token);
+    // 1. Try Supabase Auth if configured
+    if (supabaseAuthService.isConfigured()) {
+      try {
+        const res = await supabaseAuthService.signIn(email, password);
+        if (!res.error && res.session?.access_token) {
+          await handleActiveSession(res.session.access_token);
+          return { error: null };
+        }
+      } catch (err) {
+        console.warn('Supabase sign-in failed, attempting direct corporate authentication fallback:', err);
+      }
     }
-    return { error: res.error };
+
+    // 2. Direct corporate login via backend API
+    try {
+      const res = await SolianApiClient.corporateLogin({ email, password });
+      if (res?.accessToken) {
+        await setCorporateSession(res.accessToken);
+        return { error: null };
+      }
+      return { error: res?.detail || res?.message || 'Corporate authentication failed.' };
+    } catch (err: any) {
+      return { error: err.message || 'Corporate authentication failed.' };
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {

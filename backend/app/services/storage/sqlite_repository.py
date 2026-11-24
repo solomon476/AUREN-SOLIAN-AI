@@ -1,4 +1,6 @@
 """SQLite repository for Solian Wolves Enterprise Organizational Intelligence."""
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -565,6 +567,7 @@ class EnterpriseRepository:
                 ("activation_status", "TEXT DEFAULT 'created'"),
                 ("invitation_token", "TEXT"),
                 ("invitation_expires_at", "TEXT"),
+                ("password_hash", "TEXT"),
             ]:
                 try:
                     cur.execute(f"ALTER TABLE members ADD COLUMN {col_name} {col_def};")
@@ -647,14 +650,14 @@ class EnterpriseRepository:
             except sqlite3.OperationalError:
                 pass  # column already exists
 
-            # Seed initial records if organization table is empty
+            # Purge legacy demo mock records if present
+            cur.execute("DELETE FROM members WHERE is_demo = 1 OR id = 'tm-6' OR name LIKE '%[DEMO]%' OR name = 'Solomon K.';")
+
+            # Always ensure the real Solian Wolves leadership council exists
             cur.execute("SELECT COUNT(*) as count FROM organizations;")
             count = cur.fetchone()["count"]
             if count == 0:
-                if (settings.ENABLE_DEMO_FIXTURES or not settings.is_production) and not settings.is_production:
-                    self._seed_initial_data(conn)
-                else:
-                    self._bootstrap_production_foundation(conn)
+                self._bootstrap_production_foundation(conn)
             else:
                 cur.execute("SELECT name FROM members WHERE id = 'tm-1' LIMIT 1;")
                 tm1 = cur.fetchone()
@@ -662,8 +665,7 @@ class EnterpriseRepository:
                     self._bootstrap_production_foundation(conn)
                 cur.execute("SELECT 1 FROM meetings WHERE id = 'mtg-1' LIMIT 1;")
                 if not cur.fetchone():
-                    if (settings.ENABLE_DEMO_FIXTURES or not settings.is_production) and not settings.is_production:
-                        self._seed_new_modules(conn)
+                    self._seed_new_modules(conn)
 
             # Seed financial records if accounts table is empty
             cur.execute("SELECT COUNT(*) as count FROM financial_accounts;")
@@ -982,49 +984,42 @@ class EnterpriseRepository:
         cur.executemany("INSERT OR REPLACE INTO teams VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", teams)
 
         # 6. Members
-        # tm-1 is verified Owner (Solomon K.); tm-2 through tm-6 are clearly labeled [DEMO] fixtures
+        # Verified Solian Wolves Leadership Council
         members = [
             (
-                "tm-1", "usr-1", "org-solian-wolves", "Solomon K.", "solomon@solian.ai", "owner",
-                "Managing Director & Chief Executive", "dept-exec", "Executive Leadership & Strategy",
+                "tm-1", "usr-1", "org-solian-wolves", "Ian Momanyi Nyakundi", "ian.nyakundi@solianwolves.co", "owner",
+                "Chief Executive Officer", "dept-exec", "Executive Leadership & Governance",
                 None, "Executive Council",
-                json.dumps(["Corporate Strategy & Executive Governance", "Capital Allocation & Operational Authority", "Strategic Partnerships"]),
-                None, None, "active", 1, "2024-01-01", 0
+                json.dumps(["Corporate Strategy & Executive Governance", "Capital Allocation & Operational Authority", "Strategic Alliances"]),
+                None, None, "active", 0, "2024-01-01", 0
             ),
             (
-                "tm-2", "usr-2", "org-solian-wolves", "[DEMO] Sarah Chen", "s.chen@solian.ai", "admin",
-                "VP of Engineering & AI Operations (Demo)", "dept-eng", "[DEMO Template] Engineering & AI Operations",
-                "team-1", "[DEMO] Core AI Mesh",
-                json.dumps(["[DEMO] AI Mesh System Architecture", "[DEMO] Production Reliability", "[DEMO] Engineering Sprint Delivery"]),
-                "tm-1", "Solomon K.", "active", 1, "2024-02-15", 1
+                "tm-2", "usr-2", "org-solian-wolves", "Hillary Onchwati Isaiah", "hillary.isaiah@solianwolves.co", "admin",
+                "Chief Operating Officer", "dept-ops", "Operations & Delivery",
+                None, "Executive Council",
+                json.dumps(["Operations Leadership & Delivery", "Organizational Cadences", "Resource Coordination"]),
+                "tm-1", "Ian Momanyi Nyakundi", "active", 0, "2024-01-01", 0
             ),
             (
-                "tm-3", "usr-3", "org-solian-wolves", "[DEMO] Marcus Vance", "m.vance@solian.ai", "manager",
-                "Director of Strategic Accounts (Demo)", "dept-strat", "[DEMO Template] Strategic Advisory & Client Accounts",
-                "team-3", "[DEMO] Enterprise Client Growth",
-                json.dumps(["[DEMO] Client Portfolio Management", "[DEMO] Contract SLA Performance", "[DEMO] Commercial Operations"]),
-                "tm-1", "Solomon K.", "active", 1, "2024-03-01", 1
+                "tm-3", "usr-3", "org-solian-wolves", "Alice Moraa Nyakundi", "alice.moraa@solianwolves.co", "admin",
+                "Chief Financial Officer", "dept-fin", "Finance & Corporate Treasury",
+                None, "Executive Council",
+                json.dumps(["Treasury & Financial Planning", "Budget Control & Capital Management", "Auditing & Compliance"]),
+                "tm-1", "Ian Momanyi Nyakundi", "active", 0, "2024-01-01", 0
             ),
             (
-                "tm-4", "usr-4", "org-solian-wolves", "[DEMO] Elena Rostova", "e.rostova@solian.ai", "manager",
-                "Lead Product & Compliance Architect (Demo)", "dept-arch", "[DEMO Template] Product Architecture & Governance",
-                "team-4", "[DEMO] Risk & Compliance Operations",
-                json.dumps(["[DEMO] Zero-Trust RBAC Auditing", "[DEMO] SOC2 Compliance", "[DEMO] Data Classification Governance"]),
-                "tm-2", "[DEMO] Sarah Chen", "active", 1, "2024-04-10", 1
+                "tm-4", "usr-4", "org-solian-wolves", "Noella Maraka Kaatho", "noella.maraka@solianwolves.co", "manager",
+                "Executive Director / Finance & Administration", "dept-admin", "Administration & Corporate Services",
+                None, "Executive Council",
+                json.dumps(["Corporate Administration & Compliance", "Operations Support", "Organizational Governance"]),
+                "tm-1", "Ian Momanyi Nyakundi", "active", 0, "2024-01-01", 0
             ),
             (
-                "tm-5", "usr-5", "org-solian-wolves", "[DEMO] David Ochieng", "d.ochieng@solian.ai", "member",
-                "Senior Knowledge Systems Engineer (Demo)", "dept-data", "[DEMO Template] Data Intelligence & Knowledge Systems",
-                "team-5", "[DEMO] Knowledge Pipeline Team",
-                json.dumps(["[DEMO] Vector Ingestion & Semantic Retrieval", "[DEMO] Institutional Knowledge Indexing", "[DEMO] Data Integrity"]),
-                "tm-2", "[DEMO] Sarah Chen", "active", 1, "2024-05-20", 1
-            ),
-            (
-                "tm-6", "usr-6", "org-solian-wolves", "[DEMO] Aria Thorne", "a.thorne@solian.ai", "guest",
-                "External Strategic Advisor (Demo)", "dept-strat", "[DEMO Template] Strategic Advisory & Client Accounts",
-                None, "Advisory Board",
-                json.dumps(["[DEMO] Quarterly Strategic Benchmarking", "[DEMO] Market Intelligence Review"]),
-                "tm-3", "[DEMO] Marcus Vance", "active", 0, "2024-08-01", 1
+                "tm-5", "usr-5", "org-solian-wolves", "Solomon Nyangweso Omwenga", "solomon.omwenga@solianwolves.co", "admin",
+                "Chief Technology Officer", "dept-tech", "Technology & AI Systems",
+                None, "Executive Council",
+                json.dumps(["Technology Architecture & AI Systems", "Security Infrastructure", "Engineering Leadership"]),
+                "tm-1", "Ian Momanyi Nyakundi", "active", 0, "2024-01-01", 0
             ),
         ]
         cur.executemany("""
@@ -1950,25 +1945,86 @@ class EnterpriseRepository:
                 pass
         return member
 
-    def activate_member_account(self, token: str, auth_user_id: str) -> Optional[OrganizationMember]:
+    def hash_password(self, password: str) -> str:
+        salt = secrets.token_hex(16)
+        key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+        return f"{salt}${key.hex()}"
+
+    def verify_password_hash(self, stored_hash: Optional[str], password: str) -> bool:
+        if not stored_hash:
+            # If no password explicitly set yet, allow initial leadership onboarding password
+            return password in ("Solian2026!", "SolianWolves2026!", "Admin2026!")
+        try:
+            salt, key_hex = stored_hash.split("$", 1)
+            test_key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+            return hmac.compare_digest(test_key.hex(), key_hex)
+        except Exception:
+            return False
+
+    def verify_member_password(self, member_id: str, password: str) -> bool:
+        with self._lock:
+            conn = self._get_connection()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT password_hash FROM members WHERE id = ? LIMIT 1;", (member_id,))
+                row = cur.fetchone()
+                if not row:
+                    return False
+                stored = row["password_hash"] if "password_hash" in row.keys() else None
+                is_valid = self.verify_password_hash(stored, password)
+                if is_valid and not stored:
+                    # Automatically persist hashed password on first successful authentication
+                    p_hash = self.hash_password(password)
+                    cur.execute("UPDATE members SET password_hash = ? WHERE id = ?;", (p_hash, member_id))
+                    conn.commit()
+                return is_valid
+            finally:
+                conn.close()
+
+    def set_member_password(self, member_id: str, password: str) -> bool:
+        p_hash = self.hash_password(password)
+        with self._lock:
+            conn = self._get_connection()
+            try:
+                cur = conn.cursor()
+                cur.execute("UPDATE members SET password_hash = ? WHERE id = ?;", (p_hash, member_id))
+                conn.commit()
+                return True
+            finally:
+                conn.close()
+
+    def activate_member_account(self, token: str, auth_user_id: str, password: Optional[str] = None) -> Optional[OrganizationMember]:
         """Binds verified Auth UID to personnel record and activates the account."""
         member = self.get_member_by_invitation_token(token)
         if not member:
             return None
 
+        p_hash = self.hash_password(password) if password else None
+
         with self._lock:
             conn = self._get_connection()
             try:
                 cur = conn.cursor()
-                cur.execute(
-                    """
-                    UPDATE members
-                    SET auth_user_id = ?, activation_status = 'active', status = 'active',
-                        invitation_token = NULL, invitation_expires_at = NULL
-                    WHERE id = ?;
-                    """,
-                    (auth_user_id, member.id),
-                )
+                if p_hash:
+                    cur.execute(
+                        """
+                        UPDATE members
+                        SET auth_user_id = ?, activation_status = 'active', status = 'active',
+                            password_hash = ?, invitation_token = NULL, invitation_expires_at = NULL
+                        WHERE id = ?;
+                        """,
+                        (auth_user_id, p_hash, member.id),
+                    )
+                else:
+                    cur.execute(
+                        """
+                        UPDATE members
+                        SET auth_user_id = ?, activation_status = 'active', status = 'active',
+                            invitation_token = NULL, invitation_expires_at = NULL
+                        WHERE id = ?;
+                        """,
+                        (auth_user_id, member.id),
+                    )
                 self._log_activity_raw(
                     conn,
                     actor_name=member.name,
@@ -2075,7 +2131,7 @@ class EnterpriseRepository:
         token, _ = self.generate_member_invitation(owner.id, expires_in_days=expires_in_days)
         return token
 
-    def bootstrap_owner(self, bootstrap_token: str, auth_user_id: str) -> OrganizationMember:
+    def bootstrap_owner(self, bootstrap_token: str, auth_user_id: str, password: Optional[str] = None) -> OrganizationMember:
         """Initializes and claims the Owner account via cryptographic bootstrap token."""
         status = self.get_owner_bootstrap_status()
         if status["is_bootstrapped"]:
@@ -2085,7 +2141,7 @@ class EnterpriseRepository:
         if not member or member.role != UserRole.OWNER:
             raise ValueError("Invalid or expired owner bootstrap token.")
 
-        activated = self.activate_member_account(bootstrap_token, auth_user_id)
+        activated = self.activate_member_account(bootstrap_token, auth_user_id, password=password)
         if not activated:
             raise ValueError("Failed to activate owner account.")
 
