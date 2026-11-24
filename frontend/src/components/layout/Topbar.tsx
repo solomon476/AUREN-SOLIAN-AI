@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, ShieldCheck, LogOut, LogIn, KeyRound, X, User } from 'lucide-react';
+import { Search, ShieldCheck, LogOut, LogIn, KeyRound, X, User, Download, Smartphone } from 'lucide-react';
 import { useOrganization } from '../../context/OrganizationContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePWAInstall } from '../common/PWAInstallBanner';
 import { UserRole } from '../../types';
 import { AuthModal } from '../auth/AuthModal';
 import { NotificationCenter } from '../notifications/NotificationCenter';
@@ -12,6 +13,7 @@ import { UserAvatar } from '../common/UserAvatar';
 export const Topbar: React.FC = () => {
   const { currentOrg, activeModule } = useOrganization();
   const { user, availableUsers, switchUser, authMode, isDevSimulation, signOut } = useAuth();
+  const { isStandalone, triggerInstall } = usePWAInstall();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
@@ -133,6 +135,19 @@ export const Topbar: React.FC = () => {
         >
           <Search className="w-4 h-4 text-gold-400" />
         </button>
+
+        {/* Mobile Quick Install App Button (visible on mobile browsers when not yet installed) */}
+        {!isStandalone && (
+          <button
+            onClick={triggerInstall}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500/25 border border-gold-500/30 text-gold-400 text-xs font-bold cursor-pointer transition min-h-[36px] active:scale-95"
+            title="Install AUREN SOLIAN on your device"
+            aria-label="Install App"
+          >
+            <Download className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+            <span className="hidden xs:inline">Install</span>
+          </button>
+        )}
 
         {/* Desktop Search trigger button styled as input */}
         <button

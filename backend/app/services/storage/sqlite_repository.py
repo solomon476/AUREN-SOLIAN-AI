@@ -650,8 +650,18 @@ class EnterpriseRepository:
             except sqlite3.OperationalError:
                 pass  # column already exists
 
-            # Purge legacy demo mock records if present
+            # Purge legacy demo mock records if present and normalize executive leadership records
             cur.execute("DELETE FROM members WHERE is_demo = 1 OR id = 'tm-6' OR name LIKE '%[DEMO]%' OR name = 'Solomon K.';")
+            cur.execute("UPDATE members SET auth_user_id = 'usr-1' WHERE id = 'tm-1' AND auth_user_id IS NULL;")
+            cur.execute("UPDATE departments SET lead_name = 'Ian Momanyi Nyakundi' WHERE lead_id = 'tm-1' OR lead_name = 'Solomon K.';")
+            cur.execute("UPDATE operating_cadences SET lead = 'Ian Momanyi Nyakundi' WHERE lead = 'Solomon K.';")
+            cur.execute("UPDATE knowledge_items SET author = 'Ian Momanyi Nyakundi' WHERE author = 'Solomon K.';")
+            cur.execute("UPDATE projects SET lead = 'Ian Momanyi Nyakundi' WHERE lead = 'Solomon K.';")
+            cur.execute("UPDATE tasks SET assignee = 'Ian Momanyi Nyakundi' WHERE assignee = 'Solomon K.';")
+            cur.execute("UPDATE clients SET lead_account_manager = 'Ian Momanyi Nyakundi' WHERE lead_account_manager = 'Solomon K.';")
+            cur.execute("UPDATE company_activities SET actor_name = 'Ian Momanyi Nyakundi' WHERE actor_name = 'Solomon K.';")
+            cur.execute("UPDATE meetings SET organizer_name = 'Ian Momanyi Nyakundi' WHERE organizer_name = 'Solomon K.' OR organizer_id = 'tm-1';")
+            cur.execute("UPDATE discussions SET author_name = 'Ian Momanyi Nyakundi' WHERE author_id = 'tm-1' OR author_name = 'Solomon K.';")
 
             # Always ensure the real Solian Wolves leadership council exists
             cur.execute("SELECT COUNT(*) as count FROM organizations;")
@@ -682,8 +692,8 @@ class EnterpriseRepository:
         # 14. Meetings (DEMO)
         meetings = [
             (
-                "mtg-1", "org-solian-wolves", "[DEMO] Executive Strategy & Capital Allocation Review",
-                "executive", "Solomon K.", "tm-1", "2026-11-24", "10:00", 60, "Executive Boardroom & Virtual",
+                "mtg-1", "org-solian-wolves", "Executive Strategy & Capital Allocation Review",
+                "executive", "Ian Momanyi Nyakundi", "tm-1", "2026-11-24", "10:00", 60, "Executive Boardroom & Virtual",
                 "https://meet.solian.ai/exec-sync", None, None,
                 json.dumps(["Q4 Strategic Priorities", "Institutional Capital Allocation", "Enterprise Client SLA Adherence"]),
                 "Reviewed Q4 operating plan and confirmed milestone timelines across all engineering tracks.",
@@ -691,12 +701,12 @@ class EnterpriseRepository:
                     {"id": "dec-1", "decision": "Approve unified PostgreSQL migration with zero-trust tenant isolation", "impact": "Enforces complete customer isolation and unlocks production Supabase deployment", "status": "approved", "knowledge_item_id": None},
                     {"id": "dec-2", "decision": "Authorize new enterprise client onboarding protocol with automatic SLA alerts", "impact": "Reduces onboarding latency by 45%", "status": "approved", "knowledge_item_id": None}
                 ]),
-                json.dumps(["Solomon K.", "Ian Momanyi Nyakundi", "Hillary Onchwati Isaiah", "Alice Moraa Nyakundi", "Noella Maraka Kaatho", "Solomon Nyangweso Omwenga"]),
+                json.dumps(["Ian Momanyi Nyakundi", "Hillary Onchwati Isaiah", "Alice Moraa Nyakundi", "Noella Maraka Kaatho", "Solomon Nyangweso Omwenga"]),
                 json.dumps([
-                    {"id": "act-item-1", "title": "Finalize RLS tenant isolation verification in staging cluster", "assignee": "Solomon K.", "due_date": "2026-11-26", "status": "pending", "task_id": None},
+                    {"id": "act-item-1", "title": "Finalize RLS tenant isolation verification in staging cluster", "assignee": "Solomon Nyangweso Omwenga", "due_date": "2026-11-26", "status": "pending", "task_id": None},
                     {"id": "act-item-2", "title": "Publish updated enterprise governance charter to Knowledge Vault", "assignee": "Alice Moraa Nyakundi", "due_date": "2026-11-28", "status": "pending", "task_id": None}
                 ]),
-                "scheduled", "2026-11-20T08:00:00Z", 1
+                "scheduled", "2026-11-20T08:00:00Z", 0
             ),
             (
                 "mtg-2", "org-solian-wolves", "[DEMO] AI Mesh Architecture & Telemetry Sprint Planning",
@@ -707,7 +717,7 @@ class EnterpriseRepository:
                 json.dumps([
                     {"id": "dec-3", "decision": "Standardize all company API responses on typed Pydantic V2 schemas", "impact": "Prevents data corruption across frontend-backend boundaries", "status": "approved", "knowledge_item_id": None}
                 ]),
-                json.dumps(["[DEMO] Sarah Chen", "[DEMO] David Ochieng", "Solomon K."]),
+                json.dumps(["[DEMO] Sarah Chen", "[DEMO] David Ochieng", "Solomon Nyangweso Omwenga"]),
                 json.dumps([
                     {"id": "act-item-3", "title": "Implement unified command palette search across all modules", "assignee": "[DEMO] Sarah Chen", "due_date": "2026-11-27", "status": "pending", "task_id": None}
                 ]),
@@ -722,7 +732,7 @@ class EnterpriseRepository:
                 json.dumps([
                     {"id": "dec-4", "decision": "Extend dedicated SLA tier for Meridian Logistics through 2027", "impact": "Secures enterprise ARR commitment", "status": "approved", "knowledge_item_id": None}
                 ]),
-                json.dumps(["[DEMO] Marcus Vance", "Alister Sterling (Demo)", "Solomon K."]),
+                json.dumps(["[DEMO] Marcus Vance", "Alister Sterling (Demo)", "Ian Momanyi Nyakundi"]),
                 json.dumps([
                     {"id": "act-item-4", "title": "Draft revised Master Services Agreement amendment", "assignee": "[DEMO] Marcus Vance", "due_date": "2026-11-29", "status": "pending", "task_id": None}
                 ]),
@@ -735,7 +745,7 @@ class EnterpriseRepository:
         discussions = [
             (
                 "dsc-1", "org-solian-wolves", "company", "general", "General Announcements",
-                "tm-1", "Solomon K.", "owner", "Welcome to Solian Wolves Unified Operating Environment",
+                "tm-1", "Ian Momanyi Nyakundi", "owner", "Welcome to Solian Wolves Unified Operating Environment",
                 "The AUREN SOLIAN platform is now active as our primary company intelligence and operational command system. All department leads, please ensure your sprint deliverables, client accounts, and institutional knowledge are accurately reflected in the system.",
                 None, 1, "2026-11-20T10:00:00Z", 1
             ),
@@ -956,7 +966,7 @@ class EnterpriseRepository:
 
         # 3. Operating Cadences (DEMO Templates)
         cadences = [
-            ("cad-1", "org-solian-wolves", "[DEMO Template] Executive Strategic Briefing", "Weekly (Mondays 09:00 UTC)", "Executive Leadership & Department Heads", "High-level review of strategic initiatives, capital velocity, and cross-departmental blockers.", "Solomon K.", 1),
+            ("cad-1", "org-solian-wolves", "Executive Strategic Briefing", "Weekly (Mondays 09:00 UTC)", "Executive Leadership & Department Heads", "High-level review of strategic initiatives, capital velocity, and cross-departmental blockers.", "Ian Momanyi Nyakundi", 0),
             ("cad-2", "org-solian-wolves", "[DEMO Template] Engineering & AI Mesh Sync", "Bi-Weekly (Tuesdays 14:00 UTC)", "AI Ops, Architecture & Data Teams", "Audit sprint velocity, LLM boundary latency, and model infrastructure deployments.", "[DEMO] Sarah Chen", 1),
             ("cad-3", "org-solian-wolves", "[DEMO Template] Client Operations Triage", "Daily (10:00 UTC)", "Strategic Accounts & Client Leads", "Review client escalation tickets, SLA adherence, and contract milestones.", "[DEMO] Marcus Vance", 1),
             ("cad-4", "org-solian-wolves", "[DEMO Template] Institutional Knowledge Audit", "Monthly (First Friday)", "Compliance & Data Intelligence", "Evaluate stale documentation, update SOP classifications, and audit RBAC matrices.", "[DEMO] Elena Rostova", 1),
@@ -965,7 +975,7 @@ class EnterpriseRepository:
 
         # 4. Departments (DEMO Templates)
         departments = [
-            ("dept-exec", "org-solian-wolves", "Executive Leadership & Strategy", "EXEC", "Corporate strategy, capital allocation, governance, and organizational command.", "tm-1", "Solomon K.", 1, 1, 0),
+            ("dept-exec", "org-solian-wolves", "Executive Leadership & Strategy", "EXEC", "Corporate strategy, capital allocation, governance, and organizational command.", "tm-1", "Ian Momanyi Nyakundi", 1, 1, 0),
             ("dept-eng", "org-solian-wolves", "[DEMO Template] Engineering & AI Operations", "ENG-AI", "AUREN SOLIAN core mesh architecture, backend systems, and container infrastructure.", "tm-2", "[DEMO] Sarah Chen", 1, 1, 1),
             ("dept-strat", "org-solian-wolves", "[DEMO Template] Strategic Advisory & Client Accounts", "STRAT", "Enterprise client management, advisory services, commercial contracts, and SLA delivery.", "tm-3", "[DEMO] Marcus Vance", 2, 1, 1),
             ("dept-arch", "org-solian-wolves", "[DEMO Template] Product Architecture & Governance", "ARCH", "Security architecture, multi-tenant RBAC boundaries, and regulatory SOC2 compliance.", "tm-4", "[DEMO] Elena Rostova", 1, 1, 1),
@@ -1075,7 +1085,7 @@ class EnterpriseRepository:
                 "Policy",
                 "Demonstration corporate identity, operational autonomy tenets, and ethical guidelines for testing.",
                 "Demonstration operating policy detailing organizational values, executive accountability, and disciplined delivery practices.",
-                "Public", 0, "Executive Leadership & Strategy", "1.0", "2026-11-01", "Solomon K.",
+                "Public", 0, "Executive Leadership & Strategy", "1.0", "2026-11-01", "Ian Momanyi Nyakundi",
                 json.dumps(["demo", "identity", "principles", "discipline", "public"]), 1
             ),
             (
@@ -1084,7 +1094,7 @@ class EnterpriseRepository:
                 "SOP",
                 "Demonstration standard procedure for converting AI action proposals into verified tasks and completing executive reviews.",
                 "Demonstration workflow defining how department managers review, accept, or reject action proposals without silent operational execution.",
-                "Internal", 0, "Executive Leadership & Strategy", "1.1", "2026-11-10", "Solomon K.",
+                "Internal", 0, "Executive Leadership & Strategy", "1.1", "2026-11-10", "Ian Momanyi Nyakundi",
                 json.dumps(["demo", "tasks", "delegation", "ai-proposals", "governance"]), 1
             ),
         ]
@@ -1099,7 +1109,7 @@ class EnterpriseRepository:
             ),
             (
                 "p-102", "org-solian-wolves", "[DEMO] Intelligence Mesh Architecture Rollout", "Internal",
-                "in_progress", 85, "Solomon K.", "2026-11-30", "high", "Executive Leadership & Strategy",
+                "in_progress", 85, "Ian Momanyi Nyakundi", "2026-11-30", "high", "Executive Leadership & Strategy",
                 "Demonstration deployment of AUREN SOLIAN components across internal testing divisions.", 1
             ),
             (
@@ -1121,7 +1131,7 @@ class EnterpriseRepository:
                 "t-1", "org-solian-wolves", "[DEMO] Synthesize Q4 Operations Review for Board",
                 "Demonstration task: compile departmental deliverables, AI system metrics, and executive budget allocations.",
                 "p-102", "[DEMO] Intelligence Mesh Architecture Rollout", "in_progress", "urgent",
-                "Solomon K.", "2026-11-25", "Executive Leadership & Strategy", "2026-11-20", 1
+                "Ian Momanyi Nyakundi", "2026-11-25", "Executive Leadership & Strategy", "2026-11-20", 1
             ),
             (
                 "t-2", "org-solian-wolves", "[DEMO] Audit Multi-Tenant RBAC Security Matrix",
@@ -1147,7 +1157,7 @@ class EnterpriseRepository:
         # 10. Clients (DEMO)
         clients = [
             ("c-1", "org-solian-wolves", "[DEMO] Meridian Global Logistics", "Alister Sterling (Demo)", "demo-sterling@meridian.test", "active", "$240,000 / yr (Demo)", "[DEMO] Marcus Vance", "Demonstration client account for testing CRM views.", 1),
-            ("c-2", "org-solian-wolves", "[DEMO] Aether Capital Partners", "Beatrice Holt (Demo)", "demo-holt@aethercap.test", "retained", "$360,000 / yr (Demo)", "Solomon K.", "Demonstration private equity partner for testing retained accounts.", 1),
+            ("c-2", "org-solian-wolves", "[DEMO] Aether Capital Partners", "Beatrice Holt (Demo)", "demo-holt@aethercap.test", "retained", "$360,000 / yr (Demo)", "Ian Momanyi Nyakundi", "Demonstration private equity partner for testing retained accounts.", 1),
             ("c-3", "org-solian-wolves", "[DEMO] Vanguard Industrial Systems", "Robert Drake (Demo)", "demo-drake@vanguardind.test", "contract_pending", "$180,000 / yr (Demo)", "[DEMO] Marcus Vance", "Demonstration industrial client in contract review stage.", 1),
         ]
         cur.executemany("INSERT OR REPLACE INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", clients)
@@ -1173,7 +1183,7 @@ class EnterpriseRepository:
             ("act-1", "org-solian-wolves", "[DEMO] Sarah Chen", "milestone", "[DEMO] Project Apex: Milestone 2 Reached", "Demonstration milestone reached for testing activity feeds.", "2026-11-22 10:30 UTC", "projects", 1),
             ("act-2", "org-solian-wolves", "[DEMO] David Ochieng", "sop_indexed", "[DEMO] SOP-401 Incident Protocol Updated", "Demonstration indexing of escalation protocol.", "2026-11-22 09:15 UTC", "knowledge", 1),
             ("act-3", "org-solian-wolves", "[DEMO] Marcus Vance", "task_created", "[DEMO] Created Escalation Review Task", "Demonstration triage review scheduled for testing.", "2026-11-21 16:45 UTC", "tasks", 1),
-            ("act-4", "org-solian-wolves", "Solomon K.", "milestone", "[DEMO] Operations Briefing Prepared", "Demonstration briefing entry.", "2026-11-21 14:00 UTC", "dashboard", 1),
+            ("act-4", "org-solian-wolves", "Ian Momanyi Nyakundi", "milestone", "[DEMO] Operations Briefing Prepared", "Demonstration briefing entry.", "2026-11-21 14:00 UTC", "dashboard", 1),
             ("act-5", "org-solian-wolves", "[DEMO] Elena Rostova", "doc_uploaded", "[DEMO] Compliance Whitepaper Uploaded", "Demonstration whitepaper upload in confidential registry.", "2026-11-20 11:20 UTC", "documents", 1),
         ]
         cur.executemany("INSERT OR REPLACE INTO company_activities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", activities)
@@ -1181,8 +1191,8 @@ class EnterpriseRepository:
         # 14. Meetings (DEMO)
         meetings = [
             (
-                "mtg-1", "org-solian-wolves", "[DEMO] Executive Strategy & Capital Allocation Review",
-                "executive", "Solomon K.", "tm-1", "2026-11-24", "10:00", 60, "Executive Boardroom & Virtual",
+                "mtg-1", "org-solian-wolves", "Executive Strategy & Capital Allocation Review",
+                "executive", "Ian Momanyi Nyakundi", "tm-1", "2026-11-24", "10:00", 60, "Executive Boardroom & Virtual",
                 "https://meet.solian.ai/exec-sync", None, None,
                 json.dumps(["Q4 Strategic Priorities", "Institutional Capital Allocation", "Enterprise Client SLA Adherence"]),
                 "Reviewed Q4 operating plan and confirmed milestone timelines across all engineering tracks.",
@@ -1190,12 +1200,12 @@ class EnterpriseRepository:
                     {"id": "dec-1", "decision": "Approve unified PostgreSQL migration with zero-trust tenant isolation", "impact": "Enforces complete customer isolation and unlocks production Supabase deployment", "status": "approved", "knowledge_item_id": None},
                     {"id": "dec-2", "decision": "Authorize new enterprise client onboarding protocol with automatic SLA alerts", "impact": "Reduces onboarding latency by 45%", "status": "approved", "knowledge_item_id": None}
                 ]),
-                json.dumps(["Solomon K.", "Ian Momanyi Nyakundi", "Hillary Onchwati Isaiah", "Alice Moraa Nyakundi", "Noella Maraka Kaatho", "Solomon Nyangweso Omwenga"]),
+                json.dumps(["Ian Momanyi Nyakundi", "Hillary Onchwati Isaiah", "Alice Moraa Nyakundi", "Noella Maraka Kaatho", "Solomon Nyangweso Omwenga"]),
                 json.dumps([
-                    {"id": "act-item-1", "title": "Finalize RLS tenant isolation verification in staging cluster", "assignee": "Solomon K.", "due_date": "2026-11-26", "status": "pending", "task_id": None},
+                    {"id": "act-item-1", "title": "Finalize RLS tenant isolation verification in staging cluster", "assignee": "Solomon Nyangweso Omwenga", "due_date": "2026-11-26", "status": "pending", "task_id": None},
                     {"id": "act-item-2", "title": "Publish updated enterprise governance charter to Knowledge Vault", "assignee": "Alice Moraa Nyakundi", "due_date": "2026-11-28", "status": "pending", "task_id": None}
                 ]),
-                "scheduled", "2026-11-20T08:00:00Z", 1
+                "scheduled", "2026-11-20T08:00:00Z", 0
             ),
             (
                 "mtg-2", "org-solian-wolves", "[DEMO] AI Mesh Architecture & Telemetry Sprint Planning",
@@ -1206,7 +1216,7 @@ class EnterpriseRepository:
                 json.dumps([
                     {"id": "dec-3", "decision": "Standardize all company API responses on typed Pydantic V2 schemas", "impact": "Prevents data corruption across frontend-backend boundaries", "status": "approved", "knowledge_item_id": None}
                 ]),
-                json.dumps(["[DEMO] Sarah Chen", "[DEMO] David Ochieng", "Solomon K."]),
+                json.dumps(["[DEMO] Sarah Chen", "[DEMO] David Ochieng", "Solomon Nyangweso Omwenga"]),
                 json.dumps([
                     {"id": "act-item-3", "title": "Implement unified command palette search across all modules", "assignee": "[DEMO] Sarah Chen", "due_date": "2026-11-27", "status": "pending", "task_id": None}
                 ]),
@@ -1221,7 +1231,7 @@ class EnterpriseRepository:
                 json.dumps([
                     {"id": "dec-4", "decision": "Extend dedicated SLA tier for Meridian Logistics through 2027", "impact": "Secures enterprise ARR commitment", "status": "approved", "knowledge_item_id": None}
                 ]),
-                json.dumps(["[DEMO] Marcus Vance", "Alister Sterling (Demo)", "Solomon K."]),
+                json.dumps(["[DEMO] Marcus Vance", "Alister Sterling (Demo)", "Ian Momanyi Nyakundi"]),
                 json.dumps([
                     {"id": "act-item-4", "title": "Draft revised Master Services Agreement amendment", "assignee": "[DEMO] Marcus Vance", "due_date": "2026-11-29", "status": "pending", "task_id": None}
                 ]),
@@ -1234,7 +1244,7 @@ class EnterpriseRepository:
         discussions = [
             (
                 "dsc-1", "org-solian-wolves", "company", "general", "General Announcements",
-                "tm-1", "Solomon K.", "owner", "Welcome to Solian Wolves Unified Operating Environment",
+                "tm-1", "Ian Momanyi Nyakundi", "owner", "Welcome to Solian Wolves Unified Operating Environment",
                 "The AUREN SOLIAN platform is now active as our primary company intelligence and operational command system. All department leads, please ensure your sprint deliverables, client accounts, and institutional knowledge are accurately reflected in the system.",
                 None, 1, "2026-11-20T10:00:00Z", 1
             ),

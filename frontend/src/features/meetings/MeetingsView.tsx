@@ -661,7 +661,7 @@ export const MeetingsView: React.FC = () => {
                   type="text"
                   value={attendeesInput}
                   onChange={(e) => setAttendeesInput(e.target.value)}
-                  placeholder="Solomon K., Sarah Chen, David Ochieng"
+                  placeholder="Ian Momanyi Nyakundi, Hillary Onchwati, Solomon Nyangweso"
                   className="w-full bg-solian-surface border border-solian-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
                 />
               </div>

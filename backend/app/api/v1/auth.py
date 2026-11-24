@@ -50,9 +50,14 @@ async def corporate_login(body: CorporateLoginRequest):
             detail="Incorrect password for corporate account.",
         )
 
-    auth_uid = getattr(member, "auth_user_id", None) or f"usr-auth-{member.id}"
+    auth_uid = getattr(member, "auth_user_id", None) or member.user_id or f"usr-{member.id}"
+    if not getattr(member, "auth_user_id", None):
+        repo.link_member_auth_id(member.id, auth_uid)
+
     session_token = create_access_token({
         "sub": auth_uid,
+        "member_id": member.id,
+        "user_id": member.user_id,
         "email": member.email,
         "role": member.role.value,
         "name": member.name,

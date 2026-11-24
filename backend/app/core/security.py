@@ -188,6 +188,13 @@ def get_current_user(
                 or repo.get_member_by_id(token_user_id)
             )
 
+        # For verified internal corporate session tokens (issued by our own secure server):
+        if not member and payload.get("iss") == "auren-solian-auth":
+            if payload.get("member_id"):
+                member = repo.get_member_by_id(payload.get("member_id"))
+            if not member and token_email:
+                member = repo.get_member_by_email(token_email)
+
         if member:
             if getattr(member, "status", None) == "suspended" or getattr(member, "activation_status", None) == "suspended":
                 raise HTTPException(

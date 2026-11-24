@@ -121,6 +121,8 @@ const AuthContext = createContext<AuthContextType>({
   setCorporateSession: async () => {},
 });
 
+const CORPORATE_TOKEN_STORAGE_KEY = 'solian_corporate_session_token';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(isProductionEnv ? unauthenticatedUser : defaultUser);
   const [availableUsers, setAvailableUsers] = useState<UserProfile[]>(verifiedLeadershipUsers);
@@ -146,16 +148,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     }
 
-    // 2. Check for active Supabase session (both dev and prod)
-    if (isSupabaseConfigured) {
-      supabaseAuthService.getSession().then((session) => {
-        if (session?.access_token) {
-          handleActiveSession(session.access_token);
-        } else if (isProductionEnv) {
-          handleSignedOut();
+    // 2. Check for active session: Supabase first, then stored corporate token
+    const checkExistingSession = async () => {
+      if (isSupabaseConfigured) {
+        try {
+          const session = await supabaseAuthService.getSession();
+          if (session?.access_token) {
+            await handleActiveSession(session.access_token);
+            return;
+          }
+        } catch (err) {
+          console.warn('Supabase session restoration failed:', err);
         }
-      });
+      }
 
+      // Check stored corporate JWT session
+      const storedCorporateToken = typeof window !== 'undefined' ? localStorage.getItem(CORPORATE_TOKEN_STORAGE_KEY) : null;
+      if (storedCorporateToken) {
+        try {
+          await handleActiveSession(storedCorporateToken);
+          return;
+        } catch {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(CORPORATE_TOKEN_STORAGE_KEY);
+          }
+        }
+      }
+
+      if (isProductionEnv) {
+        handleSignedOut();
+      }
+    };
+
+    checkExistingSession();
+
+    if (isSupabaseConfigured) {
       const { unsubscribe } = supabaseAuthService.onAuthStateChange(async (event, session) => {
         if (session?.access_token) {
           await handleActiveSession(session.access_token);
@@ -167,19 +194,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return () => {
         unsubscribe();
       };
-    } else if (isProductionEnv) {
-      handleSignedOut();
     }
   }, []);
 
   const handleActiveSession = async (token: string) => {
     SolianApiClient.setAuthToken(token);
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(CORPORATE_TOKEN_STORAGE_KEY, token);
+      }
       const serverProfile = await SolianApiClient.getCurrentUserProfile();
-      setUser(serverProfile);
-      setAuthMode('SUPABASE_JWT');
-      setIsDevSimulation(false);
-      setIsAuthenticated(true);
+      if (serverProfile && serverProfile.role !== 'guest') {
+        setUser(serverProfile);
+        setAuthMode('SUPABASE_JWT');
+        setIsDevSimulation(false);
+        setIsAuthenticated(true);
+      } else if (serverProfile) {
+        setUser(serverProfile);
+        setAuthMode('SUPABASE_JWT');
+        setIsDevSimulation(false);
+        setIsAuthenticated(false);
+      }
     } catch {
       // If server profile fetch fails, user remains in containment
       setIsAuthenticated(true);
@@ -190,6 +225,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSignedOut = () => {
     SolianApiClient.setAuthToken(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(CORPORATE_TOKEN_STORAGE_KEY);
+    }
     if (isProductionEnv) {
       setAuthMode('SUPABASE_JWT');
       setIsDevSimulation(false);
