@@ -28,7 +28,54 @@ class CompanyRetrievalService:
         """
         q_lower = query.lower()
 
-        # 1. Intent Classification
+        # ---------------------------------------------------------------------
+        # 1. GUEST ACCESS ISOLATION BOUNDARY
+        # ---------------------------------------------------------------------
+        # Unauthenticated visitors and guest clearance sessions MUST NOT access
+        # internal institutional memory, corporate SOPs, strategic project matrices,
+        # tasks, personnel details, financial records, client CRM, or meetings.
+        if user.role == UserRole.GUEST:
+            all_knowledge_matches = repo.list_knowledge(query=query)
+            public_knowledge = [k for k in all_knowledge_matches if k.classification == "Public"]
+            
+            verified_facts = {
+                "organization": {
+                    "name": "Solian Enterprise Group",
+                    "code": "SLN-WLV",
+                    "operating_presence": "Nairobi, Kenya",
+                    "public_overview": "Enterprise operating group, strategic capital initiatives, and institutional technology systems.",
+                }
+            }
+            context_sources = [k.title for k in public_knowledge[:3]] if public_knowledge else []
+            knowledge_context = [
+                {
+                    "title": k.title,
+                    "category": k.category,
+                    "classification": k.classification,
+                    "snippet": k.snippet,
+                }
+                for k in public_knowledge[:3]
+            ]
+            
+            missing = [
+                "Internal corporate projects, operational tasks, financial ledgers, and institutional memory require authenticated corporate credentials."
+            ]
+            if any(w in q_lower for w in ["finance", "financial", "treasury", "balance", "bank", "account", "money", "cash"]):
+                missing.append("Financial treasury records require Member clearance.")
+
+            return {
+                "verified_facts": verified_facts,
+                "calculated_figures": {},
+                "missing_records": missing,
+                "context_sources": context_sources,
+                "knowledge_context": knowledge_context,
+                "restricted_attempt": False,
+                "formatted_prompt_context": self._format_guest_context(user, workspace_context, public_knowledge),
+            }
+
+        # ---------------------------------------------------------------------
+        # 2. Authenticated Personnel Intent Classification
+        # ---------------------------------------------------------------------
         is_financial = any(w in q_lower for w in [
             "finance", "cash flow", "income", "expense", "revenue", "spend",
             "balance", "account", "invoice", "payable", "receivable", "budget",
@@ -417,6 +464,45 @@ class CompanyRetrievalService:
             "restricted_attempt": restricted_attempt,
             "formatted_prompt_context": formatted_prompt_context,
         }
+
+    def _format_guest_context(
+        self,
+        user: AuthUser,
+        workspace_context: Optional[str],
+        public_knowledge: List[Any],
+    ) -> str:
+        """Constructs a strictly isolated, public-only context payload for unauthenticated guests."""
+        public_snippets = [
+            f"- {k.title}: {k.snippet}" for k in public_knowledge[:3]
+        ]
+        snippets_text = "\n".join(public_snippets) if public_snippets else "No public notices currently published."
+
+        lines = [
+            "<company_context>",
+            "  <security_governance>",
+            "    <session_tier>UNAUTHENTICATED_GUEST</session_tier>",
+            "    <clearance>PUBLIC_ACCESS_ONLY</clearance>",
+            "    <caller_identity>External Visitor</caller_identity>",
+            "  </security_governance>",
+            "",
+            "  <public_organization_overview>",
+            "    Solian Enterprise Group (Solian Wolves) is a private corporate operating group based in Nairobi, Kenya.",
+            "    Focus areas: Enterprise operations, corporate governance, and technology infrastructure.",
+            "  </public_organization_overview>",
+            "",
+            "  <public_knowledge_items>",
+            f"    {snippets_text}",
+            "  </public_knowledge_items>",
+            "",
+            "  <visitor_governance_directives>",
+            "    1. The user is an unauthenticated external visitor. Treat them with executive courtesy but STRICTLY restrict answers to public facts.",
+            "    2. You must NEVER disclose, reference, or hint at internal SOPs (e.g. SOP-401), internal policies (e.g. POL-202), strategic project matrices, active tasks, financial ledgers, employee rosters, or meeting minutes.",
+            "    3. If the visitor inquires about internal company projects, tasks, finances, or personnel, politely explain that access to internal institutional intelligence requires signing in with an authorized corporate account.",
+            "    4. Never propose or suggest actions, tasks, or operational delegations to guests.",
+            "  </visitor_governance_directives>",
+            "</company_context>",
+        ]
+        return "\n".join(lines)
 
     def _format_structured_context(
         self,

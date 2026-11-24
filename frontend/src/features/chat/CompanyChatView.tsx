@@ -25,8 +25,20 @@ import { UserAvatar } from '../../components/common/UserAvatar';
 export const CompanyChatView: React.FC = () => {
   const { user } = useAuth();
   const { currentOrg, setActiveModule } = useOrganization();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
+  const isGuest = user.role === 'guest';
+
+  const getWelcomeMessage = (): ChatMessage => {
+    if (isGuest) {
+      return {
+        id: 'msg-welcome-guest',
+        role: 'assistant',
+        content: `Welcome to **AUREN SOLIAN**, the organizational operating system for **${currentOrg.name}**.\n\nI am currently operating in **Visitor Mode** with public access.\n\nTo consult internal operations, project matrices, institutional knowledge, or executive decision support, please sign in with your corporate account.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        contextSources: [],
+        actionProposals: [],
+      };
+    }
+    return {
       id: 'msg-welcome',
       role: 'assistant',
       content: `Good day, ${user.fullName}. I am **AUREN SOLIAN**, the organizational intelligence assistant for **${currentOrg.name}**.\n\nI operate across your corporate policies, operational playbooks, and active project matrices under strict **${user.role.toUpperCase()}** clearance.\n\nHow may I support executive decision-making, strategic synthesis, or operational delegation today?`,
@@ -49,8 +61,10 @@ export const CompanyChatView: React.FC = () => {
           status: 'pending',
         },
       ],
-    },
-  ]);
+    };
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>([getWelcomeMessage()]);
 
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -62,12 +76,18 @@ export const CompanyChatView: React.FC = () => {
   const docInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const quickPrompts = [
-    'Summarize active strategic initiatives and project progress',
-    'Review SOP-401 enterprise incident escalation protocol',
-    'What operations currently require urgent attention?',
-    'Explain corporate data classification under POL-202',
-  ];
+  const quickPrompts = isGuest
+    ? [
+        'What is Solian Wolves?',
+        'What services does Solian Enterprise provide?',
+        'How do I sign in with a corporate account?',
+      ]
+    : [
+        'Summarize active strategic initiatives and project progress',
+        'Review SOP-401 enterprise incident escalation protocol',
+        'What operations currently require urgent attention?',
+        'Explain corporate data classification under POL-202',
+      ];
 
   const handleDocumentSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -131,19 +151,7 @@ export const CompanyChatView: React.FC = () => {
   }, [messages, isStreaming]);
 
   const handleResetConversation = () => {
-    setMessages([
-      {
-        id: `msg-welcome-${Date.now()}`,
-        role: 'assistant',
-        content: `Good day, ${user.fullName}. I am **AUREN SOLIAN**, the organizational intelligence assistant for **${currentOrg.name}**.\n\nI operate across your corporate policies, operational playbooks, and active project matrices under strict **${user.role.toUpperCase()}** clearance.\n\nHow may I support executive decision-making, strategic synthesis, or operational delegation today?`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        contextSources: [
-          'Solian Wolves Institutional Memory',
-          'Corporate SOP-401 & POL-202',
-          'Active Strategic Initiatives Matrix',
-        ],
-      },
-    ]);
+    setMessages([{ ...getWelcomeMessage(), id: `msg-welcome-${Date.now()}` }]);
   };
 
   const handleSendPrompt = (promptText: string) => {
@@ -369,10 +377,26 @@ export const CompanyChatView: React.FC = () => {
             <RotateCcw className="w-3.5 h-3.5 text-gold-400" />
             <span className="hidden xs:inline">New Thread</span>
           </button>
-          <span className="text-[11px] text-graphite-400 hidden sm:inline">Clearance:</span>
-          <span className="text-[10px] font-mono font-bold uppercase text-gold-400 bg-solian-card px-2 py-0.5 rounded border border-gold-500/30">
-            {user.role} ({user.department})
-          </span>
+          {isGuest ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase text-graphite-300 bg-solian-card px-2 py-0.5 rounded border border-solian-border">
+                Visitor Mode
+              </span>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
+                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gold-500 text-solian-darkest hover:bg-gold-400 transition cursor-pointer"
+              >
+                Sign In
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className="text-[11px] text-graphite-400 hidden sm:inline">Clearance:</span>
+              <span className="text-[10px] font-mono font-bold uppercase text-gold-400 bg-solian-card px-2 py-0.5 rounded border border-gold-500/30">
+                {user.role} {user.department ? `(${user.department})` : ''}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -442,17 +466,17 @@ export const CompanyChatView: React.FC = () => {
                   </div>
                 )}
 
-                {/* Real Action Proposals */}
-                {!isUser && msg.actionProposals && msg.actionProposals.length > 0 && (
+                {/* Real Action Proposals (Restricted to Authenticated Personnel) */}
+                {!isUser && !isGuest && msg.actionProposals && msg.actionProposals.length > 0 && (
                   <div className="space-y-2 pt-1">
                     {msg.actionProposals.map((prop) => (
                       <div
                         key={prop.id}
-                        className="p-3.5 rounded-xl bg-solian-surface border border-gold-500/30 flex items-center justify-between gap-3 text-xs"
+                        className="p-3 sm:p-3.5 rounded-xl bg-solian-surface border border-gold-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <ListTodo className="w-4 h-4 text-gold-500 shrink-0" />
-                          <span className="font-semibold text-slate-200 truncate">{prop.title}</span>
+                        <div className="flex items-start sm:items-center gap-2 min-w-0">
+                          <ListTodo className="w-4 h-4 text-gold-500 shrink-0 mt-0.5 sm:mt-0" />
+                          <span className="font-semibold text-slate-200 break-words leading-relaxed">{prop.title}</span>
                         </div>
                         {prop.status === 'executed' ? (
                           <span className="flex items-center gap-1 text-emerald-400 font-bold text-[10px] uppercase shrink-0">
@@ -462,7 +486,7 @@ export const CompanyChatView: React.FC = () => {
                           <button
                             onClick={() => handleExecuteAction(msg.id, prop)}
                             disabled={executingProposalId === prop.id}
-                            className="px-3 py-1.5 rounded-lg bg-gold-500 text-solian-darkest font-bold text-[10px] uppercase hover:bg-gold-400 transition cursor-pointer shrink-0 disabled:opacity-50"
+                            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer shrink-0 disabled:opacity-50 min-h-[38px] flex items-center justify-center"
                           >
                             {executingProposalId === prop.id ? 'Executing...' : 'Execute Action'}
                           </button>
@@ -513,10 +537,10 @@ export const CompanyChatView: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5 text-gold-500 animate-spin" />
                 <span className="font-semibold text-slate-100">
                   {thinkingSeconds < 3
-                    ? 'AUREN SOLIAN is evaluating company memory...'
+                    ? (isGuest ? 'AUREN SOLIAN is analyzing public knowledge...' : 'AUREN SOLIAN is evaluating company memory...')
                     : thinkingSeconds < 6
-                    ? 'Querying SOP-401, projects & task matrices...'
-                    : 'Synthesizing executive brief...'}
+                    ? (isGuest ? 'Structuring visitor response...' : 'Querying SOP-401, projects & task matrices...')
+                    : 'Synthesizing response...'}
                 </span>
                 <span className="text-[10px] text-gold-400 font-mono">({thinkingSeconds}s)</span>
               </div>
@@ -639,7 +663,9 @@ export const CompanyChatView: React.FC = () => {
             placeholder={
               selectedDocs.length > 0
                 ? 'Add instructions for attached file(s)...'
-                : 'Consult AUREN SOLIAN on initiatives, SOPs, or delegate tasks...'
+                : (isGuest
+                    ? 'Ask AUREN SOLIAN a public question...'
+                    : 'Consult AUREN SOLIAN on initiatives, SOPs, or delegate tasks...')
             }
             disabled={isStreaming}
             className="flex-1 bg-transparent text-xs md:text-sm text-slate-100 placeholder-graphite-400 focus:outline-none"

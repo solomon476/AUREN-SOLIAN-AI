@@ -11,7 +11,7 @@ router = APIRouter()
 async def get_calendar_events(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     events = repo.get_operational_calendar(start_date=start_date, end_date=end_date)
     return events

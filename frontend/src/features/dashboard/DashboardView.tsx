@@ -21,6 +21,9 @@ import {
   MessageSquare,
   Flame,
   ListTodo,
+  Bot,
+  Lock,
+  LogIn,
 } from 'lucide-react';
 import { SolianApiClient } from '../../api/client';
 import { DashboardStats, Project, TaskItem, Department, Meeting, ExpenseRequest, DiscussionMessage } from '../../types';
@@ -43,6 +46,10 @@ export const DashboardView: React.FC = () => {
   const isAdminOrOwner = user.role === 'owner' || user.role === 'admin';
 
   useEffect(() => {
+    if (user.role === 'guest') {
+      setLoading(false);
+      return;
+    }
     async function loadData() {
       try {
         const promises: Promise<any>[] = [
@@ -73,13 +80,110 @@ export const DashboardView: React.FC = () => {
       }
     }
     loadData();
-  }, [isAdminOrOwner]);
+  }, [isAdminOrOwner, user.role]);
 
   if (loading) {
     return (
       <div className="p-8 text-graphite-400 flex items-center justify-center min-h-[60vh] gap-3">
         <div className="w-5 h-5 border-2 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
         <span className="text-sm font-medium">Synchronizing Company Command Center...</span>
+      </div>
+    );
+  }
+
+  if (user.role === 'guest') {
+    return (
+      <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-5xl mx-auto">
+        {/* Visitor Hero Card */}
+        <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-solian-surface via-solian-card to-solian-darkest border border-gold-500/30 shadow-card-elevation relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center p-1.5 shadow-glow-subtle">
+                  <img src="/favicon.svg" alt="Solian Emblem" className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">
+                    {currentOrg.name}
+                  </h1>
+                  <p className="text-xs text-graphite-400">
+                    {currentOrg.tagline || 'Organizational Intelligence & High-Trust Autonomous Operations'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-solian-surface text-graphite-300 border border-solian-border">
+                Visitor Access
+              </span>
+            </div>
+
+            <p className="text-xs md:text-sm text-slate-300 leading-relaxed max-w-2xl">
+              AUREN SOLIAN serves as the centralized institutional operating system for corporate strategy,
+              autonomous workflow dispatch, and intelligence synthesis across Solian Enterprise Group.
+            </p>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setActiveModule('chat')}
+                className="px-4 py-2.5 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+              >
+                <Bot className="w-4 h-4" />
+                <span>Consult AUREN SOLIAN AI (Visitor Mode)</span>
+              </button>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
+                className="px-4 py-2.5 rounded-xl bg-solian-surface hover:bg-solian-surface/80 border border-gold-500/40 text-gold-300 font-bold text-xs uppercase transition flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+              >
+                <LogIn className="w-4 h-4 text-gold-400" />
+                <span>Sign In to Corporate Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Public Operating Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 sm:p-5 rounded-xl bg-solian-card border border-solian-border space-y-2">
+            <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-white">Cryptographic RBAC</h3>
+            <p className="text-xs text-graphite-400 leading-relaxed">
+              Every operation, ledger entry, and decision matrix is cryptographically authenticated with rigorous role separation.
+            </p>
+          </div>
+
+          <div className="p-4 sm:p-5 rounded-xl bg-solian-card border border-solian-border space-y-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Brain className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-white">Organizational Intelligence</h3>
+            <p className="text-xs text-graphite-400 leading-relaxed">
+              High-velocity enterprise knowledge mesh synthesizing SOPs, execution matrices, and strategic capital governance.
+            </p>
+          </div>
+
+          <div className="p-4 sm:p-5 rounded-xl bg-solian-card border border-solian-border space-y-2">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-white">Sovereign Architecture</h3>
+            <p className="text-xs text-graphite-400 leading-relaxed">
+              Air-gapped database partitioning, zero client role override, and dedicated enterprise multi-tenant isolation.
+            </p>
+          </div>
+        </div>
+
+        {/* Corporate Confidentiality Boundary Notice */}
+        <div className="p-4 rounded-xl bg-solian-surface/80 border border-solian-border flex items-start gap-3">
+          <Lock className="w-4 h-4 text-graphite-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5 text-xs">
+            <span className="font-semibold text-slate-200">Corporate Clearance Protected</span>
+            <p className="text-graphite-400 leading-relaxed">
+              Company projects, operational tasks, financial ledgers, staff directory, and internal minutes require authenticated corporate member credentials.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

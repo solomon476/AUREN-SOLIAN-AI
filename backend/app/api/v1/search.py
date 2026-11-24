@@ -9,7 +9,7 @@ router = APIRouter()
 @router.get("/unified")
 async def search_unified(
     q: str = Query(..., min_length=1, description="Search term across enterprise entities"),
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     results = repo.search_unified(query=q)
     return results

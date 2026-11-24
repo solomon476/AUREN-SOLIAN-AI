@@ -1,33 +1,196 @@
 """Authentication and tenant identity endpoints."""
 import os
+import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import FileResponse
-from app.core.security import get_current_user, require_role, AuthUser, UserRole
-from app.models.organization import OrganizationProfileUpdate
+from app.core.security import get_current_user, require_role, AuthUser, UserRole, create_access_token
+from app.models.organization import (
+    OrganizationProfileUpdate,
+    InvitationCheckResponse,
+    AccountActivateRequest,
+    OwnerBootstrapRequest,
+)
 from app.services.storage.sqlite_repository import repo
 from app.services.storage.avatar_storage import avatar_storage
 
 router = APIRouter()
 
 
+@router.get("/invitation/{token}", response_model=InvitationCheckResponse)
+async def check_invitation(token: str):
+    """
+    Validates a cryptographic invitation or owner bootstrap token.
+    Returns sanitized public onboarding profile for user verification.
+    """
+    if not token or len(token.strip()) < 8:
+        return InvitationCheckResponse(valid=False, error="Invalid invitation token.")
+
+    member = repo.get_member_by_invitation_token(token.strip())
+    if not member:
+        return InvitationCheckResponse(valid=False, error="Invitation token not found or has expired.")
+
+    if getattr(member, "status", None) == "suspended" or getattr(member, "activation_status", None) == "suspended":
+        return InvitationCheckResponse(valid=False, error="This account has been suspended by company administration.")
+
+    return InvitationCheckResponse(
+        valid=True,
+        member_id=member.id,
+        name=member.name,
+        email=member.email,
+        role=member.role.value,
+        title=member.title,
+        department=member.department,
+        organization="Solian Enterprise Group",
+        is_owner_bootstrap=member.role == UserRole.OWNER,
+    )
+
+
+@router.post("/activate")
+async def activate_account(body: AccountActivateRequest):
+    """
+    Activates an employee account using a cryptographic invitation token.
+    Binds the stable Auth UID to the personnel record and transitions status to active.
+    Returns authenticated session credentials with full corporate clearance.
+    """
+    member = repo.get_member_by_invitation_token(body.token.strip())
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invitation token.",
+        )
+
+    if getattr(member, "status", None) == "suspended" or getattr(member, "activation_status", None) == "suspended":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been suspended by company administration.",
+        )
+
+    # Determine Auth UID
+    auth_uid = body.auth_user_id
+    if not auth_uid and body.access_token:
+        try:
+            from app.core.security import verify_jwt_token
+            payload = verify_jwt_token(body.access_token)
+            auth_uid = payload.get("sub")
+        except Exception:
+            pass
+
+    if not auth_uid:
+        auth_uid = f"usr-auth-{uuid.uuid4().hex[:12]}"
+
+    activated_member = repo.activate_member_account(body.token.strip(), auth_uid)
+    if not activated_member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to activate account. Token may have already been consumed.",
+        )
+
+    session_token = create_access_token({
+        "sub": auth_uid,
+        "email": activated_member.email or "unassigned@solianwolves.co",
+        "role": activated_member.role.value,
+        "name": activated_member.name,
+    })
+
+    return {
+        "success": True,
+        "message": f"Account activated successfully. Welcome to AUREN SOLIAN, {activated_member.name}.",
+        "accessToken": session_token,
+        "user": {
+            "id": activated_member.id,
+            "userId": activated_member.user_id,
+            "email": activated_member.email,
+            "fullName": activated_member.name,
+            "role": activated_member.role.value,
+            "title": activated_member.title,
+            "department": activated_member.department,
+            "avatarUrl": getattr(activated_member, "avatar_url", None),
+        },
+    }
+
+
+@router.get("/owner-bootstrap-status")
+async def get_owner_bootstrap_status():
+    """Returns statutory owner initialization status."""
+    return repo.get_owner_bootstrap_status()
+
+
+@router.post("/bootstrap-owner")
+async def bootstrap_owner(body: OwnerBootstrapRequest):
+    """
+    Initializes and claims the statutory Company Owner account using a secure bootstrap token.
+    Binds the owner Auth UID, transitions status to active, and returns verified Owner credentials.
+    """
+    status_info = repo.get_owner_bootstrap_status()
+    if status_info["is_bootstrapped"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: The statutory company Owner account has already been bootstrapped and activated.",
+        )
+
+    auth_uid = body.auth_user_id
+    if not auth_uid and body.access_token:
+        try:
+            from app.core.security import verify_jwt_token
+            payload = verify_jwt_token(body.access_token)
+            auth_uid = payload.get("sub")
+        except Exception:
+            pass
+
+    if not auth_uid:
+        auth_uid = f"usr-owner-{uuid.uuid4().hex[:12]}"
+
+    try:
+        owner = repo.bootstrap_owner(body.bootstrap_token.strip(), auth_uid)
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
+
+    session_token = create_access_token({
+        "sub": auth_uid,
+        "email": owner.email,
+        "role": owner.role.value,
+        "name": owner.name,
+    })
+
+    return {
+        "success": True,
+        "message": f"Owner account successfully bootstrapped. Welcome, {owner.name} ({owner.title}).",
+        "accessToken": session_token,
+        "user": {
+            "id": owner.id,
+            "userId": owner.user_id,
+            "email": owner.email,
+            "fullName": owner.name,
+            "role": owner.role.value,
+            "title": owner.title,
+            "department": owner.department,
+            "avatarUrl": getattr(owner, "avatar_url", None),
+        },
+    }
+
+
 @router.get("/me")
 async def get_me(user: AuthUser = Depends(get_current_user)):
-    member = repo.get_member_by_user_id(user.user_id) or repo.get_member_by_id(user.id)
+    is_guest = user.role == UserRole.GUEST
+    member = (repo.get_member_by_user_id(user.user_id) or repo.get_member_by_id(user.id)) if not is_guest else None
     return {
         "id": user.id,
         "userId": user.user_id,
-        "email": user.email,
-        "fullName": user.full_name,
+        "email": "" if is_guest else user.email,
+        "fullName": "Visitor" if is_guest else user.full_name,
         "role": user.role.value,
         "organizationId": user.organization_id,
-        "title": user.title,
-        "department": user.department,
+        "title": "Public Visitor" if is_guest else user.title,
+        "department": "" if is_guest else user.department,
         "avatarUrl": member.avatar_url if member and getattr(member, "avatar_url", None) else None,
         "responsibilities": member.responsibilities if member else [],
         "reportsTo": member.reports_to_name if member else None,
         "authMode": user.auth_mode,
-        "isDemoUser": user.is_demo_user,
+        "isDemoUser": False if is_guest else user.is_demo_user,
     }
 
 
@@ -55,12 +218,12 @@ async def update_org_profile(
 
 
 @router.get("/operating-info")
-async def get_operating_info(user: AuthUser = Depends(get_current_user)):
+async def get_operating_info(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     return repo.get_company_operating_info().model_dump()
 
 
 @router.get("/users")
-async def list_available_users(user: AuthUser = Depends(get_current_user)):
+async def list_available_users(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """List available member profiles for development session selection."""
     members = repo.list_members()
     return [
@@ -86,13 +249,19 @@ async def list_available_users(user: AuthUser = Depends(get_current_user)):
 async def upload_avatar(
     file: UploadFile = File(...),
     target_user_id: Optional[str] = Form(None),
-    user: AuthUser = Depends(get_current_user),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """
     Uploads a personal profile picture.
     Enforces format validation (JPEG, PNG, WebP), 5MB size limit, Pillow sanitization,
     metadata stripping, dimension normalization, and path traversal defense.
+    Requires authenticated corporate member account.
     """
+    if user.role == UserRole.GUEST:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Profile picture upload requires an authenticated corporate account.",
+        )
     effective_user_id = user.user_id
     if target_user_id and target_user_id != user.user_id:
         if user.role not in (UserRole.ADMIN, UserRole.OWNER):
@@ -147,7 +316,7 @@ async def upload_avatar(
 @router.delete("/avatar")
 async def delete_avatar(
     target_user_id: Optional[str] = None,
-    user: AuthUser = Depends(get_current_user),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Removes a user's profile picture and resets to default avatar."""
     effective_user_id = user.user_id

@@ -5,9 +5,10 @@ Enforces multi-tenant organization boundary isolation and Row-Level Security (RL
 """
 import json
 import logging
+import secrets
 import uuid
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
+from typing import List, Optional, Dict, Any, Tuple
+from datetime import datetime, timezone, timedelta
 
 from app.core.config import settings
 from app.core.security import UserRole
@@ -27,6 +28,9 @@ from app.models.organization import (
     VERIFIED_LEADERSHIP_COUNCIL,
     MemberInviteCreate,
     MemberStatusUpdate,
+    PersonnelCreate,
+    PersonnelUpdate,
+    AccountActivationStatus,
 )
 from app.models.knowledge import KnowledgeItem, KnowledgeItemCreate
 from app.models.operations import (
@@ -454,11 +458,16 @@ class PostgresRepository:
             cur.execute("UPDATE members SET status = %s WHERE organization_id = %s AND id = %s;", (new_status, self.organization_id, member_id))
             return self.get_member_by_id(member_id)
 
-    def invite_member(self, invite: MemberInviteCreate, inviter_name: str = "Admin") -> OrganizationMember:
+    def create_personnel_record(self, member_in: PersonnelCreate, creator_name: str = "Admin") -> OrganizationMember:
+        """Establishes a new personnel record in the company directory."""
         member_id = f"tm-{uuid.uuid4().hex[:8]}"
         user_id = f"usr-{uuid.uuid4().hex[:8]}"
         joined_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        responsibilities_json = json.dumps(invite.responsibilities or [])
+        responsibilities_json = json.dumps(member_in.responsibilities or [])
+        activation_status = "invitation_pending" if member_in.email else "created"
+
+        email = member_in.email.strip() if member_in.email and member_in.email.strip() else None
+        phone = member_in.phone.strip() if member_in.phone and member_in.phone.strip() else None
 
         with db_manager.connection() as conn:
             cur = conn.cursor()
@@ -466,17 +475,298 @@ class PostgresRepository:
             cur.execute(
                 """
                 INSERT INTO members (
-                    id, user_id, organization_id, name, email, role, title,
+                    id, user_id, organization_id, name, email, phone, role, title,
                     department_id, department, team_id, team, responsibilities,
-                    reports_to_id, reports_to_name, status, assigned_projects, joined_date, is_demo
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    reports_to_id, reports_to_name, status, activation_status, assigned_projects, joined_date, is_demo
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                """,
+                (
+                    member_id,
+                    user_id,
+                    self.organization_id,
+                    member_in.name.strip(),
+                    email,
+                    phone,
+                    member_in.role.value,
+                    member_in.title.strip(),
+                    None,
+                    member_in.department.strip(),
+                    None,
+                    member_in.team.strip() if member_in.team else None,
+                    responsibilities_json,
+                    None,
+                    None,
+                    "active",
+                    activation_status,
+                    0,
+                    joined_date,
+                    False,
+                ),
+            )
+            self._log_activity_raw(
+                conn,
+                actor_name=creator_name,
+                action_type="personnel_created",
+                title=f"Personnel Added: {member_in.name}",
+                description=f"Added {member_in.name} ({member_in.title}) to {member_in.department}. Status: {activation_status}.",
+                module="teams",
+            )
+            return self.get_member_by_id(member_id)
+
+    def update_personnel_record(
+        self, member_id: str, updates: PersonnelUpdate, updater_name: str = "Admin"
+    ) -> Optional[OrganizationMember]:
+        existing = self.get_member_by_id(member_id)
+        if not existing:
+            return None
+
+        update_fields = []
+        values = []
+
+        if updates.name is not None and updates.name.strip():
+            update_fields.append("name = %s")
+            values.append(updates.name.strip())
+
+        if updates.email is not None:
+            clean_email = updates.email.strip() if updates.email.strip() else None
+            update_fields.append("email = %s")
+            values.append(clean_email)
+            if clean_email and existing.activation_status == "created":
+                update_fields.append("activation_status = %s")
+                values.append("invitation_pending")
+
+        if updates.phone is not None:
+            update_fields.append("phone = %s")
+            values.append(updates.phone.strip() if updates.phone.strip() else None)
+
+        if updates.title is not None and updates.title.strip():
+            update_fields.append("title = %s")
+            values.append(updates.title.strip())
+
+        if updates.department is not None and updates.department.strip():
+            update_fields.append("department = %s")
+            values.append(updates.department.strip())
+
+        if updates.team is not None:
+            update_fields.append("team = %s")
+            values.append(updates.team.strip() if updates.team.strip() else None)
+
+        if updates.responsibilities is not None:
+            update_fields.append("responsibilities = %s")
+            values.append(json.dumps(updates.responsibilities))
+
+        if not update_fields:
+            return existing
+
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            values.extend([self.organization_id, member_id])
+            cur.execute(f"UPDATE members SET {', '.join(update_fields)} WHERE organization_id = %s AND id = %s;", values)
+            self._log_activity_raw(
+                conn,
+                actor_name=updater_name,
+                action_type="personnel_updated",
+                title=f"Personnel Updated: {existing.name}",
+                description=f"Updated profile details for {existing.name} by {updater_name}.",
+                module="teams",
+            )
+            return self.get_member_by_id(member_id)
+
+    def generate_member_invitation(self, member_id: str, expires_in_days: int = 7) -> Tuple[str, str]:
+        member = self.get_member_by_id(member_id)
+        if not member:
+            raise ValueError("Personnel record not found.")
+
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
+
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute(
+                """
+                UPDATE members
+                SET invitation_token = %s, invitation_expires_at = %s, activation_status = 'invitation_sent'
+                WHERE organization_id = %s AND id = %s;
+                """,
+                (token, expires_at, self.organization_id, member_id),
+            )
+
+        return token, expires_at.isoformat()
+
+    def get_member_by_invitation_token(self, token: str) -> Optional[OrganizationMember]:
+        if not token or not token.strip():
+            return None
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute(
+                "SELECT * FROM members WHERE organization_id = %s AND invitation_token = %s LIMIT 1;",
+                (self.organization_id, token.strip()),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            member = self._row_to_member(row)
+            if member.invitation_expires_at:
+                try:
+                    exp = datetime.fromisoformat(str(member.invitation_expires_at).replace("Z", "+00:00"))
+                    if datetime.now(timezone.utc) > exp:
+                        return None
+                except Exception:
+                    pass
+            return member
+
+    def activate_member_account(self, token: str, auth_user_id: str) -> Optional[OrganizationMember]:
+        member = self.get_member_by_invitation_token(token)
+        if not member:
+            return None
+
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute(
+                """
+                UPDATE members
+                SET auth_user_id = %s, activation_status = 'active', status = 'active',
+                    invitation_token = NULL, invitation_expires_at = NULL
+                WHERE organization_id = %s AND id = %s;
+                """,
+                (auth_user_id, self.organization_id, member.id),
+            )
+            self._log_activity_raw(
+                conn,
+                actor_name=member.name,
+                action_type="account_activated",
+                title=f"Account Activated: {member.name}",
+                description=f"{member.name} successfully activated their corporate account.",
+                module="auth",
+            )
+
+        return self.get_member_by_id(member.id)
+
+    def suspend_member(self, member_id: str, actor_name: str = "Admin") -> Optional[OrganizationMember]:
+        member = self.get_member_by_id(member_id)
+        if not member:
+            return None
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute(
+                "UPDATE members SET status = 'suspended', activation_status = 'suspended' WHERE organization_id = %s AND id = %s;",
+                (self.organization_id, member_id),
+            )
+            self._log_activity_raw(
+                conn,
+                actor_name=actor_name,
+                action_type="member_suspended",
+                title=f"Member Suspended: {member.name}",
+                description=f"Operational access suspended for {member.name} by {actor_name}.",
+                module="teams",
+            )
+        return self.get_member_by_id(member_id)
+
+    def unsuspend_member(self, member_id: str, actor_name: str = "Admin") -> Optional[OrganizationMember]:
+        member = self.get_member_by_id(member_id)
+        if not member:
+            return None
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute(
+                "UPDATE members SET status = 'active', activation_status = 'active' WHERE organization_id = %s AND id = %s;",
+                (self.organization_id, member_id),
+            )
+            self._log_activity_raw(
+                conn,
+                actor_name=actor_name,
+                action_type="member_unsuspended",
+                title=f"Member Restored: {member.name}",
+                description=f"Operational access restored for {member.name} by {actor_name}.",
+                module="teams",
+            )
+        return self.get_member_by_id(member_id)
+
+    def get_owner_bootstrap_status(self) -> Dict[str, Any]:
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute("SELECT * FROM members WHERE organization_id = %s AND role = 'owner' LIMIT 1;", (self.organization_id,))
+            row = cur.fetchone()
+            if not row:
+                return {"is_bootstrapped": False, "owner_name": None, "owner_email": None, "owner_id": None}
+            owner = self._row_to_member(row)
+            is_bootstrapped = bool(owner.auth_user_id and owner.activation_status == "active")
+            return {
+                "is_bootstrapped": is_bootstrapped,
+                "owner_name": owner.name,
+                "owner_email": owner.email,
+                "owner_id": owner.id,
+            }
+
+    def get_or_create_owner_bootstrap_token(self, expires_in_days: int = 3) -> Optional[str]:
+        status = self.get_owner_bootstrap_status()
+        if status["is_bootstrapped"]:
+            return None
+
+        owner_id = status["owner_id"]
+        owner = self.get_member_by_id(owner_id) if owner_id else None
+        if not owner:
+            return None
+
+        if owner.invitation_token and owner.invitation_expires_at:
+            try:
+                exp = datetime.fromisoformat(str(owner.invitation_expires_at).replace("Z", "+00:00"))
+                if datetime.now(timezone.utc) < exp:
+                    return owner.invitation_token
+            except Exception:
+                pass
+
+        token, _ = self.generate_member_invitation(owner.id, expires_in_days=expires_in_days)
+        return token
+
+    def bootstrap_owner(self, bootstrap_token: str, auth_user_id: str) -> OrganizationMember:
+        status = self.get_owner_bootstrap_status()
+        if status["is_bootstrapped"]:
+            raise ValueError("Owner account has already been bootstrapped and activated.")
+
+        member = self.get_member_by_invitation_token(bootstrap_token)
+        if not member or member.role != UserRole.OWNER:
+            raise ValueError("Invalid or expired owner bootstrap token.")
+
+        activated = self.activate_member_account(bootstrap_token, auth_user_id)
+        if not activated:
+            raise ValueError("Failed to activate owner account.")
+
+        return activated
+
+    def invite_member(self, invite: MemberInviteCreate, inviter_name: str = "Admin") -> OrganizationMember:
+        member_id = f"tm-{uuid.uuid4().hex[:8]}"
+        user_id = f"usr-{uuid.uuid4().hex[:8]}"
+        joined_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        responsibilities_json = json.dumps(invite.responsibilities or [])
+        activation_status = "invitation_pending" if invite.email else "created"
+        phone = invite.phone.strip() if invite.phone and invite.phone.strip() else None
+
+        with db_manager.connection() as conn:
+            cur = conn.cursor()
+            self._set_tenant_session(cur)
+            cur.execute(
+                """
+                INSERT INTO members (
+                    id, user_id, organization_id, name, email, phone, role, title,
+                    department_id, department, team_id, team, responsibilities,
+                    reports_to_id, reports_to_name, status, activation_status, assigned_projects, joined_date, is_demo
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                 """,
                 (
                     member_id,
                     user_id,
                     self.organization_id,
                     invite.name,
-                    invite.email,
+                    invite.email.strip() if invite.email else None,
+                    phone,
                     invite.role.value,
                     invite.title,
                     None,
@@ -487,6 +777,7 @@ class PostgresRepository:
                     None,
                     None,
                     "active",
+                    activation_status,
                     0,
                     joined_date,
                     False,
@@ -496,8 +787,8 @@ class PostgresRepository:
                 conn,
                 actor_name=inviter_name,
                 action_type="member_invited",
-                title=f"Member Invited: {invite.name}",
-                description=f"Invited {invite.name} ({invite.email}) as {invite.role.value} in {invite.department}",
+                title=f"Member Added: {invite.name}",
+                description=f"Added {invite.name} as {invite.role.value} in {invite.department}",
                 module="teams",
             )
             return self.get_member_by_id(member_id)
@@ -527,13 +818,34 @@ class PostgresRepository:
         if "avatar_url" in row and row["avatar_url"]:
             avatar_url = row["avatar_url"]
 
+        phone = None
+        if "phone" in row and row["phone"]:
+            phone = row["phone"]
+
+        activation_status = "created"
+        if "activation_status" in row and row["activation_status"]:
+            activation_status = row["activation_status"]
+        elif auth_user_id:
+            activation_status = "active"
+
+        invitation_token = None
+        if "invitation_token" in row and row["invitation_token"]:
+            invitation_token = row["invitation_token"]
+
+        invitation_expires_at = None
+        if "invitation_expires_at" in row and row["invitation_expires_at"]:
+            invitation_expires_at = str(row["invitation_expires_at"])
+
+        email_val = row["email"] if ("email" in row and row["email"]) else None
+
         return OrganizationMember(
             id=row["id"],
             user_id=row["user_id"],
             auth_user_id=auth_user_id,
             organization_id=row["organization_id"],
             name=row["name"],
-            email=row["email"],
+            email=email_val,
+            phone=phone,
             role=role,
             title=row["title"],
             department_id=row["department_id"],
@@ -545,6 +857,9 @@ class PostgresRepository:
             reports_to_name=row["reports_to_name"],
             avatar_url=avatar_url,
             status=row["status"] or "active",
+            activation_status=activation_status,
+            invitation_token=invitation_token,
+            invitation_expires_at=invitation_expires_at,
             assigned_projects=row["assigned_projects"] or 0,
             joined_date=str(row["joined_date"]),
             is_demo=bool(row["is_demo"]),
@@ -1905,10 +2220,10 @@ class PostgresRepository:
                 "meetings": [],
             }
 
-        members = [m for m in self.list_members() if q in m.name.lower() or q in m.email.lower() or q in m.title.lower()]
+        members = [m for m in self.list_members() if q in m.name.lower() or (m.email and q in m.email.lower()) or (m.title and q in m.title.lower())]
         projects = [p for p in self.list_projects() if q in p.name.lower() or (p.description and q in p.description.lower())]
         tasks = [t for t in self.list_tasks() if q in t.title.lower() or (t.description and q in t.description.lower())]
-        clients = [c for c in self.list_clients() if q in c.company_name.lower() or q in c.contact_person.lower() or q in c.email.lower()]
+        clients = [c for c in self.list_clients() if q in c.company_name.lower() or (c.contact_person and q in c.contact_person.lower()) or (c.email and q in c.email.lower())]
         knowledge = self.list_knowledge(query=query)
         documents = [d for d in self.list_documents() if q in d.name.lower() or (d.department and q in d.department.lower())]
         meetings = [m for m in self.list_meetings() if q in m.title.lower() or (m.discussion_notes and q in m.discussion_notes.lower())]

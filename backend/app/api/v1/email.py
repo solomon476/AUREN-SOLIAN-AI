@@ -2,7 +2,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.core.security import get_current_user, AuthUser
+from app.core.security import get_current_user, require_role, UserRole, AuthUser
 from app.models.email import (
     EmailMessage,
     EmailDraft,
@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get("/status", response_model=EmailProviderStatus)
-async def get_email_provider_status(user: AuthUser = Depends(get_current_user)):
+async def get_email_provider_status(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Returns the honest integration status of company email providers."""
     return email_service.get_status()
 
@@ -31,7 +31,7 @@ async def list_messages(
     search: Optional[str] = Query(None, min_length=1, max_length=100),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    user: AuthUser = Depends(get_current_user),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Retrieves paginated messages for the specified folder."""
     messages, total = email_service.list_messages(
@@ -52,7 +52,7 @@ async def list_messages(
 
 
 @router.get("/messages/{message_id}", response_model=EmailMessage)
-async def get_message(message_id: str, user: AuthUser = Depends(get_current_user)):
+async def get_message(message_id: str, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Retrieves a single message by ID."""
     msg = email_service.get_message(message_id)
     if not msg:
@@ -64,7 +64,7 @@ async def get_message(message_id: str, user: AuthUser = Depends(get_current_user
 
 
 @router.post("/send", response_model=EmailSendResult)
-async def send_email(request: EmailSendRequest, user: AuthUser = Depends(get_current_user)):
+async def send_email(request: EmailSendRequest, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """
     Sends an outbound company email.
     Explicit user action required. Rejects if provider is disconnected.
@@ -97,19 +97,19 @@ async def send_email(request: EmailSendRequest, user: AuthUser = Depends(get_cur
 # --- DRAFTS ---
 
 @router.get("/drafts", response_model=List[EmailDraft])
-async def list_drafts(user: AuthUser = Depends(get_current_user)):
+async def list_drafts(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Retrieves saved email drafts for the authenticated user."""
     return email_service.list_drafts(user.user_id)
 
 
 @router.post("/drafts", response_model=EmailDraft, status_code=status.HTTP_201_CREATED)
-async def create_draft(draft: EmailDraftCreate, user: AuthUser = Depends(get_current_user)):
+async def create_draft(draft: EmailDraftCreate, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Saves a new draft."""
     return email_service.save_draft(user.user_id, draft)
 
 
 @router.get("/drafts/{draft_id}", response_model=EmailDraft)
-async def get_draft(draft_id: str, user: AuthUser = Depends(get_current_user)):
+async def get_draft(draft_id: str, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Retrieves a specific draft."""
     d = email_service.get_draft(draft_id, user.user_id)
     if not d:
@@ -124,7 +124,7 @@ async def get_draft(draft_id: str, user: AuthUser = Depends(get_current_user)):
 async def update_draft(
     draft_id: str,
     update: EmailDraftUpdate,
-    user: AuthUser = Depends(get_current_user),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Updates an existing draft."""
     updated = email_service.update_draft(draft_id, user.user_id, update)
@@ -137,7 +137,7 @@ async def update_draft(
 
 
 @router.delete("/drafts/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_draft(draft_id: str, user: AuthUser = Depends(get_current_user)):
+async def delete_draft(draft_id: str, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Deletes an email draft."""
     deleted = email_service.delete_draft(draft_id, user.user_id)
     if not deleted:
@@ -153,7 +153,7 @@ async def delete_draft(draft_id: str, user: AuthUser = Depends(get_current_user)
 @router.post("/ai/assist", response_model=EmailAIAssistResponse)
 async def ai_email_assist(
     request: EmailAIAssistRequest,
-    user: AuthUser = Depends(get_current_user),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """
     Provides intelligent email assistance (drafting, tone improvement, summarization, reply drafting).

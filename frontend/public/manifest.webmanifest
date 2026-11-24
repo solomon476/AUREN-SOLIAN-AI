@@ -1,19 +1,16 @@
 {
   "name": "AUREN SOLIAN — Organizational Intelligence",
   "short_name": "AUREN SOLIAN",
+  "id": "/",
   "description": "Enterprise AI Assistant, Corporate Knowledge Vault & Organizational Operations Platform",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0B0D13",
   "theme_color": "#0B0D13",
   "orientation": "any",
+  "categories": ["business", "productivity"],
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
     {
       "src": "/pwa-192x192.png",
       "sizes": "192x192",
@@ -25,6 +22,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

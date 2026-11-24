@@ -56,10 +56,11 @@ class ChatService:
             yield f"data: {payload}\n\n"
 
         # Generate actionable proposals if query implies operational action
+        # GUESTS NEVER RECEIVE ACTION PROPOSALS
         proposals: List[ActionProposal] = []
         lower_msg = message.lower()
 
-        if any(w in lower_msg for w in ["create task", "assign", "delegate", "schedule review", "draft sop"]):
+        if user.role != UserRole.GUEST and any(w in lower_msg for w in ["create task", "assign", "delegate", "schedule review", "draft sop"]):
             if "sop" in lower_msg:
                 proposals.append(
                     ActionProposal(
@@ -107,6 +108,14 @@ class ChatService:
 
     def execute_action(self, req: ExecuteActionRequest, user: AuthUser) -> ExecuteActionResult:
         """Executes a confirmed action proposal on the backend repository."""
+        # GUEST SECURITY GATE
+        if user.role == UserRole.GUEST:
+            return ExecuteActionResult(
+                success=False,
+                message="Unauthorized: Guest sessions cannot execute actions against corporate records.",
+                already_executed=False,
+            )
+
         # Idempotency check: prevent duplicate replay of the same action proposal
         if repo.is_proposal_executed(req.proposal_id):
             return ExecuteActionResult(

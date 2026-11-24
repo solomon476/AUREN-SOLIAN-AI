@@ -1,5 +1,6 @@
 """Unit tests for Cryptographic Authentication & RBAC Foundation (Phase 3A)."""
 from datetime import timedelta
+import uuid
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -13,6 +14,8 @@ from app.core.security import (
     require_role,
     AuthUser,
 )
+from app.services.storage.sqlite_repository import repo
+from app.models.organization import PersonnelCreate
 from app.main import app
 
 client = TestClient(app)
@@ -102,12 +105,12 @@ def test_supabase_authentic_payload_resolution():
     now = datetime.now(timezone.utc)
     supabase_payload = {
         "sub": "usr-1",
-        "email": "solomon@solian.ai",
+        "email": "ian.nyakundi@solianwolves.co",
         "aud": "authenticated",
         "role": "authenticated",
         "iss": "https://auth.solian-wolves-test.supabase.co/auth/v1",
         "app_metadata": {"provider": "email", "providers": ["email"]},
-        "user_metadata": {"full_name": "Solomon K."},
+        "user_metadata": {"full_name": "Ian Momanyi Nyakundi"},
         "exp": now + timedelta(hours=1),
         "iat": now,
     }
@@ -115,7 +118,7 @@ def test_supabase_authentic_payload_resolution():
     user = get_current_user(authorization=f"Bearer {token}")
     assert user.user_id == "usr-1"
     assert user.role == UserRole.OWNER
-    assert user.full_name == "Solomon K."
+    assert user.full_name == "Ian Momanyi Nyakundi"
     assert user.auth_mode == "SUPABASE_JWT"
 
 
@@ -125,10 +128,19 @@ def test_server_side_role_resolution_via_jwt():
     their role is strictly resolved server-side from the verified corporate directory,
     completely ignoring any client-provided role or headers.
     """
-    # Create token for Member (David Ochieng, usr-5)
+    # Create a dynamic Member record
+    member = repo.create_personnel_record(
+        PersonnelCreate(
+            name="Test Verification Member",
+            email=f"member.{uuid.uuid4().hex[:6]}@solianwolves.co",
+            role=UserRole.MEMBER,
+            department="Technology & AI Systems",
+            title="Junior Engineer",
+        )
+    )
     member_token = create_access_token({
-        "sub": "usr-5",
-        "email": "d.ochieng@solian.ai",
+        "sub": member.user_id,
+        "email": member.email,
     })
 
     # Even if client tries to spoof an Owner role in headers, server-side DB authority prevails
@@ -136,7 +148,7 @@ def test_server_side_role_resolution_via_jwt():
         authorization=f"Bearer {member_token}",
         x_user_role="owner",  # Forged header
     )
-    assert user.user_id == "usr-5"
+    assert user.user_id == member.user_id
     assert user.role == UserRole.MEMBER  # Correctly resolved as MEMBER, NOT owner!
     assert user.auth_mode == "SUPABASE_JWT"
 
@@ -165,10 +177,10 @@ def test_production_environment_rejects_unauthenticated_requests(monkeypatch):
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO members (id, user_id, organization_id, name, email, role, title, department, is_demo)
-            VALUES ('tm-1', 'usr-1', 'org-solian-wolves', 'Solomon K.', 'solomon@solian.ai', 'owner', 'Managing Director', 'Executive Leadership', FALSE)
+            VALUES ('tm-1', 'usr-1', 'org-solian-wolves', 'Ian Momanyi Nyakundi', 'ian.nyakundi@solianwolves.co', 'owner', 'Chief Executive Officer', 'Executive Leadership', FALSE)
             ON CONFLICT (id) DO NOTHING;
         """)
-    token = create_access_token({"sub": "usr-1", "email": "solomon@solian.ai"})
+    token = create_access_token({"sub": "usr-1", "email": "ian.nyakundi@solianwolves.co"})
     user = get_current_user(authorization=f"Bearer {token}")
     assert user.user_id == "usr-1"
     assert user.role == UserRole.OWNER
@@ -176,12 +188,12 @@ def test_production_environment_rejects_unauthenticated_requests(monkeypatch):
 
 def test_api_endpoint_with_bearer_token():
     """Tests calling an API endpoint (/api/v1/auth/me) with a Bearer token."""
-    token = create_access_token({"sub": "usr-1", "email": "solomon@solian.ai"})
+    token = create_access_token({"sub": "usr-1", "email": "ian.nyakundi@solianwolves.co"})
     response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     data = response.json()
     assert data["userId"] == "usr-1"
-    assert data["fullName"] == "Solomon K."
+    assert data["fullName"] == "Ian Momanyi Nyakundi"
     assert data["role"] == "owner"
     assert data["authMode"] == "SUPABASE_JWT"
 
@@ -191,7 +203,16 @@ def test_privilege_escalation_prevention_on_protected_route():
     Verifies that a Member with a valid JWT cannot access Admin-only endpoints,
     even if attempting to spoof headers.
     """
-    member_token = create_access_token({"sub": "usr-5", "email": "d.ochieng@solian.ai"})
+    member = repo.create_personnel_record(
+        PersonnelCreate(
+            name="Escalation Test Member",
+            email=f"escalate.{uuid.uuid4().hex[:6]}@solianwolves.co",
+            role=UserRole.MEMBER,
+            department="Technology & AI Systems",
+            title="Junior Engineer",
+        )
+    )
+    member_token = create_access_token({"sub": member.user_id, "email": member.email})
 
     # Attempt to call Admin-only PUT /api/v1/auth/org/profile
     response = client.put(

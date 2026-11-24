@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("")
 async def list_tasks(
     status: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     tasks = repo.list_tasks(status=status)
     return [
@@ -59,7 +59,7 @@ async def create_task(
 @router.get("/{task_id}")
 async def get_task(
     task_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Retrieve a task by ID."""
     task = repo.get_task(task_id)

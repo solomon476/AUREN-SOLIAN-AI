@@ -58,7 +58,7 @@ describe('AUREN SOLIAN Company Foundation Components', () => {
       </AuthProvider>
     );
 
-    expect(screen.getByText(/Organization Structure & Staff Directory/i)).toBeDefined();
+    expect(screen.getByText(/Company Personnel & Staff Directory/i)).toBeDefined();
     expect(screen.getByText(/Staff & Member Directory/i)).toBeDefined();
     expect(screen.getByText(/Departments & Teams/i)).toBeDefined();
     expect(screen.getByText(/Organizational Hierarchy Tree/i)).toBeDefined();
@@ -117,7 +117,7 @@ describe('AUREN SOLIAN Company Foundation Components', () => {
     expect(screen.getByText(/Tier/i)).toBeDefined();
   });
 
-  it('renders AuthModal with Sign In, Register and Recovery tabs when opened', async () => {
+  it('renders AuthModal with Sign In, Activate Account and Recovery tabs when opened', async () => {
     const { AuthModal } = await import('../components/auth/AuthModal');
     render(
       <AuthProvider>
@@ -128,6 +128,7 @@ describe('AUREN SOLIAN Company Foundation Components', () => {
     expect(screen.getByText(/Solian Wolves Executive Access/i)).toBeDefined();
     expect(screen.getByText(/Corporate Email/i)).toBeDefined();
     expect(screen.getByText(/Authenticate Session/i)).toBeDefined();
+    expect(screen.getAllByText(/Activate Account/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Recovery/i)).toBeDefined();
   });
 });

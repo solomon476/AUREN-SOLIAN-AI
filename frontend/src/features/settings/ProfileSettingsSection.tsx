@@ -107,16 +107,53 @@ export const ProfileSettingsSection: React.FC = () => {
     }
   };
 
+  if (user.role === 'guest') {
+    return (
+      <div className="bg-solian-card rounded-xl border border-solian-border p-4 sm:p-5 shadow-sm">
+        <div className="flex items-center justify-between pb-3 border-b border-solian-border mb-4">
+          <div className="flex items-center gap-2">
+            <Camera className="w-4 h-4 text-gold-500" />
+            <h2 className="text-sm sm:text-base font-semibold text-white">
+              Personal Profile Settings
+            </h2>
+          </div>
+          <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-solian-surface text-graphite-300 border border-solian-border">
+            Visitor Mode
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+          <div className="w-14 h-14 rounded-full bg-solian-surface border border-solian-border flex items-center justify-center text-graphite-300 font-bold text-lg shrink-0">
+            V
+          </div>
+          <div className="flex-1 space-y-1">
+            <h3 className="text-sm font-bold text-white">Public Visitor Session</h3>
+            <p className="text-xs text-graphite-400 leading-relaxed">
+              Personal profile picture management and staff directory personalization require an authenticated corporate account.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gold-500 text-solian-darkest text-xs font-bold uppercase hover:bg-gold-400 transition shrink-0 cursor-pointer min-h-[40px] flex items-center justify-center"
+          >
+            Sign In to Corporate Account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-solian-card rounded-xl border border-solian-border p-5 md:p-6 shadow-sm">
-      <div className="flex items-center justify-between pb-4 border-b border-solian-border mb-6">
+    <div className="bg-solian-card rounded-xl border border-solian-border p-4 sm:p-5 shadow-sm">
+      <div className="flex items-center justify-between pb-3 border-b border-solian-border mb-4">
         <div>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+          <h2 className="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
             <Camera className="w-4 h-4 text-gold-500" />
             Personal Profile Picture
           </h2>
-          <p className="text-xs text-graphite-400 mt-0.5">
-            Manage your personal profile picture displayed across Solian Wolves company records, directory, and communications.
+          <p className="text-xs text-graphite-400 mt-0.5 hidden sm:block">
+            Manage your personal profile picture displayed across Solian Wolves company records and directory.
           </p>
         </div>
         <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-gold-500/10 text-gold-400 border border-gold-500/30">
@@ -126,7 +163,7 @@ export const ProfileSettingsSection: React.FC = () => {
 
       {message && (
         <div
-          className={`mb-5 p-3 rounded-lg text-xs flex items-center gap-2.5 ${
+          className={`mb-4 p-2.5 rounded-lg text-xs flex items-center gap-2.5 ${
             message.type === 'success'
               ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
               : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
@@ -141,30 +178,30 @@ export const ProfileSettingsSection: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
         {/* Avatar Display / Preview */}
         <div className="relative group shrink-0">
           <UserAvatar
             name={user.fullName}
             avatarUrl={previewUrl || user.avatarUrl}
-            size="xl"
+            size="lg"
             role={user.role}
-            className="w-24 h-24 ring-2 ring-gold-500/20 shadow-lg"
+            className="w-16 h-16 sm:w-20 sm:h-20 ring-2 ring-gold-500/20 shadow-md"
           />
 
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 p-2 bg-solian-surface border border-gold-500/40 rounded-full text-gold-400 hover:text-white hover:bg-gold-500/20 transition-all shadow-md cursor-pointer"
+            className="absolute bottom-0 right-0 p-1.5 bg-solian-surface border border-gold-500/40 rounded-full text-gold-400 hover:text-white hover:bg-gold-500/20 transition-all shadow-md cursor-pointer"
             title="Upload new image"
             aria-label="Upload new image"
           >
-            <Camera className="w-4 h-4" />
+            <Camera className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Action Controls & Details */}
-        <div className="flex-1 space-y-3 text-center sm:text-left min-w-0">
+        <div className="flex-1 space-y-2.5 text-center sm:text-left min-w-0">
           <div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <h3 className="text-sm font-bold text-white truncate">{user.fullName}</h3>
@@ -173,10 +210,10 @@ export const ProfileSettingsSection: React.FC = () => {
               </span>
             </div>
             <div className="text-xs text-graphite-300 mt-0.5">{user.title}</div>
-            <div className="text-[11px] text-graphite-400">{user.department}</div>
+            {user.department && <div className="text-[11px] text-graphite-400">{user.department}</div>}
           </div>
 
-          <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+          <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -191,15 +228,15 @@ export const ProfileSettingsSection: React.FC = () => {
                   type="button"
                   onClick={handleSavePicture}
                   disabled={isUploading}
-                  className="px-3.5 py-1.5 rounded-lg bg-gold-500 text-solian-darkest text-xs font-semibold hover:bg-gold-400 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg bg-gold-500 text-solian-darkest text-xs font-semibold hover:bg-gold-400 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 min-h-[36px]"
                 >
                   {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                  Save Profile Picture
+                  Save Picture
                 </button>
                 <button
                   type="button"
                   onClick={handleRemovePicture}
-                  className="px-3 py-1.5 rounded-lg bg-solian-surface border border-solian-border text-xs text-slate-300 hover:text-white hover:bg-rose-500/20 hover:border-rose-500/30 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface border border-solian-border text-xs text-slate-300 hover:text-white hover:bg-rose-500/20 hover:border-rose-500/30 transition-all cursor-pointer min-h-[36px]"
                 >
                   Cancel Preview
                 </button>
@@ -209,7 +246,7 @@ export const ProfileSettingsSection: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-1.5 rounded-lg bg-solian-surface border border-gold-500/40 text-gold-400 hover:bg-gold-500/15 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-solian-surface border border-gold-500/40 text-gold-400 hover:bg-gold-500/15 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer min-h-[36px]"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   Upload Photo
@@ -220,7 +257,7 @@ export const ProfileSettingsSection: React.FC = () => {
                     type="button"
                     onClick={handleRemovePicture}
                     disabled={isDeleting}
-                    className="px-3 py-1.5 rounded-lg bg-solian-surface border border-solian-border text-xs text-rose-400 hover:bg-rose-500/15 hover:border-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg bg-solian-surface border border-solian-border text-xs text-rose-400 hover:bg-rose-500/15 hover:border-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 min-h-[36px]"
                   >
                     {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                     Remove
@@ -230,9 +267,8 @@ export const ProfileSettingsSection: React.FC = () => {
             )}
           </div>
 
-          <div className="pt-2 text-[11px] text-graphite-400 space-y-1">
-            <p>• Supported formats: JPEG, PNG, and WebP (max 5MB).</p>
-            <p>• Images are automatically cropped, EXIF-sanitized, and optimized to 512×512 WebP.</p>
+          <div className="pt-1 text-[10.5px] text-graphite-400">
+            <span>• Supported formats: JPEG, PNG, WebP ≤ 5MB (auto-cropped to 512×512).</span>
           </div>
         </div>
       </div>

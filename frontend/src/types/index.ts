@@ -138,11 +138,20 @@ export interface KnowledgeItem {
   tags: string[];
 }
 
+export type AccountActivationStatus =
+  | 'created'
+  | 'invitation_pending'
+  | 'invitation_sent'
+  | 'activated'
+  | 'active'
+  | 'suspended';
+
 export interface TeamMember {
   id: string;
   userId: string;
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   role: UserRole;
   title: string;
   departmentId?: string;
@@ -152,11 +161,59 @@ export interface TeamMember {
   responsibilities: string[];
   reportsToId?: string | null;
   reportsToName?: string | null;
-  status: 'active' | 'away' | 'offline';
+  status: 'active' | 'away' | 'offline' | 'suspended';
+  activationStatus?: AccountActivationStatus;
+  invitationExpiresAt?: string | null;
   assignedProjects: number;
   joinedDate?: string;
   avatarUrl?: string | null;
   isDemo?: boolean;
+}
+
+export interface PersonnelCreate {
+  name: string;
+  email?: string;
+  phone?: string;
+  role: UserRole;
+  title: string;
+  department: string;
+  team?: string;
+  responsibilities?: string[];
+}
+
+export interface PersonnelUpdate {
+  name?: string;
+  email?: string;
+  phone?: string;
+  title?: string;
+  department?: string;
+  team?: string;
+  responsibilities?: string[];
+}
+
+export interface InvitationResponse {
+  memberId: string;
+  name: string;
+  email?: string;
+  role: string;
+  activationStatus: string;
+  invitationToken: string;
+  activationUrl: string;
+  expiresAt: string;
+  message: string;
+}
+
+export interface InvitationCheckResponse {
+  valid: boolean;
+  member_id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  title?: string;
+  department?: string;
+  organization?: string;
+  is_owner_bootstrap?: boolean;
+  error?: string;
 }
 
 export interface Project {

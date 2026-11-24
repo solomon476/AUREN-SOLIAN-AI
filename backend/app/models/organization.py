@@ -1,7 +1,17 @@
 """Organization models and schemas for Solian Wolves."""
+from enum import Enum
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from app.core.security import UserRole
+
+
+class AccountActivationStatus(str, Enum):
+    CREATED = "created"
+    INVITATION_PENDING = "invitation_pending"
+    INVITATION_SENT = "invitation_sent"
+    ACTIVATED = "activated"
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
 
 
 class Department(BaseModel):
@@ -50,7 +60,8 @@ class OrganizationMember(BaseModel):
     auth_user_id: Optional[str] = None
     organization_id: str
     name: str
-    email: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     role: UserRole
     title: str
     department_id: Optional[str] = None
@@ -61,7 +72,10 @@ class OrganizationMember(BaseModel):
     reports_to_id: Optional[str] = None
     reports_to_name: Optional[str] = None
     avatar_url: Optional[str] = None
-    status: str = "active"  # active | away | offline
+    status: str = "active"  # active | away | offline | suspended
+    activation_status: str = "created"  # created | invitation_pending | invitation_sent | activated | active | suspended
+    invitation_token: Optional[str] = None
+    invitation_expires_at: Optional[str] = None
     assigned_projects: int = 0
     joined_date: str = "2024-01-15"
     is_demo: bool = False
@@ -72,17 +86,78 @@ class MemberRoleUpdate(BaseModel):
 
 
 class MemberStatusUpdate(BaseModel):
-    status: str  # active | away | offline | deactivated
+    status: str  # active | away | offline | suspended | deactivated
 
 
 class MemberInviteCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
-    email: str = Field(min_length=5, max_length=120)
+    email: Optional[str] = Field(None, max_length=120)
+    phone: Optional[str] = Field(None, max_length=30)
     role: UserRole = UserRole.MEMBER
     title: str = Field(min_length=2, max_length=100)
     department: str = Field(min_length=2, max_length=100)
     team: Optional[str] = None
     responsibilities: List[str] = Field(default_factory=list)
+
+
+class PersonnelCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=100)
+    email: Optional[str] = Field(None, max_length=120)
+    phone: Optional[str] = Field(None, max_length=30)
+    role: UserRole = UserRole.MEMBER
+    title: str = Field(min_length=2, max_length=100)
+    department: str = Field(min_length=2, max_length=100)
+    team: Optional[str] = None
+    responsibilities: List[str] = Field(default_factory=list)
+
+
+class PersonnelUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    email: Optional[str] = Field(None, max_length=120)
+    phone: Optional[str] = Field(None, max_length=30)
+    title: Optional[str] = Field(None, min_length=2, max_length=100)
+    department: Optional[str] = Field(None, min_length=2, max_length=100)
+    team: Optional[str] = None
+    responsibilities: Optional[List[str]] = None
+
+
+class InvitationResponse(BaseModel):
+    member_id: str
+    name: str
+    email: Optional[str] = None
+    role: str
+    activation_status: str
+    invitation_token: str
+    activation_url: str
+    expires_at: str
+    message: str
+
+
+class InvitationCheckResponse(BaseModel):
+    valid: bool
+    member_id: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    title: Optional[str] = None
+    department: Optional[str] = None
+    organization: Optional[str] = None
+    is_owner_bootstrap: bool = False
+    error: Optional[str] = None
+
+
+class AccountActivateRequest(BaseModel):
+    token: str = Field(min_length=8)
+    password: str = Field(min_length=6)
+    auth_user_id: Optional[str] = None
+    access_token: Optional[str] = None
+
+
+class OwnerBootstrapRequest(BaseModel):
+    bootstrap_token: str = Field(min_length=8)
+    password: Optional[str] = Field(None, min_length=6)
+    auth_user_id: Optional[str] = None
+    access_token: Optional[str] = None
 
 
 class VerifiedLeader(BaseModel):

@@ -14,26 +14,26 @@ def test_auth_me_development_mode():
     data = res.json()
     assert data["authMode"] == "DEVELOPMENT_SIMULATION"
     assert data["isDemoUser"] is False
-    assert data["fullName"] == "Solomon K."
+    assert data["fullName"] == "Ian Momanyi Nyakundi"
     assert data["role"] == "owner"
 
 
 def test_company_data_integrity_demo_flags():
-    """Verify owner is real and seeded personnel are tagged as DEMO."""
+    """Verify statutory officers are real and properly seeded in the company directory."""
     res = client.get("/api/v1/teams/members", headers={"X-User-Id": "usr-1"})
     assert res.status_code == 200
     members = res.json()
 
     owner = next(m for m in members if m["userId"] == "usr-1")
     assert owner["isDemo"] is False
-    assert "Solomon" in owner["name"]
+    assert "Ian Momanyi Nyakundi" in owner["name"]
+    assert owner["role"] == "owner"
 
-    # Demo personnel must be tagged
-    demo_members = [m for m in members if m["userId"] in ("usr-2", "usr-3", "usr-4", "usr-5", "usr-6")]
-    assert len(demo_members) >= 5
-    for dm in demo_members:
-        assert dm["isDemo"] is True
-        assert "[DEMO]" in dm["name"]
+    # Verify core leadership council exists
+    officer_names = [m["name"] for m in members]
+    assert any("Ian Momanyi Nyakundi" in name for name in officer_names)
+    assert any("Hillary Onchwati Isaiah" in name for name in officer_names)
+    assert any("Alice Moraa Nyakundi" in name for name in officer_names)
 
 
 def test_knowledge_demo_items_are_unverified():
@@ -83,7 +83,7 @@ def test_action_proposal_idempotency():
 
 def test_action_proposal_rbac_index_sop_requires_manager():
     """Verify MEMBER clearance cannot index SOPs via chat action proposals."""
-    headers_member = {"X-User-Id": "usr-5"}  # David Ochieng (Member)
+    headers_member = {"X-User-Id": "usr-test-member", "X-User-Role": "member"}
     payload = {
         "proposal_id": f"prop-member-sop-attempt-{uuid.uuid4().hex[:6]}",
         "action_type": "index_sop",
@@ -93,7 +93,7 @@ def test_action_proposal_rbac_index_sop_requires_manager():
             "snippet": "Should be rejected for member.",
             "content": "Full unauthorized content.",
             "classification": "Internal",
-            "department": "Engineering & AI Operations",
+            "department": "Technology & AI Systems",
             "tags": ["unauthorized"],
         },
     }
@@ -167,8 +167,8 @@ def test_validation_rejected_priority_and_classification():
 
 def test_client_creation_and_rbac():
     """Verify MANAGER can create a client and GUEST cannot."""
-    headers_guest = {"X-User-Id": "usr-6"}
-    headers_manager = {"X-User-Id": "usr-3"}
+    headers_guest = {"X-User-Id": "usr-guest-test", "X-User-Role": "guest"}
+    headers_manager = {"X-User-Id": "usr-4"}  # Noella Maraka Kaatho (Manager)
 
     client_payload = {
         "company_name": "Helvetia Alpine Labs",
@@ -194,15 +194,15 @@ def test_client_creation_and_rbac():
 
 def test_workflow_creation_and_rbac():
     """Verify MANAGER can create a workflow rule and MEMBER cannot."""
-    headers_member = {"X-User-Id": "usr-5"}
-    headers_manager = {"X-User-Id": "usr-3"}
+    headers_member = {"X-User-Id": "usr-test-member", "X-User-Role": "member"}
+    headers_manager = {"X-User-Id": "usr-4"}  # Noella Maraka Kaatho (Manager)
 
     wf_payload = {
         "title": "Automated Security Audit Ping",
         "trigger": "Anomalous multi-tenant query pattern detected",
         "action": "Trigger SOC escalation workflow and alert Admin",
         "status": "active",
-        "department": "Engineering & AI Operations",
+        "department": "Technology & AI Systems",
     }
 
     # Member rejected with 403

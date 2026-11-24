@@ -15,9 +15,18 @@ import {
   Crown,
   Sparkles,
   Award,
+  Phone,
+  Copy,
+  Check,
+  ExternalLink,
+  Edit3,
+  AlertTriangle,
+  Key,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
 import { SolianApiClient } from '../../api/client';
-import { TeamMember, Department, Team, HierarchyNode, UserRole, MemberInviteCreate } from '../../types';
+import { TeamMember, Department, Team, HierarchyNode, UserRole, AccountActivationStatus } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../../components/common/UserAvatar';
 
@@ -26,40 +35,40 @@ const VERIFIED_LEADERSHIP = [
     name: 'Ian Momanyi Nyakundi',
     title: 'Chief Executive Officer',
     role: 'owner',
-    email: 'ian@solian.ai',
-    department: 'Executive Office',
+    email: 'ian.nyakundi@solianwolves.co',
+    department: 'Executive Leadership & Governance',
     focus: 'Corporate Vision, Strategic Partnerships, Capital Allocation & Solian Wolves Governance',
   },
   {
     name: 'Hillary Onchwati Isaiah',
     title: 'Chief Operating Officer',
     role: 'admin',
-    email: 'hillary@solian.ai',
-    department: 'Operations',
+    email: 'hillary.isaiah@solianwolves.co',
+    department: 'Operations & Delivery',
     focus: 'Operational Excellence, Cross-Division Execution, Program Delivery & Tactical Command',
   },
   {
     name: 'Alice Moraa Nyakundi',
     title: 'Chief Financial Officer',
     role: 'admin',
-    email: 'alice@solian.ai',
-    department: 'Finance',
+    email: 'alice.moraa@solianwolves.co',
+    department: 'Finance & Corporate Treasury',
     focus: 'Fiscal Strategy, Financial Controls, Treasury Management & Commercial Intelligence',
   },
   {
     name: 'Noella Maraka Kaatho',
     title: 'Executive Director / Finance & Administration',
-    role: 'admin',
-    email: 'noella@solian.ai',
-    department: 'Administration',
+    role: 'manager',
+    email: 'noella.maraka@solianwolves.co',
+    department: 'Administration & Corporate Services',
     focus: 'Institutional Compliance, Strategic Administration, Human Capital & Resource Governance',
   },
   {
     name: 'Solomon Nyangweso Omwenga',
     title: 'Chief Technology Officer',
     role: 'admin',
-    email: 'solomon@solian.ai',
-    department: 'Technology',
+    email: 'solomon.omwenga@solianwolves.co',
+    department: 'Technology & AI Systems',
     focus: 'Autonomous AI Architecture, Solian Wolves Mesh, Cloud Security & Engineering Standards',
   },
 ];
@@ -78,15 +87,39 @@ export const TeamsView: React.FC = () => {
   const [newRole, setNewRole] = useState<UserRole>('member');
   const [updatingRole, setUpdatingRole] = useState(false);
 
-  // Invite Member Modal
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteName, setInviteName] = useState('');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteDepartment, setInviteDepartment] = useState('Technology');
-  const [inviteRole, setInviteRole] = useState<UserRole>('member');
-  const [inviteTitle, setInviteTitle] = useState('');
-  const [inviteResponsibilities, setInviteResponsibilities] = useState('');
-  const [inviting, setInviting] = useState(false);
+  // Add / Provision Personnel Modal
+  const [isAddPersonnelOpen, setIsAddPersonnelOpen] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [addPhone, setAddPhone] = useState('');
+  const [addDepartment, setAddDepartment] = useState('Technology & AI Systems');
+  const [addRole, setAddRole] = useState<UserRole>('member');
+  const [addTitle, setAddTitle] = useState('');
+  const [addResponsibilities, setAddResponsibilities] = useState('');
+  const [addingPersonnel, setAddingPersonnel] = useState(false);
+
+  // Edit Personnel Modal
+  const [editMember, setEditMember] = useState<TeamMember | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editResponsibilities, setEditResponsibilities] = useState('');
+  const [updatingPersonnel, setUpdatingPersonnel] = useState(false);
+
+  // Invitation Modal
+  const [invitationModalData, setInvitationModalData] = useState<{
+    memberId: string;
+    name: string;
+    email?: string;
+    role: string;
+    token: string;
+    url: string;
+    expiresAt: string;
+  } | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [generatingInviteId, setGeneratingInviteId] = useState<string | null>(null);
 
   const roleBadges: Record<UserRole, string> = {
     owner: 'bg-gold-500/20 text-gold-400 border-gold-500/40',
@@ -100,7 +133,17 @@ export const TeamsView: React.FC = () => {
     active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     away: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
     offline: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
-    deactivated: 'bg-red-500/20 text-red-400 border-red-500/30',
+    suspended: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+    deactivated: 'bg-rose-500/20 text-rose-400 border-red-500/30',
+  };
+
+  const activationBadges: Record<string, { label: string; className: string }> = {
+    created: { label: 'Created (Pending Setup)', className: 'bg-slate-500/15 text-slate-400 border-slate-500/30' },
+    invitation_pending: { label: 'Invite Pending', className: 'bg-sky-500/15 text-sky-400 border-sky-500/30' },
+    invitation_sent: { label: 'Invite Sent', className: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
+    activated: { label: 'Activated', className: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' },
+    active: { label: 'Active Personnel', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+    suspended: { label: 'Account Suspended', className: 'bg-rose-500/15 text-rose-400 border-rose-500/30' },
   };
 
   const loadData = async () => {
@@ -140,43 +183,117 @@ export const TeamsView: React.FC = () => {
     }
   };
 
-  const handleInviteMember = async (e: React.FormEvent) => {
+  const handleCreatePersonnel = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteName.trim() || !inviteEmail.trim()) return;
-    setInviting(true);
+    if (!addName.trim() || !addTitle.trim()) {
+      alert('Please provide the employee full name and job title.');
+      return;
+    }
+    setAddingPersonnel(true);
     try {
-      const resp = await SolianApiClient.inviteMember({
-        name: inviteName.trim(),
-        email: inviteEmail.trim(),
-        department: inviteDepartment,
-        role: inviteRole,
-        title: inviteTitle.trim() || 'Operational Specialist',
-        responsibilities: inviteResponsibilities
-          ? inviteResponsibilities.split(',').map((r) => r.trim()).filter(Boolean)
+      await SolianApiClient.createPersonnel({
+        name: addName.trim(),
+        email: addEmail.trim() ? addEmail.trim() : undefined,
+        phone: addPhone.trim() ? addPhone.trim() : undefined,
+        department: addDepartment,
+        role: addRole,
+        title: addTitle.trim(),
+        responsibilities: addResponsibilities
+          ? addResponsibilities.split(',').map((r) => r.trim()).filter(Boolean)
           : undefined,
       });
-      alert(`Member ${resp.name} (${resp.email}) invited successfully`);
-      setIsInviteOpen(false);
-      setInviteName('');
-      setInviteEmail('');
-      setInviteTitle('');
-      setInviteResponsibilities('');
+      setIsAddPersonnelOpen(false);
+      setAddName('');
+      setAddEmail('');
+      setAddPhone('');
+      setAddTitle('');
+      setAddResponsibilities('');
       await loadData();
     } catch (err: any) {
-      alert(`Invitation error: ${err.message || 'Unknown error'}`);
+      alert(`Personnel creation error: ${err.message || 'Unknown error'}`);
     } finally {
-      setInviting(false);
+      setAddingPersonnel(false);
     }
   };
 
-  const handleStatusChange = async (memberId: string, newStatus: TeamMember['status']) => {
+  const handleOpenEdit = (m: TeamMember) => {
+    setEditMember(m);
+    setEditName(m.name);
+    setEditEmail(m.email || '');
+    setEditPhone(m.phone || '');
+    setEditTitle(m.title);
+    setEditDepartment(m.department);
+    setEditResponsibilities(m.responsibilities ? m.responsibilities.join(', ') : '');
+  };
+
+  const handleUpdatePersonnel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editMember) return;
+    setUpdatingPersonnel(true);
     try {
-      await SolianApiClient.updateMemberStatus(memberId, newStatus);
-      setMembers((prev) =>
-        prev.map((m) => (m.id === memberId ? { ...m, status: newStatus } : m))
-      );
+      await SolianApiClient.updatePersonnel(editMember.id, {
+        name: editName.trim(),
+        email: editEmail.trim() ? editEmail.trim() : undefined,
+        phone: editPhone.trim() ? editPhone.trim() : undefined,
+        title: editTitle.trim(),
+        department: editDepartment.trim(),
+        responsibilities: editResponsibilities
+          ? editResponsibilities.split(',').map((r) => r.trim()).filter(Boolean)
+          : undefined,
+      });
+      setEditMember(null);
+      await loadData();
     } catch (err: any) {
-      alert(`Status update error: ${err.message || 'Unknown error'}`);
+      alert(`Personnel update error: ${err.message || 'Unknown error'}`);
+    } finally {
+      setUpdatingPersonnel(false);
+    }
+  };
+
+  const handleGenerateInvitation = async (m: TeamMember) => {
+    setGeneratingInviteId(m.id);
+    try {
+      const resp = await SolianApiClient.generateInvitation(m.id);
+      const origin = window.location.origin;
+      const fullUrl = `${origin}${resp.activationUrl}`;
+      setInvitationModalData({
+        memberId: resp.memberId,
+        name: resp.name,
+        email: resp.email,
+        role: resp.role,
+        token: resp.invitationToken,
+        url: fullUrl,
+        expiresAt: resp.expiresAt,
+      });
+      await loadData();
+    } catch (err: any) {
+      alert(`Failed to generate invitation: ${err.message || 'Unknown error'}`);
+    } finally {
+      setGeneratingInviteId(null);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!invitationModalData) return;
+    navigator.clipboard.writeText(invitationModalData.url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleToggleSuspend = async (m: TeamMember) => {
+    const isSuspended = m.status === 'suspended' || m.activationStatus === 'suspended';
+    const action = isSuspended ? 'restore' : 'suspend';
+    if (!confirm(`Are you sure you want to ${action} access for ${m.name}?`)) return;
+
+    try {
+      if (isSuspended) {
+        await SolianApiClient.unsuspendMember(m.id);
+      } else {
+        await SolianApiClient.suspendMember(m.id);
+      }
+      await loadData();
+    } catch (err: any) {
+      alert(`Operation error: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -232,21 +349,21 @@ export const TeamsView: React.FC = () => {
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5 text-gold-500" />
             <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-              Organization Structure & Staff Directory
+              Company Personnel & Staff Directory
             </h2>
           </div>
           <p className="text-xs md:text-sm text-graphite-300">
-            Operating units, departmental leadership, job responsibilities, and organizational hierarchy for Solian Wolves.
+            Controlled personnel provisioning, verified identity onboarding, and departmental governance for Solian Wolves.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
           {hasRole('admin') && (
             <button
-              onClick={() => setIsInviteOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-gold-400 transition cursor-pointer shadow-glow-gold shrink-0"
+              onClick={() => setIsAddPersonnelOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-gold-400 transition cursor-pointer shadow-glow-gold shrink-0 min-h-[44px]"
             >
-              <UserPlus className="w-4 h-4" /> Invite Staff Member
+              <UserPlus className="w-4 h-4" /> Add Employee
             </button>
           )}
 
@@ -259,7 +376,7 @@ export const TeamsView: React.FC = () => {
                 }
               }}
               disabled={loading || members.length === 0}
-              className="px-4 py-2.5 rounded-xl bg-solian-surface hover:bg-solian-card text-gold-400 border border-gold-500/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition cursor-pointer shrink-0"
+              className="px-4 py-2.5 rounded-xl bg-solian-surface hover:bg-solian-card text-gold-400 border border-gold-500/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition cursor-pointer shrink-0 min-h-[44px]"
             >
               <ShieldCheck className="w-4 h-4" /> Manage Role Clearance
             </button>
@@ -322,7 +439,7 @@ export const TeamsView: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-solian-border pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('members')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 min-h-[44px] ${
             activeTab === 'members'
               ? 'bg-solian-card text-gold-400 border border-gold-500/40 shadow-glow-subtle'
               : 'text-graphite-400 hover:text-white'
@@ -332,7 +449,7 @@ export const TeamsView: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('departments')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 min-h-[44px] ${
             activeTab === 'departments'
               ? 'bg-solian-card text-gold-400 border border-gold-500/40 shadow-glow-subtle'
               : 'text-graphite-400 hover:text-white'
@@ -342,7 +459,7 @@ export const TeamsView: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('hierarchy')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 min-h-[44px] ${
             activeTab === 'hierarchy'
               ? 'bg-solian-card text-gold-400 border border-gold-500/40 shadow-glow-subtle'
               : 'text-graphite-400 hover:text-white'
@@ -362,117 +479,142 @@ export const TeamsView: React.FC = () => {
         /* Members Table */
         <div className="bg-solian-card rounded-2xl border border-solian-border overflow-hidden shadow-card-elevation">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[750px]">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-solian-border text-[11px] font-bold uppercase tracking-wider text-graphite-400 bg-solian-surface">
-                  <th className="py-3.5 px-4">Member & Title</th>
-                  <th className="py-3.5 px-4">Department & Team</th>
-                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Personnel & Contact</th>
+                  <th className="py-3.5 px-4">Department & Unit</th>
+                  <th className="py-3.5 px-4">Lifecycle State</th>
                   <th className="py-3.5 px-4">Role Clearance</th>
                   <th className="py-3.5 px-4">Reports To</th>
-                  <th className="py-3.5 px-4">Responsibilities</th>
                   {hasRole('admin') && <th className="py-3.5 px-4 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-solian-border text-xs">
                 {members.length === 0 ? (
                   <tr>
-                    <td colSpan={hasRole('admin') ? 7 : 6} className="py-12 text-center text-graphite-400">
+                    <td colSpan={hasRole('admin') ? 6 : 5} className="py-12 text-center text-graphite-400">
                       <Users className="w-8 h-8 text-graphite-500 mx-auto mb-2" />
-                      <div className="text-sm font-bold text-white">No Members Registered</div>
+                      <div className="text-sm font-bold text-white">No Personnel Registered</div>
                       <p className="text-xs text-graphite-400 max-w-sm mx-auto mt-1">
-                        No team members are currently registered in the organization directory.
+                        Use the "Add Employee" button above to establish the official staff directory.
                       </p>
                     </td>
                   </tr>
                 ) : (
-                  members.map((member) => (
-                    <tr key={member.id} className="hover:bg-solian-surface/50 transition">
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <UserAvatar
-                            name={member.name}
-                            avatarUrl={member.avatarUrl}
-                            role={member.role}
-                            size="sm"
-                          />
-                          <div>
-                            <div className="font-bold text-slate-100 flex items-center gap-2">
-                              {member.name}
-                              {member.isDemo && (
-                                <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">
-                                  [DEMO]
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[11px] text-graphite-400">{member.title}</div>
-                            <div className="text-[10px] text-graphite-500 flex items-center gap-1 mt-0.5">
-                              <Mail className="w-3 h-3 text-gold-500/70" /> {member.email}
+                  members.map((member) => {
+                    const activation = activationBadges[member.activationStatus || 'created'] || activationBadges.created;
+                    const isSuspended = member.status === 'suspended' || member.activationStatus === 'suspended';
+                    return (
+                      <tr key={member.id} className="hover:bg-solian-surface/50 transition">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <UserAvatar
+                              name={member.name}
+                              avatarUrl={member.avatarUrl}
+                              role={member.role}
+                              size="sm"
+                            />
+                            <div>
+                              <div className="font-bold text-slate-100 flex items-center gap-2">
+                                {member.name}
+                                {member.isDemo && (
+                                  <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">
+                                    [DEMO]
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-graphite-400">{member.title}</div>
+                              <div className="text-[10px] text-graphite-400 flex items-center gap-2 mt-0.5">
+                                {member.email ? (
+                                  <span className="flex items-center gap-1 font-mono text-slate-300">
+                                    <Mail className="w-3 h-3 text-gold-500/70" /> {member.email}
+                                  </span>
+                                ) : (
+                                  <span className="text-amber-400/90 italic">Email pending</span>
+                                )}
+                                {member.phone && (
+                                  <span className="flex items-center gap-1 font-mono text-slate-400">
+                                    <Phone className="w-3 h-3 text-slate-500" /> {member.phone}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-slate-200">{member.department}</div>
-                        <div className="text-[11px] text-graphite-400">{member.team || 'Leadership Council'}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <select
-                          value={member.status || 'active'}
-                          onChange={(e) => handleStatusChange(member.id, e.target.value as TeamMember['status'])}
-                          className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-transparent cursor-pointer focus:outline-none ${
-                            statusColors[member.status || 'active'] || statusColors.active
-                          }`}
-                        >
-                          <option value="active" className="bg-solian-card text-emerald-400">Active</option>
-                          <option value="away" className="bg-solian-card text-amber-400">Away</option>
-                          <option value="offline" className="bg-solian-card text-zinc-400">Offline</option>
-                          <option value="deactivated" className="bg-solian-card text-red-400">Deactivated</option>
-                        </select>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${roleBadges[member.role]}`}>
-                          {member.role}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-300">
-                        {member.reportsToName ? (
-                          <span className="font-medium text-slate-200">{member.reportsToName}</span>
-                        ) : (
-                          <span className="text-graphite-500 italic">None (Executive Root)</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {member.responsibilities && member.responsibilities.length > 0 ? (
-                            member.responsibilities.map((resp, i) => (
-                              <span
-                                key={i}
-                                className="text-[10px] px-1.5 py-0.2 rounded bg-solian-surface text-slate-300 border border-solian-border"
-                              >
-                                {resp}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-graphite-500 text-[10px]">General Execution</span>
-                          )}
-                        </div>
-                      </td>
-                      {hasRole('admin') && (
-                        <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => {
-                              setSelectedMember(member);
-                              setNewRole(member.role);
-                            }}
-                            className="text-gold-400 hover:text-gold-300 font-semibold text-xs cursor-pointer"
-                          >
-                            Manage Role
-                          </button>
                         </td>
-                      )}
-                    </tr>
-                  ))
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-slate-200">{member.department}</div>
+                          <div className="text-[11px] text-graphite-400">{member.team || 'Executive Council'}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="space-y-1">
+                            <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${activation.className}`}>
+                              {activation.label}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${roleBadges[member.role]}`}>
+                            {member.role}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-300">
+                          {member.reportsToName ? (
+                            <span className="font-medium text-slate-200">{member.reportsToName}</span>
+                          ) : (
+                            <span className="text-graphite-500 italic">None (Executive Root)</span>
+                          )}
+                        </td>
+                        {hasRole('admin') && (
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              {member.activationStatus !== 'active' && (
+                                <button
+                                  onClick={() => handleGenerateInvitation(member)}
+                                  disabled={generatingInviteId === member.id}
+                                  className="px-2.5 py-1 rounded-lg bg-gold-500/15 hover:bg-gold-500/25 text-gold-400 border border-gold-500/30 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer min-h-[36px]"
+                                  title="Generate cryptographic invitation link"
+                                >
+                                  <Key className="w-3 h-3" />
+                                  {generatingInviteId === member.id ? 'Generating...' : 'Invite'}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleOpenEdit(member)}
+                                className="px-2.5 py-1 rounded-lg bg-solian-surface hover:bg-solian-border text-slate-300 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer min-h-[36px]"
+                                title="Edit employee contact details"
+                              >
+                                <Edit3 className="w-3 h-3" /> Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedMember(member);
+                                  setNewRole(member.role);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-solian-surface hover:bg-solian-border text-purple-400 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer min-h-[36px]"
+                                title="Manage Role Clearance"
+                              >
+                                <Shield className="w-3 h-3" /> Role
+                              </button>
+                              {member.role !== 'owner' && (
+                                <button
+                                  onClick={() => handleToggleSuspend(member)}
+                                  className={`p-1.5 rounded-lg border text-[11px] transition cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center ${
+                                    isSuspended
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                                      : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                                  }`}
+                                  title={isSuspended ? 'Restore account' : 'Suspend account'}
+                                >
+                                  {isSuspended ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -502,38 +644,37 @@ export const TeamsView: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-graphite-300 mt-2 leading-relaxed">{dept.description}</p>
+                      <p className="text-xs text-graphite-300 mt-1">{dept.description}</p>
                     </div>
                   </div>
 
-                  <div className="text-xs text-graphite-400 flex items-center justify-between pt-2 border-t border-solian-border">
-                    <span>
-                      Division Lead: <span className="text-slate-200 font-semibold">{dept.leadName}</span>
-                    </span>
-                    <span className="font-mono text-gold-400">
-                      {dept.memberCount} Staff • {dept.activeInitiatives} Initiatives
-                    </span>
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-3 border-t border-solian-border">
+                    <div className="p-3 rounded-xl bg-solian-surface border border-solian-border">
+                      <div className="text-graphite-400 text-[10px] uppercase font-semibold">Department Head</div>
+                      <div className="text-slate-200 font-bold mt-0.5">{dept.leadName}</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-solian-surface border border-solian-border">
+                      <div className="text-graphite-400 text-[10px] uppercase font-semibold">Active Members</div>
+                      <div className="text-gold-400 font-bold mt-0.5">{dept.memberCount} Staff</div>
+                    </div>
                   </div>
 
-                  {/* Child Teams */}
                   {deptTeams.length > 0 && (
                     <div className="space-y-2 pt-2">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-graphite-400">
-                        Operational Teams
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-graphite-400">
+                        Operational Teams ({deptTeams.length})
                       </div>
-                      <div className="space-y-1.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {deptTeams.map((team) => (
                           <div
                             key={team.id}
-                            className="p-2.5 rounded-lg bg-solian-surface border border-solian-border/70 flex items-center justify-between text-xs"
+                            className="p-3 rounded-xl bg-solian-obsidian/60 border border-solian-border flex items-center justify-between"
                           >
                             <div>
-                              <div className="font-semibold text-slate-200">{team.name}</div>
-                              <div className="text-[10px] text-graphite-400">
-                                Focus: {team.focusArea} • Lead: {team.leadName}
-                              </div>
+                              <div className="text-xs font-bold text-white">{team.name}</div>
+                              <div className="text-[10px] text-graphite-400">Lead: {team.leadName}</div>
                             </div>
-                            <span className="text-[10px] font-mono font-bold text-slate-400 bg-solian-card px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-solian-card text-gold-400 border border-solian-border">
                               {team.memberCount} members
                             </span>
                           </div>
@@ -548,19 +689,349 @@ export const TeamsView: React.FC = () => {
         </div>
       ) : (
         /* Hierarchy Tree View */
-        <div className="p-6 rounded-2xl bg-solian-card border border-solian-border space-y-4 shadow-card-elevation">
-          <div className="flex items-center justify-between pb-3 border-b border-solian-border">
-            <div className="flex items-center gap-2">
-              <GitMerge className="w-5 h-5 text-gold-500" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-                Organizational Chain of Command
-              </h3>
-            </div>
-            <span className="text-xs text-graphite-400">Executive Reporting Structure</span>
+        <div className="bg-solian-card rounded-2xl border border-solian-border p-6 shadow-card-elevation space-y-6">
+          <div className="border-b border-solian-border pb-3">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <Layers className="w-4 h-4 text-gold-500" />
+              Organizational Command & Reporting Structure
+            </h3>
+            <p className="text-xs text-graphite-400 mt-0.5">
+              Strict authority chains and supervisory alignments across Solian Wolves operating divisions.
+            </p>
           </div>
 
-          <div className="space-y-3 pt-2">
-            {hierarchy.map((root) => renderHierarchyNode(root))}
+          <div className="space-y-3">
+            {hierarchy.map((rootNode) => renderHierarchyNode(rootNode, 0))}
+          </div>
+        </div>
+      )}
+
+      {/* Add / Provision Personnel Modal */}
+      {isAddPersonnelOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <form
+            onSubmit={handleCreatePersonnel}
+            className="bg-solian-card border border-gold-500/40 max-w-lg w-full rounded-2xl p-6 md:p-8 space-y-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-solian-border pb-3">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-gold-500" />
+                <h3 className="text-base font-bold text-white">Add Company Personnel</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddPersonnelOpen(false)}
+                className="text-graphite-400 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-graphite-300">
+              Establish a company personnel record in the staff directory. Contact info can be supplied now or updated later.
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={addName}
+                    onChange={(e) => setAddName(e.target.value)}
+                    placeholder="e.g. Victor Ndwiga"
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Job Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={addTitle}
+                    onChange={(e) => setAddTitle(e.target.value)}
+                    placeholder="e.g. AI Systems Engineer"
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Corporate Email (Optional)</label>
+                  <input
+                    type="email"
+                    value={addEmail}
+                    onChange={(e) => setAddEmail(e.target.value)}
+                    placeholder="e.g. victor@solianwolves.co"
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Phone Number (Optional)</label>
+                  <input
+                    type="tel"
+                    value={addPhone}
+                    onChange={(e) => setAddPhone(e.target.value)}
+                    placeholder="e.g. +254 700 000 000"
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Department</label>
+                  <select
+                    value={addDepartment}
+                    onChange={(e) => setAddDepartment(e.target.value)}
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  >
+                    <option value="Executive Leadership & Governance">Executive Leadership & Governance</option>
+                    <option value="Operations & Delivery">Operations & Delivery</option>
+                    <option value="Finance & Corporate Treasury">Finance & Corporate Treasury</option>
+                    <option value="Administration & Corporate Services">Administration & Corporate Services</option>
+                    <option value="Technology & AI Systems">Technology & AI Systems</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">System Role</label>
+                  <select
+                    value={addRole}
+                    onChange={(e) => setAddRole(e.target.value as UserRole)}
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 uppercase font-semibold min-h-[44px]"
+                  >
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin" disabled={user.role !== 'owner' && user.role !== 'admin'}>Admin</option>
+                    <option value="owner" disabled={user.role !== 'owner'}>Owner</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-graphite-300 block mb-1 font-semibold">Responsibilities (Comma separated)</label>
+                <input
+                  type="text"
+                  value={addResponsibilities}
+                  onChange={(e) => setAddResponsibilities(e.target.value)}
+                  placeholder="e.g. Backend Architecture, Database Migrations, API Auditing"
+                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-solian-border">
+              <button
+                type="button"
+                onClick={() => setIsAddPersonnelOpen(false)}
+                className="px-4 py-2 rounded-xl bg-solian-surface hover:bg-solian-border text-slate-300 text-xs font-semibold transition cursor-pointer min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={addingPersonnel}
+                className="px-5 py-2 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold cursor-pointer disabled:opacity-50 min-h-[44px]"
+              >
+                {addingPersonnel ? 'Creating...' : 'Create Personnel Record'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Edit Personnel Modal */}
+      {editMember && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <form
+            onSubmit={handleUpdatePersonnel}
+            className="bg-solian-card border border-gold-500/40 max-w-lg w-full rounded-2xl p-6 md:p-8 space-y-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-solian-border pb-3">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-gold-500" />
+                <h3 className="text-base font-bold text-white">Edit Personnel Record</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditMember(null)}
+                className="text-graphite-400 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Job Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Official Corporate Email</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder="e.g. employee@solianwolves.co"
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-graphite-300 block mb-1 font-semibold">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="e.g. +254 700 000 000"
+                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-graphite-300 block mb-1 font-semibold">Department</label>
+                <input
+                  type="text"
+                  value={editDepartment}
+                  onChange={(e) => setEditDepartment(e.target.value)}
+                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-graphite-300 block mb-1 font-semibold">Key Responsibilities</label>
+                <input
+                  type="text"
+                  value={editResponsibilities}
+                  onChange={(e) => setEditResponsibilities(e.target.value)}
+                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 min-h-[44px]"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-solian-border">
+              <button
+                type="button"
+                onClick={() => setEditMember(null)}
+                className="px-4 py-2 rounded-xl bg-solian-surface hover:bg-solian-border text-slate-300 text-xs font-semibold transition cursor-pointer min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={updatingPersonnel}
+                className="px-5 py-2 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold cursor-pointer disabled:opacity-50 min-h-[44px]"
+              >
+                {updatingPersonnel ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Generated Invitation Link Modal */}
+      {invitationModalData && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-solian-card border border-gold-500/50 max-w-lg w-full rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-solian-border pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-gold-500/20 text-gold-400 border border-gold-500/30">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Employee Onboarding Invitation</h3>
+                  <p className="text-xs text-graphite-400">Cryptographic one-time account activation link</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInvitationModalData(null)}
+                className="text-graphite-400 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-graphite-400">Personnel:</span>
+                <span className="font-bold text-white">{invitationModalData.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-graphite-400">Assigned Clearance:</span>
+                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${roleBadges[invitationModalData.role as UserRole]}`}>
+                  {invitationModalData.role}
+                </span>
+              </div>
+              {invitationModalData.email && (
+                <div className="flex justify-between items-center">
+                  <span className="text-graphite-400">Corporate Email:</span>
+                  <span className="font-mono text-slate-300">{invitationModalData.email}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-graphite-400">Expires:</span>
+                <span className="text-amber-400 font-mono text-[11px]">{new Date(invitationModalData.expiresAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-300 block">One-Time Activation URL</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={invitationModalData.url}
+                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-xs text-slate-200 font-mono select-all focus:outline-none min-h-[44px]"
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className="px-4 py-2.5 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 hover:bg-gold-400 transition cursor-pointer shrink-0 min-h-[44px]"
+                >
+                  {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedLink ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-gold-500/10 border border-gold-500/20 text-xs text-graphite-300 space-y-1">
+              <span className="font-semibold text-gold-400 block">Security Notice:</span>
+              <p>
+                Provide this link securely to {invitationModalData.name}. Upon opening, they will choose their password, activate their verified corporate clearance, and access AUREN SOLIAN.
+              </p>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-solian-border">
+              <button
+                type="button"
+                onClick={() => setInvitationModalData(null)}
+                className="px-5 py-2.5 rounded-xl bg-solian-surface hover:bg-solian-border text-white text-xs font-semibold transition cursor-pointer min-h-[44px]"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -570,41 +1041,42 @@ export const TeamsView: React.FC = () => {
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <form
             onSubmit={handleUpdateRole}
-            className="bg-solian-card border border-gold-500/40 max-w-md w-full rounded-2xl p-6 md:p-8 space-y-4 shadow-2xl"
+            className="bg-solian-card border border-solian-border max-w-md w-full rounded-2xl p-6 md:p-8 space-y-4 shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-solian-border pb-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-gold-500" />
-                <h3 className="text-base font-bold text-white">Manage Member Clearance</h3>
+                <h3 className="text-base font-bold text-white">Adjust Clearance Role</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedMember(null)}
-                className="text-graphite-400 hover:text-white"
+                className="text-graphite-400 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-lg bg-solian-surface border border-solian-border">
-                <div className="font-bold text-white">{selectedMember.name}</div>
-                <div className="text-graphite-400">{selectedMember.title}</div>
-                <div className="text-graphite-400">{selectedMember.department}</div>
-                <div className="text-gold-400 font-mono mt-1">Current Tier: {selectedMember.role.toUpperCase()}</div>
+              <div className="p-3 rounded-xl bg-solian-surface border border-solian-border">
+                <div className="text-graphite-400 text-[10px] uppercase font-semibold">Staff Member</div>
+                <div className="text-slate-100 font-bold text-sm mt-0.5">{selectedMember.name}</div>
+                <div className="text-graphite-400 text-[11px]">{selectedMember.title} • {selectedMember.department}</div>
               </div>
 
               <div>
-                <label className="text-graphite-300 block mb-1 font-semibold">Assign Role Tier</label>
+                <label className="text-graphite-300 block mb-1 font-semibold">System Authority Clearance</label>
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as UserRole)}
-                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 uppercase font-semibold"
+                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 uppercase font-semibold min-h-[44px]"
                 >
                   <option value="owner" disabled={user.role !== 'owner'}>
-                    Owner (Executive Authority)
+                    Owner (Executive Governance Superuser)
                   </option>
-                  <option value="admin">Admin (Engineering & Operations VP)</option>
+                  <option value="admin" disabled={user.role !== 'owner' && user.role !== 'admin'}>
+                    Admin (Engineering & Operations VP)
+                  </option>
                   <option value="manager">Manager (Departmental Lead)</option>
                   <option value="member">Member (Core Staff)</option>
                   <option value="guest">Guest (External Advisor)</option>
@@ -619,137 +1091,16 @@ export const TeamsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedMember(null)}
-                className="px-4 py-2 rounded-xl bg-solian-surface hover:bg-solian-border text-slate-300 text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-solian-surface hover:bg-solian-border text-slate-300 text-xs font-semibold transition cursor-pointer min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={updatingRole}
-                className="px-5 py-2 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {updatingRole ? 'Updating...' : 'Save Role Clearance'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Invite Member Modal */}
-      {isInviteOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <form
-            onSubmit={handleInviteMember}
-            className="bg-solian-card border border-gold-500/40 max-w-lg w-full rounded-2xl p-6 md:p-8 space-y-4 shadow-2xl"
-          >
-            <div className="flex items-center justify-between border-b border-solian-border pb-3">
-              <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-gold-500" />
-                <h3 className="text-base font-bold text-white">Invite Staff Member</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsInviteOpen(false)}
-                className="text-graphite-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-graphite-300 block mb-1 font-semibold">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                    placeholder="e.g. Victor Ndwiga"
-                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50"
-                  />
-                </div>
-                <div>
-                  <label className="text-graphite-300 block mb-1 font-semibold">Corporate Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="e.g. victor@solian.ai"
-                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-graphite-300 block mb-1 font-semibold">Department</label>
-                  <select
-                    value={inviteDepartment}
-                    onChange={(e) => setInviteDepartment(e.target.value)}
-                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50"
-                  >
-                    <option value="Executive Office">Executive Office</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Administration">Administration</option>
-                    <option value="Client Engagements">Client Engagements</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-graphite-300 block mb-1 font-semibold">Role Tier</label>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as UserRole)}
-                    className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50 uppercase font-semibold"
-                  >
-                    <option value="member">Member</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin" disabled={user.role !== 'owner' && user.role !== 'admin'}>Admin</option>
-                    <option value="guest">Guest</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-graphite-300 block mb-1 font-semibold">Job Title</label>
-                <input
-                  type="text"
-                  value={inviteTitle}
-                  onChange={(e) => setInviteTitle(e.target.value)}
-                  placeholder="e.g. Senior Distributed Systems Engineer"
-                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50"
-                />
-              </div>
-
-              <div>
-                <label className="text-graphite-300 block mb-1 font-semibold">Key Responsibilities (Comma separated)</label>
-                <input
-                  type="text"
-                  value={inviteResponsibilities}
-                  onChange={(e) => setInviteResponsibilities(e.target.value)}
-                  placeholder="e.g. Backend API, PostgreSQL Migrations, Security Hardening"
-                  className="w-full bg-solian-surface border border-solian-border rounded-lg p-2.5 text-white focus:outline-none focus:border-gold-500/50"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-solian-border">
-              <button
-                type="button"
-                onClick={() => setIsInviteOpen(false)}
-                className="px-4 py-2 rounded-xl bg-solian-surface hover:bg-solian-border text-slate-300 text-xs font-semibold transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={inviting}
-                className="px-5 py-2 rounded-xl bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition shadow-glow-gold cursor-pointer disabled:opacity-50"
-              >
-                {inviting ? 'Inviting...' : 'Send Invitation'}
               </button>
             </div>
           </form>

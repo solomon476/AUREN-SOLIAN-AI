@@ -41,8 +41,22 @@ def admin_headers():
 
 @pytest.fixture
 def member_headers():
+    from app.services.storage.sqlite_repository import repo
+    from app.models.organization import PersonnelCreate
+    email = "test.platform.member@solianwolves.co"
+    member = next((m for m in repo.list_members() if m.email == email), None)
+    if not member:
+        member = repo.create_personnel_record(
+            PersonnelCreate(
+                name="Platform Test Member",
+                email=email,
+                role=UserRole.MEMBER,
+                department="Technology & AI Systems",
+                title="Systems Associate",
+            )
+        )
     token = create_access_token(
-        data={"sub": "usr-5", "email": "d.ochieng@solian.ai", "role": "member", "full_name": "David Ochieng"}
+        data={"sub": member.user_id, "email": member.email, "role": "member", "full_name": member.name}
     )
     return {"Authorization": f"Bearer {token}"}
 
@@ -198,8 +212,11 @@ def test_post_discussion_message_and_reply(client, member_headers):
 # Notifications Center Tests
 # =============================================================================
 def test_notifications_dispatch_and_read_lifecycle(client, admin_headers, member_headers):
+    import jwt
+    token = member_headers["Authorization"].split(" ")[1]
+    member_user_id = jwt.decode(token, options={"verify_signature": False})["sub"]
     notif_payload = {
-        "user_id": "usr-5",
+        "user_id": member_user_id,
         "title": "System Audit Complete",
         "message": "All database queries validated.",
         "type": "system",

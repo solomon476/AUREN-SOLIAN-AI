@@ -46,6 +46,11 @@ async def get_item(
         # Check if item exists but is restricted
         unfiltered = repo.get_knowledge_item(item_id)
         if unfiltered:
+            if user.role == UserRole.GUEST:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Access denied: Corporate knowledge item is classified as {unfiltered.classification} and requires employee clearance.",
+                )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access denied: Document '{unfiltered.title}' is classified as {unfiltered.classification}.",

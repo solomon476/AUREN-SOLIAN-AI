@@ -13,7 +13,7 @@ router = APIRouter()
 async def list_meetings(
     status: Optional[str] = None,
     meeting_type: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     meetings = repo.list_meetings(status=status, meeting_type=meeting_type)
     return [
@@ -47,7 +47,7 @@ async def list_meetings(
 @router.get("/{meeting_id}")
 async def get_meeting(
     meeting_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     meeting = repo.get_meeting(meeting_id)
     if not meeting:

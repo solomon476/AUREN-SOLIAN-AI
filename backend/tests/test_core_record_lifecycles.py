@@ -43,8 +43,10 @@ def test_projects_crud_lifecycle():
     invalid_res = client.post("/api/v1/projects", json={"name": "", "lead": "Lead"}, headers={"x-user-role": "manager"})
     assert invalid_res.status_code in (400, 422)
 
-    # 3. Retrieve record
-    get_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "guest"})
+    # 3. Retrieve record: GUEST is rejected (403), MEMBER succeeds (200)
+    guest_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "guest"})
+    assert guest_res.status_code == 403
+    get_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "member"})
     assert get_res.status_code == 200
     assert get_res.json()["name"] == "Project Nyati Core"
 
@@ -55,7 +57,7 @@ def test_projects_crud_lifecycle():
     assert update_res.json()["status"] == "review"
 
     # 5. Verify persistence
-    verify_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "guest"})
+    verify_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "member"})
     assert verify_res.json()["progress"] == 60
 
     # 6. Unauthorized deletion check (MEMBER cannot delete project)
@@ -67,7 +69,7 @@ def test_projects_crud_lifecycle():
     assert del_res.status_code == 200
 
     # 8. Verify record is gone
-    gone_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "guest"})
+    gone_res = client.get(f"/api/v1/projects/{p_id}", headers={"x-user-role": "member"})
     assert gone_res.status_code == 404
 
 
@@ -90,8 +92,10 @@ def test_tasks_crud_lifecycle():
     invalid_res = client.post("/api/v1/tasks", json={"title": "X", "assignee": "A"}, headers={"x-user-role": "member"})
     assert invalid_res.status_code in (400, 422)
 
-    # 3. Retrieve task
-    get_res = client.get(f"/api/v1/tasks/{t_id}", headers={"x-user-role": "guest"})
+    # 3. Retrieve task: GUEST is rejected (403), MEMBER succeeds (200)
+    guest_res = client.get(f"/api/v1/tasks/{t_id}", headers={"x-user-role": "guest"})
+    assert guest_res.status_code == 403
+    get_res = client.get(f"/api/v1/tasks/{t_id}", headers={"x-user-role": "member"})
     assert get_res.status_code == 200
     assert get_res.json()["title"] == "Validate TLS Gateway Certificates"
 
@@ -103,7 +107,7 @@ def test_tasks_crud_lifecycle():
     # 5. Delete task
     del_res = client.delete(f"/api/v1/tasks/{t_id}", headers={"x-user-role": "member"})
     assert del_res.status_code == 200
-    assert client.get(f"/api/v1/tasks/{t_id}", headers={"x-user-role": "guest"}).status_code == 404
+    assert client.get(f"/api/v1/tasks/{t_id}", headers={"x-user-role": "member"}).status_code == 404
 
 
 def test_clients_crud_lifecycle():
@@ -186,8 +190,10 @@ def test_departments_crud_lifecycle():
     assert res.status_code == 201
     d_id = res.json()["id"]
 
-    # 2. Retrieve department
-    get_res = client.get(f"/api/v1/teams/departments/{d_id}", headers={"x-user-role": "guest"})
+    # 2. Retrieve department: GUEST is rejected (403), MEMBER succeeds (200)
+    guest_res = client.get(f"/api/v1/teams/departments/{d_id}", headers={"x-user-role": "guest"})
+    assert guest_res.status_code == 403
+    get_res = client.get(f"/api/v1/teams/departments/{d_id}", headers={"x-user-role": "member"})
     assert get_res.status_code == 200
     assert get_res.json()["name"] == "Research & Mathematical Systems"
 
@@ -237,8 +243,11 @@ def test_meetings_and_decisions_lifecycle():
     upd_res = client.patch(f"/api/v1/meetings/{m_id}", json=update_payload, headers={"x-user-role": "member"})
     assert upd_res.status_code == 200
 
-    # 3. Verify retrieved decisions
-    get_res = client.get(f"/api/v1/meetings/{m_id}", headers={"x-user-role": "guest"})
+    # 3. Verify retrieved decisions: GUEST is rejected (403), MEMBER succeeds (200)
+    guest_res = client.get(f"/api/v1/meetings/{m_id}", headers={"x-user-role": "guest"})
+    assert guest_res.status_code == 403
+    get_res = client.get(f"/api/v1/meetings/{m_id}", headers={"x-user-role": "member"})
+    assert get_res.status_code == 200
     assert len(get_res.json()["decisions"]) == 1
     assert get_res.json()["decisions"][0]["decision"] == "Approved budget allocation for sovereign AI infrastructure expansion."
 
@@ -250,7 +259,7 @@ def test_meetings_and_decisions_lifecycle():
     # 5. Delete meeting (MANAGER)
     del_res = client.delete(f"/api/v1/meetings/{m_id}", headers={"x-user-role": "manager"})
     assert del_res.status_code == 200
-    assert client.get(f"/api/v1/meetings/{m_id}", headers={"x-user-role": "guest"}).status_code == 404
+    assert client.get(f"/api/v1/meetings/{m_id}", headers={"x-user-role": "member"}).status_code == 404
 
 
 def test_discussions_crud_and_permission_lifecycle():
@@ -266,8 +275,10 @@ def test_discussions_crud_and_permission_lifecycle():
     assert res.status_code == 201
     msg_id = res.json()["id"]
 
-    # 2. Retrieve message
-    get_res = client.get(f"/api/v1/discussions/messages/{msg_id}", headers={"x-user-role": "guest"})
+    # 2. Retrieve message: GUEST is rejected (403), MEMBER succeeds (200)
+    guest_res = client.get(f"/api/v1/discussions/messages/{msg_id}", headers={"x-user-role": "guest"})
+    assert guest_res.status_code == 403
+    get_res = client.get(f"/api/v1/discussions/messages/{msg_id}", headers={"x-user-role": "member"})
     assert get_res.status_code == 200
     assert get_res.json()["content"] == "All statutory council members please confirm availability for annual audit."
 
@@ -278,7 +289,7 @@ def test_discussions_crud_and_permission_lifecycle():
     # 4. Authorized deletion by ADMIN
     admin_del = client.delete(f"/api/v1/discussions/messages/{msg_id}", headers={"x-user-role": "admin"})
     assert admin_del.status_code == 200
-    assert client.get(f"/api/v1/discussions/messages/{msg_id}", headers={"x-user-role": "guest"}).status_code == 404
+    assert client.get(f"/api/v1/discussions/messages/{msg_id}", headers={"x-user-role": "member"}).status_code == 404
 
 
 def test_analytics_metrics_calculation():

@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("")
-async def list_documents(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def list_documents(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     allowed = get_allowed_classifications(user.role)
     docs = repo.list_documents(allowed_classifications=allowed)
     return [
@@ -30,7 +30,7 @@ async def list_documents(user: AuthUser = Depends(require_role(UserRole.GUEST)))
 @router.get("/{document_id}")
 async def get_document(
     document_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Retrieve document metadata by ID, enforcing classification clearance."""
     doc = repo.get_document(document_id)

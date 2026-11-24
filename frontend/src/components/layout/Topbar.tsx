@@ -16,7 +16,7 @@ export const Topbar: React.FC = () => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
 
-  // Global shortcut listener: ⌘K or Ctrl+K
+  // Global shortcut listener: ⌘K or Ctrl+K & AuthModal listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -25,7 +25,18 @@ export const Topbar: React.FC = () => {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('token') || params.get('bootstrap_token') || window.location.pathname.startsWith('/activate')) {
+      setIsAuthModalOpen(true);
+    }
+    const handleOpenAuth = () => setIsAuthModalOpen(true);
+    window.addEventListener('open-auth-modal', handleOpenAuth);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('open-auth-modal', handleOpenAuth);
+    };
   }, []);
 
   const roleColors: Record<UserRole, string> = {
@@ -227,21 +238,31 @@ export const Topbar: React.FC = () => {
           )}
         </div>
 
-        {/* Mobile User Profile Avatar Trigger (Visible on < md) */}
-        <button
-          onClick={() => setIsMobileProfileOpen(true)}
-          className="md:hidden flex items-center justify-center p-0.5 rounded-full transition active:scale-95 cursor-pointer shrink-0"
-          aria-label={`User profile: ${user.fullName} (${user.role})`}
-          title={`${user.fullName} (${user.role.toUpperCase()})`}
-        >
-          <UserAvatar
-            name={user.fullName}
-            avatarUrl={user.avatarUrl}
-            role={user.role}
-            size="sm"
-            showRoleBadge
-          />
-        </button>
+        {/* Mobile User Profile Trigger / Visitor Sign In (Visible on < md) */}
+        {user.role === 'guest' ? (
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
+            className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer min-h-[36px]"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Sign In</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsMobileProfileOpen(true)}
+            className="md:hidden flex items-center justify-center p-0.5 rounded-full transition active:scale-95 cursor-pointer shrink-0"
+            aria-label={`User profile: ${user.fullName} (${user.role})`}
+            title={`${user.fullName} (${user.role.toUpperCase()})`}
+          >
+            <UserAvatar
+              name={user.fullName}
+              avatarUrl={user.avatarUrl}
+              role={user.role}
+              size="sm"
+              showRoleBadge
+            />
+          </button>
+        )}
 
         {/* Live Notification Center */}
         <NotificationCenter />
@@ -262,7 +283,7 @@ export const Topbar: React.FC = () => {
                   <img src="/favicon.svg" alt="Solian Emblem" className="w-full h-full object-contain" />
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wider text-white">
-                  Executive Identity & Clearance
+                  {user.role === 'guest' ? 'Visitor Access' : 'Executive Identity & Clearance'}
                 </span>
               </div>
               <button
@@ -275,57 +296,84 @@ export const Topbar: React.FC = () => {
             </div>
 
             {/* Profile Information Card */}
-            <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border space-y-3">
-              <div className="flex items-start justify-between gap-3">
+            {user.role === 'guest' ? (
+              <div className="p-4 rounded-xl bg-solian-surface border border-solian-border space-y-3">
                 <div className="flex items-center gap-3">
-                  <UserAvatar
-                    name={user.fullName}
-                    avatarUrl={user.avatarUrl}
-                    role={user.role}
-                    size="lg"
-                    className="shrink-0"
-                  />
+                  <div className="w-12 h-12 rounded-full bg-solian-card border border-solian-border flex items-center justify-center text-sm font-bold text-graphite-300">
+                    V
+                  </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white leading-tight">
-                      {user.fullName}
-                    </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      {user.title}
-                    </p>
-                    <p className="text-[10px] text-gold-400/80 font-mono mt-0.5">
-                      {user.email || 'No institutional email'}
-                    </p>
+                    <h3 className="text-sm font-bold text-white">Public Visitor</h3>
+                    <p className="text-xs text-graphite-400 mt-0.5">Visitor Session (Public Access)</p>
                   </div>
                 </div>
-                <span
-                  className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded border shrink-0 ${
-                    roleColors[user.role]
-                  }`}
+                <p className="text-xs text-graphite-300 leading-relaxed pt-1">
+                  Access to institutional memory, strategic project matrices, financial records, and operational execution requires an authorized corporate account.
+                </p>
+                <button
+                  onClick={() => {
+                    setIsMobileProfileOpen(false);
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="w-full py-2 rounded-lg bg-gold-500 text-solian-darkest font-bold text-xs uppercase hover:bg-gold-400 transition cursor-pointer min-h-[40px] flex items-center justify-center gap-1.5"
                 >
-                  {user.role}
-                </span>
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In to Corporate Account</span>
+                </button>
               </div>
+            ) : (
+              <div className="p-3.5 rounded-xl bg-solian-surface border border-solian-border space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      name={user.fullName}
+                      avatarUrl={user.avatarUrl}
+                      role={user.role}
+                      size="lg"
+                      className="shrink-0"
+                    />
+                    <div>
+                      <h3 className="text-sm font-bold text-white leading-tight">
+                        {user.fullName}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {user.title}
+                      </p>
+                      <p className="text-[10px] text-gold-400/80 font-mono mt-0.5">
+                        {user.email || 'No institutional email'}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded border shrink-0 ${
+                      roleColors[user.role]
+                    }`}
+                  >
+                    {user.role}
+                  </span>
+                </div>
 
-              <div className="pt-2 border-t border-solian-border/60 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">Department</span>
-                <span className="text-slate-200 font-medium text-right truncate max-w-[200px]">
-                  {user.department}
-                </span>
-              </div>
+                <div className="pt-2 border-t border-solian-border/60 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Department</span>
+                  <span className="text-slate-200 font-medium text-right truncate max-w-[200px]">
+                    {user.department}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">Auth Mode</span>
-                <span
-                  className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                    authMode === 'SUPABASE_JWT'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  }`}
-                >
-                  {authMode === 'SUPABASE_JWT' ? 'SUPABASE JWT' : 'DEV SIMULATION'}
-                </span>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Auth Mode</span>
+                  <span
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                      authMode === 'SUPABASE_JWT'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                    }`}
+                  >
+                    {authMode === 'SUPABASE_JWT' ? 'SUPABASE JWT' : 'DEV SIMULATION'}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Dev Persona Switcher (Only in Dev Simulation Mode) */}
             {isDevSimulation && (

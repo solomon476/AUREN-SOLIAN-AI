@@ -120,6 +120,17 @@ class GeminiService:
                     logger.warning(f"Groq API streaming fallback error: {exc}")
 
         # 5. Honest Error Reporting (No fake canned response substitution)
+        if user_role == "guest":
+            err_chunks = [
+                "### AUREN SOLIAN (Visitor Mode)\n\n",
+                "Welcome to Solian Enterprise Group. Live AI assistance is currently offline or undergoing scheduled maintenance.\n\n",
+                "Please check back shortly or sign in with your corporate account to access company workspaces.",
+            ]
+            for c in err_chunks:
+                yield c
+                await asyncio.sleep(0.02)
+            return
+
         err_chunks = [
             "### ⚠️ AI Intelligence Service Offline\n\n",
             "Unable to establish a live connection to verified enterprise AI intelligence providers.\n\n",

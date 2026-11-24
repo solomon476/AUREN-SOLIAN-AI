@@ -22,7 +22,7 @@ class ProjectUpdate(BaseModel):
 
 
 @router.get("")
-async def list_projects(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def list_projects(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     projects = repo.list_projects()
     return [
         {
@@ -67,7 +67,7 @@ async def create_project(
 @router.get("/{project_id}")
 async def get_project(
     project_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Retrieve an initiative by ID."""
     project = repo.get_project(project_id)

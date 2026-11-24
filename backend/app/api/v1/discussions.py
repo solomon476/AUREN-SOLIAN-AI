@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.get("/channels")
-async def list_channels(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def list_channels(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     channels = repo.list_discussion_channels()
     return [
         {
@@ -28,7 +28,7 @@ async def list_messages(
     channel_id: Optional[str] = None,
     channel_type: Optional[str] = None,
     parent_id: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     messages = repo.list_discussions(channel_id=channel_id, channel_type=channel_type, parent_id=parent_id)
     return [
@@ -76,7 +76,7 @@ async def create_message(
 @router.get("/messages/{message_id}")
 async def get_message(
     message_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Retrieve a single discussion message by ID."""
     msg = repo.get_discussion_message(message_id)

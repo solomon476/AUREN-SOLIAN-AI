@@ -240,7 +240,7 @@ def serialize_project_financials(pf: ProjectFinancialSummary) -> Dict[str, Any]:
 # =============================================================================
 @router.get("/overview")
 async def get_financial_overview(
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     stats = repo.get_financial_overview()
     return serialize_overview(stats)
@@ -252,7 +252,7 @@ async def get_financial_overview(
 @router.get("/accounts")
 async def list_financial_accounts(
     include_archived: bool = Query(False),
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     accounts = repo.list_financial_accounts(include_archived=include_archived)
     return [serialize_account(a) for a in accounts]
@@ -261,7 +261,7 @@ async def list_financial_accounts(
 @router.get("/accounts/{account_id}")
 async def get_financial_account(
     account_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     acc = repo.get_financial_account(account_id)
     if not acc:
@@ -301,7 +301,7 @@ async def list_transactions(
     project_id: Optional[str] = None,
     client_id: Optional[str] = None,
     limit: int = Query(100, le=500),
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     txs = repo.list_transactions(
         account_id=account_id,
@@ -317,7 +317,7 @@ async def list_transactions(
 @router.get("/transactions/{tx_id}")
 async def get_transaction(
     tx_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     tx = repo.get_transaction(tx_id)
     if not tx:
@@ -366,7 +366,7 @@ async def list_invoices(
     status: Optional[str] = None,
     client_id: Optional[str] = None,
     project_id: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     invoices = repo.list_invoices(status=status, client_id=client_id, project_id=project_id)
     return [serialize_invoice(i) for i in invoices]
@@ -375,7 +375,7 @@ async def list_invoices(
 @router.get("/invoices/{invoice_id}")
 async def get_invoice(
     invoice_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     inv = repo.get_invoice(invoice_id)
     if not inv:
@@ -429,7 +429,7 @@ async def list_payables(
     status: Optional[str] = None,
     category: Optional[str] = None,
     project_id: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     payables = repo.list_payables(status=status, category=category, project_id=project_id)
     return [serialize_payable(p) for p in payables]
@@ -438,7 +438,7 @@ async def list_payables(
 @router.get("/payables/{payable_id}")
 async def get_payable(
     payable_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     p = repo.get_payable(payable_id)
     if not p:
@@ -492,7 +492,7 @@ async def list_budgets(
     status: Optional[str] = None,
     period: Optional[str] = None,
     project_id: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     budgets = repo.list_budgets(status=status, period=period, project_id=project_id)
     return [serialize_budget(b) for b in budgets]
@@ -501,7 +501,7 @@ async def list_budgets(
 @router.get("/budgets/{budget_id}")
 async def get_budget(
     budget_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     b = repo.get_budget(budget_id)
     if not b:
@@ -538,7 +538,7 @@ async def list_expense_requests(
     status: Optional[str] = None,
     urgency: Optional[str] = None,
     requested_by_id: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     reqs = repo.list_expense_requests(status=status, urgency=urgency, requested_by_id=requested_by_id)
     return [serialize_expense_request(r) for r in reqs]
@@ -547,7 +547,7 @@ async def list_expense_requests(
 @router.get("/requests/{request_id}")
 async def get_expense_request(
     request_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     r = repo.get_expense_request(request_id)
     if not r:
@@ -608,7 +608,7 @@ async def pay_expense_request(
 @router.get("/projects/{project_id}")
 async def get_project_financials(
     project_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     pf = repo.get_project_financials(project_id)
     return serialize_project_financials(pf)

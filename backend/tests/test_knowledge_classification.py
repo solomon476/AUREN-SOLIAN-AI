@@ -36,7 +36,7 @@ def test_member_can_access_internal_knowledge():
 
 def test_member_forbidden_from_indexing_sop():
     # Member cannot create new knowledge items
-    headers = {"X-User-Id": "usr-5"}
+    headers = {"X-User-Id": "usr-test-member", "X-User-Role": "member"}
     payload = {
         "title": "Unauthorized SOP",
         "category": "SOP",
@@ -49,8 +49,8 @@ def test_member_forbidden_from_indexing_sop():
 
 
 def test_manager_can_index_new_sop():
-    # Marcus Vance (Manager, usr-3) can index SOP
-    headers = {"X-User-Id": "usr-3"}
+    # Noella Maraka Kaatho (Manager, usr-4) can index SOP
+    headers = {"X-User-Id": "usr-4"}
     payload = {
         "title": "Client Escalation Quick-Reference Protocol",
         "category": "SOP",

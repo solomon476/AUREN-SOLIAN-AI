@@ -5,6 +5,7 @@ import { OrganizationProvider, useOrganization } from './context/OrganizationCon
 import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
+import { PWAInstallBanner } from './components/common/PWAInstallBanner';
 import { API_BASE, buildApiUrl } from './api/client';
 
 // Feature Views
@@ -107,6 +108,7 @@ export const AppContent: React.FC = () => {
         <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
           <ModuleRouter />
         </main>
+        <PWAInstallBanner />
         <MobileBottomNav />
       </div>
     </div>

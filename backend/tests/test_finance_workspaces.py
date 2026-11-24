@@ -26,7 +26,21 @@ def admin_headers():
 
 @pytest.fixture
 def member_headers():
-    token = create_access_token(data={"sub": "usr-5", "role": UserRole.MEMBER.value, "org": "org-solian-wolves"})
+    from app.services.storage.sqlite_repository import repo
+    from app.models.organization import PersonnelCreate
+    email = "test.fin.member@solianwolves.co"
+    member = next((m for m in repo.list_members() if m.email == email), None)
+    if not member:
+        member = repo.create_personnel_record(
+            PersonnelCreate(
+                name="Finance Test Member",
+                email=email,
+                role=UserRole.MEMBER,
+                department="Finance & Corporate Treasury",
+                title="Financial Analyst",
+            )
+        )
+    token = create_access_token(data={"sub": member.user_id, "role": UserRole.MEMBER.value, "org": "org-solian-wolves"})
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -39,8 +53,13 @@ def guest_headers():
 # =============================================================================
 # 1. Financial Accounts
 # =============================================================================
-def test_list_financial_accounts(client, guest_headers):
-    res = client.get("/api/v1/finance/accounts", headers=guest_headers)
+def test_list_financial_accounts(client, guest_headers, member_headers):
+    # Guest cannot list internal company financial accounts
+    guest_res = client.get("/api/v1/finance/accounts", headers=guest_headers)
+    assert guest_res.status_code == 403
+
+    # Authenticated member can view accounts
+    res = client.get("/api/v1/finance/accounts", headers=member_headers)
     assert res.status_code == 200
     accounts = res.json()
     assert len(accounts) >= 3
@@ -367,8 +386,13 @@ def test_expense_request_workflow_submit_approve_pay(client, member_headers, adm
 # =============================================================================
 # 7. Financial Overview & Telemetry
 # =============================================================================
-def test_financial_overview_telemetry(client, guest_headers):
-    res = client.get("/api/v1/finance/overview", headers=guest_headers)
+def test_financial_overview_telemetry(client, guest_headers, member_headers):
+    # Guest cannot access internal financial overview
+    guest_res = client.get("/api/v1/finance/overview", headers=guest_headers)
+    assert guest_res.status_code == 403
+
+    # Authenticated member can view financial overview
+    res = client.get("/api/v1/finance/overview", headers=member_headers)
     assert res.status_code == 200
     data = res.json()
     assert "totalRecordedBalances" in data

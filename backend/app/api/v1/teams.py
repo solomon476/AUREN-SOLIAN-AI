@@ -8,6 +8,9 @@ from app.models.organization import (
     MemberInviteCreate,
     DepartmentCreate,
     DepartmentUpdate,
+    PersonnelCreate,
+    PersonnelUpdate,
+    InvitationResponse,
 )
 from app.services.storage.sqlite_repository import repo
 
@@ -15,7 +18,7 @@ router = APIRouter()
 
 
 @router.get("/members")
-async def list_members(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def list_members(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     members = repo.list_members()
     return [
         {
@@ -23,6 +26,7 @@ async def list_members(user: AuthUser = Depends(require_role(UserRole.GUEST))):
             "userId": m.user_id,
             "name": m.name,
             "email": m.email,
+            "phone": getattr(m, "phone", None),
             "role": m.role.value,
             "title": m.title,
             "departmentId": m.department_id,
@@ -33,6 +37,8 @@ async def list_members(user: AuthUser = Depends(require_role(UserRole.GUEST))):
             "reportsToId": m.reports_to_id,
             "reportsToName": m.reports_to_name,
             "status": m.status,
+            "activationStatus": getattr(m, "activation_status", "created"),
+            "invitationExpiresAt": getattr(m, "invitation_expires_at", None),
             "assignedProjects": m.assigned_projects,
             "joinedDate": m.joined_date,
             "avatarUrl": m.avatar_url if getattr(m, "avatar_url", None) else None,
@@ -43,7 +49,7 @@ async def list_members(user: AuthUser = Depends(require_role(UserRole.GUEST))):
 
 
 @router.get("/members/{member_id}")
-async def get_member(member_id: str, user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def get_member(member_id: str, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     member = repo.get_member_by_id(member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Staff member not found.")
@@ -52,6 +58,7 @@ async def get_member(member_id: str, user: AuthUser = Depends(require_role(UserR
         "userId": member.user_id,
         "name": member.name,
         "email": member.email,
+        "phone": getattr(member, "phone", None),
         "role": member.role.value,
         "title": member.title,
         "departmentId": member.department_id,
@@ -62,10 +69,197 @@ async def get_member(member_id: str, user: AuthUser = Depends(require_role(UserR
         "reportsToId": member.reports_to_id,
         "reportsToName": member.reports_to_name,
         "status": member.status,
+        "activationStatus": getattr(member, "activation_status", "created"),
+        "invitationExpiresAt": getattr(member, "invitation_expires_at", None),
         "assignedProjects": member.assigned_projects,
         "joinedDate": member.joined_date,
         "avatarUrl": member.avatar_url if getattr(member, "avatar_url", None) else None,
         "isDemo": member.is_demo,
+    }
+
+
+@router.post("/members", status_code=status.HTTP_201_CREATED)
+async def create_personnel(
+    body: PersonnelCreate,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """
+    Establish a new company personnel record.
+    Contact information (email, phone) can be assigned now or completed later.
+    """
+    caller_level = ROLE_HIERARCHY.get(user.role, 0)
+    target_level = ROLE_HIERARCHY.get(body.role, 0)
+
+    if body.role == UserRole.OWNER and user.role != UserRole.OWNER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Only an OWNER can create another OWNER personnel record.",
+        )
+
+    if target_level > caller_level:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Forbidden: Cannot create member with role '{body.role.value}' exceeding your own authority.",
+        )
+
+    member = repo.create_personnel_record(body, creator_name=user.full_name)
+    return {
+        "id": member.id,
+        "userId": member.user_id,
+        "name": member.name,
+        "email": member.email,
+        "phone": member.phone,
+        "role": member.role.value,
+        "title": member.title,
+        "department": member.department,
+        "team": member.team,
+        "responsibilities": member.responsibilities,
+        "status": member.status,
+        "activationStatus": member.activation_status,
+        "joinedDate": member.joined_date,
+        "message": f"Personnel record created for {member.name}. Activation status: {member.activation_status}.",
+    }
+
+
+@router.patch("/members/{member_id}")
+async def update_personnel(
+    member_id: str,
+    updates: PersonnelUpdate,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Update personnel contact details, title, or responsibilities."""
+    target = repo.get_member_by_id(member_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    if target.role == UserRole.OWNER and user.role != UserRole.OWNER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Only an OWNER can modify the organization OWNER record.",
+        )
+
+    updated = repo.update_personnel_record(member_id, updates, updater_name=user.full_name)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Failed to update personnel record.")
+
+    return {
+        "id": updated.id,
+        "name": updated.name,
+        "email": updated.email,
+        "phone": updated.phone,
+        "title": updated.title,
+        "department": updated.department,
+        "team": updated.team,
+        "activationStatus": updated.activation_status,
+        "message": f"Successfully updated personnel details for {updated.name}.",
+    }
+
+
+@router.post("/members/{member_id}/invite")
+async def generate_invitation(
+    member_id: str,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Generates a secure cryptographic one-time invitation token for an employee."""
+    target = repo.get_member_by_id(member_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    caller_level = ROLE_HIERARCHY.get(user.role, 0)
+    target_level = ROLE_HIERARCHY.get(target.role, 0)
+    if target_level > caller_level:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Forbidden: Cannot generate invitation for member with role '{target.role.value}' exceeding your authority.",
+        )
+
+    try:
+        token, expires_at = repo.generate_member_invitation(member_id, expires_in_days=7)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    activation_url = f"/activate?token={token}"
+
+    repo.log_activity(
+        actor_name=user.full_name,
+        action_type="invitation_generated",
+        title=f"Invitation Token Issued: {target.name}",
+        description=f"Generated one-time onboarding invitation token for {target.name} ({target.role.value}).",
+        module="teams",
+    )
+
+    return {
+        "memberId": target.id,
+        "name": target.name,
+        "email": target.email,
+        "role": target.role.value,
+        "activationStatus": "invitation_sent",
+        "invitationToken": token,
+        "activationUrl": activation_url,
+        "expiresAt": expires_at,
+        "message": f"Invitation generated successfully for {target.name}.",
+    }
+
+
+@router.post("/members/{member_id}/suspend")
+async def suspend_member_endpoint(
+    member_id: str,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Suspends member account from accessing corporate systems."""
+    target = repo.get_member_by_id(member_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    if target.role == UserRole.OWNER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: The organization OWNER account cannot be suspended.",
+        )
+
+    caller_level = ROLE_HIERARCHY.get(user.role, 0)
+    target_level = ROLE_HIERARCHY.get(target.role, 0)
+    if target_level >= caller_level and user.role != UserRole.OWNER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Cannot suspend a member with equal or higher authority.",
+        )
+
+    updated = repo.suspend_member(member_id, actor_name=user.full_name)
+    return {
+        "id": updated.id,
+        "name": updated.name,
+        "status": updated.status,
+        "activationStatus": updated.activation_status,
+        "message": f"Personnel account for {updated.name} has been suspended.",
+    }
+
+
+@router.post("/members/{member_id}/unsuspend")
+async def unsuspend_member_endpoint(
+    member_id: str,
+    user: AuthUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Restores a suspended member account."""
+    target = repo.get_member_by_id(member_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    caller_level = ROLE_HIERARCHY.get(user.role, 0)
+    target_level = ROLE_HIERARCHY.get(target.role, 0)
+    if target_level >= caller_level and user.role != UserRole.OWNER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Cannot restore a member with equal or higher authority.",
+        )
+
+    updated = repo.unsuspend_member(member_id, actor_name=user.full_name)
+    return {
+        "id": updated.id,
+        "name": updated.name,
+        "status": updated.status,
+        "activationStatus": updated.activation_status,
+        "message": f"Personnel account for {updated.name} has been restored to active status.",
     }
 
 
@@ -187,7 +381,7 @@ async def update_member_status(
 
 
 @router.get("/departments")
-async def list_departments(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def list_departments(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     departments = repo.list_departments()
     return [
         {
@@ -208,7 +402,7 @@ async def list_departments(user: AuthUser = Depends(require_role(UserRole.GUEST)
 @router.get("/departments/{dept_id}")
 async def get_department(
     dept_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     """Retrieve departmental profile by ID or Code."""
     dept = repo.get_department(dept_id)
@@ -281,7 +475,7 @@ async def update_department(
 @router.get("/teams")
 async def list_teams(
     department_id: Optional[str] = None,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     teams = repo.list_teams(department_id=department_id)
     return [
@@ -301,7 +495,7 @@ async def list_teams(
 
 
 @router.get("/hierarchy")
-async def get_hierarchy(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def get_hierarchy(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     """Returns organizational reporting tree."""
     members = repo.list_members()
     # Build tree

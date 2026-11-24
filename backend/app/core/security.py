@@ -189,11 +189,16 @@ def get_current_user(
             )
 
         if member:
+            if getattr(member, "status", None) == "suspended" or getattr(member, "activation_status", None) == "suspended":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="This personnel account has been suspended by company administration.",
+                )
             # Server-side authority resolution: Role strictly sourced from verified database member record
             return AuthUser(
                 id=member.id,
                 user_id=member.user_id,
-                email=member.email,
+                email=member.email or token_email or "",
                 full_name=member.name,
                 role=member.role,
                 organization_id=member.organization_id,
@@ -205,18 +210,18 @@ def get_current_user(
 
         # Authenticated user exists in auth provider but their stable UID (sub) is not bound
         # to a corporate staff directory member:
-        # Strictly contained to Guest clearance with verified identity claims.
+        # Strictly contained to Visitor / Guest clearance with verified identity claims.
         user_metadata = payload.get("user_metadata", {})
-        full_name = user_metadata.get("full_name") or payload.get("name") or "External User"
+        full_name = user_metadata.get("full_name") or payload.get("name") or "Visitor"
         return AuthUser(
-            id=token_user_id or "usr-ext",
-            user_id=token_user_id or "usr-ext",
-            email=token_email or "user@solian.ai",
+            id=token_user_id or "usr-guest",
+            user_id=token_user_id or "usr-guest",
+            email=token_email or "guest@solian.ai",
             full_name=full_name,
             role=UserRole.GUEST,
             organization_id=payload.get("organization_id", settings.ORGANIZATION_ID),
-            title="External User",
-            department="External",
+            title="Visitor",
+            department="",
             auth_mode="SUPABASE_JWT",
             is_demo_user=False,
         )
@@ -242,6 +247,57 @@ def get_current_user(
     # -------------------------------------------------------------------------
     # Path 3: Development Identity Simulation (Local / Non-Production Only)
     # -------------------------------------------------------------------------
+    if x_user_role:
+        try:
+            parsed_role = UserRole(x_user_role.lower())
+        except ValueError:
+            parsed_role = UserRole.MEMBER
+        if parsed_role == UserRole.GUEST:
+            return AuthUser(
+                id=x_user_id or "usr-guest",
+                user_id=x_user_id or "usr-guest",
+                email="guest@solian.ai",
+                full_name="Visitor",
+                role=UserRole.GUEST,
+                organization_id=x_org_id or settings.ORGANIZATION_ID,
+                title="Visitor",
+                department="",
+                auth_mode="DEVELOPMENT_SIMULATION",
+                is_demo_user=False,
+            )
+        role_map = {
+            "owner": "usr-1",
+            "admin": "usr-2",
+            "manager": "usr-4",
+        }
+        mapped_user_id = role_map.get(parsed_role.value)
+        member = repo.get_member_by_user_id(mapped_user_id) if mapped_user_id else None
+        if member and member.role == parsed_role:
+            return AuthUser(
+                id=member.id,
+                user_id=member.user_id,
+                email=member.email,
+                full_name=member.name,
+                role=member.role,
+                organization_id=member.organization_id,
+                title=member.title,
+                department=member.department,
+                auth_mode="DEVELOPMENT_SIMULATION",
+                is_demo_user=member.is_demo,
+            )
+        return AuthUser(
+            id=x_user_id or f"usr-{parsed_role.value}",
+            user_id=x_user_id or f"usr-{parsed_role.value}",
+            email=f"{parsed_role.value}@solianwolves.co",
+            full_name=f"Simulated {parsed_role.value.title()}",
+            role=parsed_role,
+            organization_id=x_org_id or settings.ORGANIZATION_ID,
+            title=f"Staff {parsed_role.value.title()}",
+            department="Operations",
+            auth_mode="DEVELOPMENT_SIMULATION",
+            is_demo_user=True,
+        )
+
     if x_user_id:
         member = repo.get_member_by_user_id(x_user_id) or repo.get_member_by_id(x_user_id)
         if member:
@@ -257,48 +313,21 @@ def get_current_user(
                 auth_mode="DEVELOPMENT_SIMULATION",
                 is_demo_user=member.is_demo,
             )
-
-    if x_user_role:
-        role_map = {
-            "owner": "usr-1",
-            "admin": "usr-2",
-            "manager": "usr-4",
-            "member": "usr-5",
-            "guest": "usr-6",
-        }
-        mapped_user_id = role_map.get(x_user_role.lower(), "usr-6")
-        member = repo.get_member_by_user_id(mapped_user_id)
-        if member:
-            return AuthUser(
-                id=member.id,
-                user_id=member.user_id,
-                email=member.email,
-                full_name=member.name,
-                role=member.role,
-                organization_id=member.organization_id,
-                title=member.title,
-                department=member.department,
-                auth_mode="DEVELOPMENT_SIMULATION",
-                is_demo_user=member.is_demo,
-            )
-        try:
-            parsed_role = UserRole(x_user_role.lower())
-        except ValueError:
-            parsed_role = UserRole.MEMBER
+        # x_user_id was passed but does not exist in company directory -> treat as Guest
         return AuthUser(
-            id=x_user_id or f"usr-{parsed_role.value}",
-            user_id=x_user_id or f"usr-{parsed_role.value}",
-            email=f"{parsed_role.value}@solianwolves.co",
-            full_name=f"Simulated {parsed_role.value.title()}",
-            role=parsed_role,
+            id=x_user_id,
+            user_id=x_user_id,
+            email=f"{x_user_id}@external.solian.ai",
+            full_name="Visitor",
+            role=UserRole.GUEST,
             organization_id=x_org_id or settings.ORGANIZATION_ID,
-            title=f"Staff {parsed_role.value.title()}",
-            department="Operations",
+            title="Visitor",
+            department="",
             auth_mode="DEVELOPMENT_SIMULATION",
-            is_demo_user=True,
+            is_demo_user=False,
         )
 
-    # Default to executive owner Solomon K. in local development
+    # Default to executive owner Ian Momanyi Nyakundi in local development when no headers are supplied
     default_member = repo.get_member_by_user_id("usr-1")
     if default_member:
         return AuthUser(
@@ -318,13 +347,13 @@ def get_current_user(
         id="usr-guest",
         user_id="usr-guest",
         email="guest@solian.ai",
-        full_name="Guest User",
+        full_name="Visitor",
         role=UserRole.GUEST,
         organization_id=x_org_id or settings.ORGANIZATION_ID,
-        title="External Observer",
-        department="External Advisory",
+        title="Visitor",
+        department="",
         auth_mode="DEVELOPMENT_SIMULATION",
-        is_demo_user=True,
+        is_demo_user=False,
     )
 
 

@@ -25,6 +25,10 @@ import {
   CalendarEvent,
   UnifiedSearchResults,
   MemberInviteCreate,
+  PersonnelCreate,
+  PersonnelUpdate,
+  InvitationResponse,
+  InvitationCheckResponse,
   FinancialAccount,
   FinancialTransaction,
   Invoice,
@@ -482,7 +486,71 @@ export class SolianApiClient {
     );
   }
 
-  // Member Management & Roster
+  // Member Management & Personnel Directory
+  static async createPersonnel(personnel: PersonnelCreate): Promise<TeamMember> {
+    return await this.request<TeamMember>('/teams/members', {
+      method: 'POST',
+      body: JSON.stringify(personnel),
+    });
+  }
+
+  static async updatePersonnel(memberId: string, updates: PersonnelUpdate): Promise<any> {
+    return await this.request(`/teams/members/${memberId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  static async generateInvitation(memberId: string): Promise<InvitationResponse> {
+    return await this.request<InvitationResponse>(`/teams/members/${memberId}/invite`, {
+      method: 'POST',
+    });
+  }
+
+  static async suspendMember(memberId: string): Promise<any> {
+    return await this.request(`/teams/members/${memberId}/suspend`, {
+      method: 'POST',
+    });
+  }
+
+  static async unsuspendMember(memberId: string): Promise<any> {
+    return await this.request(`/teams/members/${memberId}/unsuspend`, {
+      method: 'POST',
+    });
+  }
+
+  static async checkInvitation(token: string): Promise<InvitationCheckResponse> {
+    return await this.request<InvitationCheckResponse>(`/auth/invitation/${encodeURIComponent(token)}`);
+  }
+
+  static async activateAccount(data: {
+    token: string;
+    password: string;
+    auth_user_id?: string;
+    access_token?: string;
+  }): Promise<any> {
+    return await this.request('/auth/activate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  static async getOwnerBootstrapStatus(): Promise<{ is_bootstrapped: boolean; owner_name?: string; owner_email?: string }> {
+    return await this.request('/auth/owner-bootstrap-status');
+  }
+
+  static async bootstrapOwner(data: {
+    bootstrap_token: string;
+    password?: string;
+    auth_user_id?: string;
+    access_token?: string;
+  }): Promise<any> {
+    return await this.request('/auth/bootstrap-owner', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   static async inviteMember(invite: MemberInviteCreate): Promise<TeamMember> {
     return await this.request<TeamMember>('/teams/members/invite', {
       method: 'POST',

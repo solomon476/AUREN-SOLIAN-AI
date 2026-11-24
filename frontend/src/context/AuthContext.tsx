@@ -18,6 +18,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string | null }>;
+  setCorporateSession: (accessToken: string) => Promise<void>;
 }
 
 const ROLE_LEVELS: Record<UserRole, number> = {
@@ -94,10 +95,10 @@ const unauthenticatedUser: UserProfile = {
   id: 'guest',
   userId: 'usr-guest',
   email: '',
-  fullName: 'Guest / Unauthenticated',
-  title: 'Guest Clearance',
+  fullName: 'Visitor',
+  title: 'Public Access',
   role: 'guest',
-  department: 'External',
+  department: '',
   responsibilities: [],
   reportsTo: null,
 };
@@ -117,6 +118,7 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: null }),
   signOut: async () => {},
   resetPassword: async () => ({ error: null }),
+  setCorporateSession: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -227,6 +229,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await supabaseAuthService.resetPassword(email);
   };
 
+  const setCorporateSession = async (accessToken: string) => {
+    await handleActiveSession(accessToken);
+  };
+
   const switchUser = (selectedUser: UserProfile) => {
     // Strictly prohibited in production environments
     if (isDevSimulation && !isProductionEnv) {
@@ -272,6 +278,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         resetPassword,
+        setCorporateSession,
       }}
     >
       {children}

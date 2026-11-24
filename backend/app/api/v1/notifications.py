@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/")
 async def list_notifications(
     unread_only: bool = False,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     notifications = repo.list_notifications(user_id=user.id, unread_only=unread_only)
     return [
@@ -50,7 +50,7 @@ async def create_notification(
 @router.patch("/{notification_id}/read")
 async def mark_notification_read(
     notification_id: str,
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     success = repo.mark_notification_read(notification_id, user_id=user.id)
     if not success:
@@ -60,7 +60,7 @@ async def mark_notification_read(
 
 @router.post("/read-all")
 async def mark_all_read(
-    user: AuthUser = Depends(require_role(UserRole.GUEST)),
+    user: AuthUser = Depends(require_role(UserRole.MEMBER)),
 ):
     count = repo.mark_all_notifications_read(user_id=user.id)
     return {"markedCount": count, "message": f"Marked {count} notifications as read."}

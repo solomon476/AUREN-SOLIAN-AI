@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/stats")
-async def get_stats(user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def get_stats(user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     stats = repo.get_dashboard_stats()
     return {
         "activeStaffCount": stats.active_staff_count,
@@ -48,7 +48,7 @@ async def get_stats(user: AuthUser = Depends(require_role(UserRole.GUEST))):
 
 
 @router.get("/activities")
-async def list_activities(limit: int = 15, user: AuthUser = Depends(require_role(UserRole.GUEST))):
+async def list_activities(limit: int = 15, user: AuthUser = Depends(require_role(UserRole.MEMBER))):
     activities = repo.list_activities(limit=limit)
     return [
         {
