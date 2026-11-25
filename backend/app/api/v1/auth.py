@@ -1,10 +1,14 @@
 """Authentication and tenant identity endpoints."""
 import os
+import time
 import uuid
+from collections import defaultdict
+from threading import Lock
 from typing import Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
 from fastapi.responses import FileResponse
+from app.core.config import settings
 from app.core.security import get_current_user, require_role, AuthUser, UserRole, create_access_token
 from app.models.organization import (
     OrganizationProfileUpdate,
@@ -17,6 +21,30 @@ from app.services.storage.avatar_storage import avatar_storage
 
 router = APIRouter()
 
+# Lightweight sliding-window rate limiter for authentication & token endpoints
+_AUTH_RATE_BUCKETS: dict[str, list[float]] = defaultdict(list)
+_AUTH_RATE_LOCK = Lock()
+AUTH_RATE_LIMIT_MAX = 20
+AUTH_RATE_LIMIT_WINDOW_SEC = 60
+
+
+def _enforce_auth_rate_limit(request: Request, bucket_prefix: str = "auth") -> None:
+    if settings.is_test and os.environ.get("ENABLE_AUTH_RATE_LIMIT_TEST") != "1":
+        return
+    client_ip = request.client.host if request.client else "unknown"
+    key = f"{bucket_prefix}:{client_ip}"
+    now = time.monotonic()
+    with _AUTH_RATE_LOCK:
+        entries = [ts for ts in _AUTH_RATE_BUCKETS[key] if now - ts < AUTH_RATE_LIMIT_WINDOW_SEC]
+        if len(entries) >= AUTH_RATE_LIMIT_MAX:
+            _AUTH_RATE_BUCKETS[key] = entries
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many authentication attempts. Please wait before trying again.",
+            )
+        entries.append(now)
+        _AUTH_RATE_BUCKETS[key] = entries
+
 
 class CorporateLoginRequest(BaseModel):
     email: str
@@ -24,11 +52,12 @@ class CorporateLoginRequest(BaseModel):
 
 
 @router.post("/login")
-async def corporate_login(body: CorporateLoginRequest):
+async def corporate_login(body: CorporateLoginRequest, request: Request):
     """
     Direct corporate authentication endpoint.
     Verifies corporate email and password, returning a signed JWT corporate session.
     """
+    _enforce_auth_rate_limit(request, "login")
     email_clean = body.email.strip().lower()
     member = repo.get_member_by_email(email_clean)
     if not member:
@@ -86,11 +115,12 @@ async def corporate_login(body: CorporateLoginRequest):
 
 
 @router.get("/invitation/{token}", response_model=InvitationCheckResponse)
-async def check_invitation(token: str):
+async def check_invitation(token: str, request: Request):
     """
     Validates a cryptographic invitation or owner bootstrap token.
     Returns sanitized public onboarding profile for user verification.
     """
+    _enforce_auth_rate_limit(request, "invitation_check")
     if not token or len(token.strip()) < 8:
         return InvitationCheckResponse(valid=False, error="Invalid invitation token.")
 
@@ -115,12 +145,13 @@ async def check_invitation(token: str):
 
 
 @router.post("/activate")
-async def activate_account(body: AccountActivateRequest):
+async def activate_account(body: AccountActivateRequest, request: Request):
     """
     Activates an employee account using a cryptographic invitation token.
     Binds the stable Auth UID to the personnel record and transitions status to active.
     Returns authenticated session credentials with full corporate clearance.
     """
+    _enforce_auth_rate_limit(request, "activate")
     member = repo.get_member_by_invitation_token(body.token.strip())
     if not member:
         raise HTTPException(
@@ -134,15 +165,24 @@ async def activate_account(body: AccountActivateRequest):
             detail="This account has been suspended by company administration.",
         )
 
-    # Determine Auth UID
-    auth_uid = body.auth_user_id
-    if not auth_uid and body.access_token:
+    # Determine Auth UID safely (never accept unverified client UID in production/staging)
+    auth_uid = None
+    if body.access_token:
         try:
             from app.core.security import verify_jwt_token
             payload = verify_jwt_token(body.access_token)
             auth_uid = payload.get("sub")
         except Exception:
             pass
+
+    if not auth_uid and body.auth_user_id and not (settings.is_production or settings.ENVIRONMENT.lower().strip() == "staging"):
+        existing_bound = repo.get_member_by_auth_id(body.auth_user_id)
+        if existing_bound and existing_bound.id != member.id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Auth UID is already bound to another personnel record.",
+            )
+        auth_uid = body.auth_user_id
 
     if not auth_uid:
         auth_uid = f"usr-auth-{uuid.uuid4().hex[:12]}"
@@ -156,6 +196,8 @@ async def activate_account(body: AccountActivateRequest):
 
     session_token = create_access_token({
         "sub": auth_uid,
+        "member_id": activated_member.id,
+        "user_id": activated_member.user_id,
         "email": activated_member.email or "unassigned@solianwolves.co",
         "role": activated_member.role.value,
         "name": activated_member.name,
@@ -185,11 +227,12 @@ async def get_owner_bootstrap_status():
 
 
 @router.post("/bootstrap-owner")
-async def bootstrap_owner(body: OwnerBootstrapRequest):
+async def bootstrap_owner(body: OwnerBootstrapRequest, request: Request):
     """
     Initializes and claims the statutory Company Owner account using a secure bootstrap token.
     Binds the owner Auth UID, transitions status to active, and returns verified Owner credentials.
     """
+    _enforce_auth_rate_limit(request, "bootstrap_owner")
     status_info = repo.get_owner_bootstrap_status()
     if status_info["is_bootstrapped"]:
         raise HTTPException(
@@ -197,14 +240,23 @@ async def bootstrap_owner(body: OwnerBootstrapRequest):
             detail="Forbidden: The statutory company Owner account has already been bootstrapped and activated.",
         )
 
-    auth_uid = body.auth_user_id
-    if not auth_uid and body.access_token:
+    auth_uid = None
+    if body.access_token:
         try:
             from app.core.security import verify_jwt_token
             payload = verify_jwt_token(body.access_token)
             auth_uid = payload.get("sub")
         except Exception:
             pass
+
+    if not auth_uid and body.auth_user_id and not (settings.is_production or settings.ENVIRONMENT.lower().strip() == "staging"):
+        existing_bound = repo.get_member_by_auth_id(body.auth_user_id)
+        if existing_bound and existing_bound.id != status_info.get("owner_id"):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Auth UID is already bound to another personnel record.",
+            )
+        auth_uid = body.auth_user_id
 
     if not auth_uid:
         auth_uid = f"usr-owner-{uuid.uuid4().hex[:12]}"
@@ -219,6 +271,8 @@ async def bootstrap_owner(body: OwnerBootstrapRequest):
 
     session_token = create_access_token({
         "sub": auth_uid,
+        "member_id": owner.id,
+        "user_id": owner.user_id,
         "email": owner.email,
         "role": owner.role.value,
         "name": owner.name,

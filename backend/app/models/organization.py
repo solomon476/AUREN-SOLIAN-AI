@@ -148,14 +148,14 @@ class InvitationCheckResponse(BaseModel):
 
 class AccountActivateRequest(BaseModel):
     token: str = Field(min_length=8)
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8)
     auth_user_id: Optional[str] = None
     access_token: Optional[str] = None
 
 
 class OwnerBootstrapRequest(BaseModel):
     bootstrap_token: str = Field(min_length=8)
-    password: Optional[str] = Field(None, min_length=6)
+    password: str = Field(min_length=8)
     auth_user_id: Optional[str] = None
     access_token: Optional[str] = None
 

@@ -68,6 +68,19 @@ export const CompanyChatView: React.FC = () => {
 
   const [messages, setMessages] = useState<ChatMessage[]>([getWelcomeMessage()]);
 
+  // Sync welcome context when user transitions between Visitor Mode and authenticated roles
+  useEffect(() => {
+    setMessages((prev) => {
+      const isOnlyWelcome =
+        prev.length === 1 &&
+        (prev[0].id === 'msg-welcome-guest' || prev[0].id === 'msg-welcome');
+      if (isOnlyWelcome || isGuest) {
+        return [getWelcomeMessage()];
+      }
+      return prev;
+    });
+  }, [user.userId, user.role, user.fullName]);
+
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [thinkingSeconds, setThinkingSeconds] = useState(0);

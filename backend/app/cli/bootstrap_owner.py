@@ -67,7 +67,7 @@ def main():
         token = repo.get_or_create_owner_bootstrap_token(expires_in_days=3)
 
     local_url = f"http://localhost:5173/?bootstrap_token={token}"
-    prod_url = f"https://ren-solian-ai.vercel.app/?bootstrap_token={token}"
+    prod_url = f"https://auren-solian-ai.vercel.app/?bootstrap_token={token}"
 
     print("\n[+] AUTHORIZATION BOOTSTRAP TOKEN GENERATED:")
     print(f"    Token: {token}\n")

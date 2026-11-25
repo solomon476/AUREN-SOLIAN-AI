@@ -85,7 +85,7 @@ export function buildApiUrl(endpoint: string): string {
 }
 
 export class SolianApiClient {
-  private static currentUserId: string = 'usr-1';
+  private static currentUserId: string = import.meta.env.PROD ? 'usr-guest' : 'usr-1';
   private static authToken: string | null = null;
 
   static buildUrl(endpoint: string): string {
@@ -150,6 +150,7 @@ export class SolianApiClient {
       title: data.title,
       role: data.role as UserRole,
       department: data.department,
+      avatarUrl: data.avatarUrl || undefined,
       responsibilities: data.responsibilities || [],
       reportsTo: data.reportsTo || null,
     };

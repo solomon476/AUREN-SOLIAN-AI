@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Organization } from '../types';
 import { SolianApiClient } from '../api/client';
+import { useAuth } from './AuthContext';
 
 interface OrganizationContextType {
   currentOrg: Organization;
@@ -33,6 +34,7 @@ const OrganizationContext = createContext<OrganizationContextType>({
 });
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [currentOrg, setCurrentOrg] = useState<Organization>(defaultOrg);
   const [activeModule, setActiveModule] = useState<string>('dashboard');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
@@ -46,7 +48,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   useEffect(() => {
     refreshOrg();
-  }, []);
+  }, [user.userId, user.role]);
 
   const toggleMobileNav = () => setIsMobileNavOpen((prev) => !prev);
   const closeMobileNav = () => setIsMobileNavOpen(false);

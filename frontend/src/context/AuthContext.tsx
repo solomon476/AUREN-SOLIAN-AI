@@ -197,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const handleActiveSession = async (token: string) => {
+  const handleActiveSession = async (token: string): Promise<UserProfile | null> => {
     SolianApiClient.setAuthToken(token);
     try {
       if (typeof window !== 'undefined') {
@@ -209,17 +209,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthMode('SUPABASE_JWT');
         setIsDevSimulation(false);
         setIsAuthenticated(true);
+        return serverProfile;
       } else if (serverProfile) {
         setUser(serverProfile);
         setAuthMode('SUPABASE_JWT');
         setIsDevSimulation(false);
         setIsAuthenticated(false);
+        return serverProfile;
       }
+      return null;
     } catch {
-      // If server profile fetch fails, user remains in containment
-      setIsAuthenticated(true);
-      setAuthMode('SUPABASE_JWT');
-      setIsDevSimulation(false);
+      // Invalid or expired token -> clear session and revert to clean signed-out state
+      handleSignedOut();
+      return null;
     }
   };
 
@@ -229,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem(CORPORATE_TOKEN_STORAGE_KEY);
     }
     if (isProductionEnv) {
+      SolianApiClient.setCurrentUserId('usr-guest');
       setAuthMode('SUPABASE_JWT');
       setIsDevSimulation(false);
       setIsAuthenticated(false);
@@ -248,8 +251,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const res = await supabaseAuthService.signIn(email, password);
         if (!res.error && res.session?.access_token) {
-          await handleActiveSession(res.session.access_token);
-          return { error: null };
+          const profile = await handleActiveSession(res.session.access_token);
+          if (profile && profile.role !== 'guest') {
+            return { error: null };
+          }
+          if (profile && profile.role === 'guest') {
+            await supabaseAuthService.signOut();
+            handleSignedOut();
+            return {
+              error:
+                'Your account is not linked to an active Solian Wolves personnel record. Please activate using an invitation or bootstrap token.',
+            };
+          }
         }
       } catch (err) {
         console.warn('Supabase sign-in failed, attempting direct corporate authentication fallback:', err);
@@ -260,8 +273,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await SolianApiClient.corporateLogin({ email, password });
       if (res?.accessToken) {
-        await setCorporateSession(res.accessToken);
-        return { error: null };
+        const profile = await handleActiveSession(res.accessToken);
+        if (profile && profile.role !== 'guest') {
+          return { error: null };
+        }
+        return {
+          error: 'Corporate session could not be verified against an active personnel record.',
+        };
       }
       return { error: res?.detail || res?.message || 'Corporate authentication failed.' };
     } catch (err: any) {

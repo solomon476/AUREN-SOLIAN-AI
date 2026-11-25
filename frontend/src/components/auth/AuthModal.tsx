@@ -103,8 +103,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         if (!verifiedInvitation) {
           throw new Error('Please verify your invitation token first.');
         }
-        if (newPassword.length < 6) {
-          throw new Error('Password must be at least 6 characters long.');
+        if (newPassword.length < 8) {
+          throw new Error('Password must be at least 8 characters long.');
         }
         if (newPassword !== confirmPassword) {
           throw new Error('Passwords do not match. Please re-enter.');

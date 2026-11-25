@@ -234,12 +234,12 @@ def get_current_user(
         )
 
     # -------------------------------------------------------------------------
-    # Path 2: Production Enforcement Boundary
+    # Path 2: Production & Staging Enforcement Boundary
     # -------------------------------------------------------------------------
-    if settings.is_production:
+    if settings.is_production or settings.ENVIRONMENT.lower().strip() == "staging":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required. Production requests must provide a valid Bearer token.",
+            detail="Authentication required. Production and staging requests must provide a valid Bearer token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -361,6 +361,45 @@ def get_current_user(
         department="",
         auth_mode="DEVELOPMENT_SIMULATION",
         is_demo_user=False,
+    )
+
+
+def get_optional_user(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_user_role: Optional[str] = Header(None, alias="X-User-Role"),
+    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
+) -> AuthUser:
+    """
+    Resolves authenticated user when a Bearer token is supplied, or returns a
+    strictly unprivileged GUEST identity for unauthenticated public visitors
+    in production/staging. Never falls back to an internal/owner identity.
+    """
+    if authorization and authorization.startswith("Bearer "):
+        return get_current_user(
+            authorization=authorization,
+            x_user_id=x_user_id,
+            x_user_role=x_user_role,
+            x_org_id=x_org_id,
+        )
+    if settings.is_production or settings.ENVIRONMENT.lower().strip() == "staging" or settings.AUTH_MODE.lower() == "jwt":
+        return AuthUser(
+            id="usr-guest",
+            user_id="usr-guest",
+            email="guest@solian.ai",
+            full_name="Visitor",
+            role=UserRole.GUEST,
+            organization_id=settings.ORGANIZATION_ID,
+            title="Public Visitor",
+            department="",
+            auth_mode="SUPABASE_JWT",
+            is_demo_user=False,
+        )
+    return get_current_user(
+        authorization=authorization,
+        x_user_id=x_user_id,
+        x_user_role=x_user_role,
+        x_org_id=x_org_id,
     )
 
 

@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from app.models.chat import ChatRequest, ExecuteActionRequest, ExecuteActionResult
-from app.core.security import get_current_user, AuthUser, require_role, UserRole
+from app.core.security import get_optional_user, AuthUser, require_role, UserRole
 from app.services.chat.chat_service import chat_service
 
 router = APIRouter()
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/stream")
 async def stream_chat(
     req: ChatRequest,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: AuthUser = Depends(get_optional_user),
 ):
     stream = chat_service.generate_chat_stream(
         message=req.message,

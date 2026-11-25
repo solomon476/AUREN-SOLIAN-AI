@@ -575,12 +575,32 @@ class PostgresRepository:
             )
             return self.get_member_by_id(member_id)
 
+    @staticmethod
+    def _hash_token(token: str) -> str:
+        return f"sha256:{hashlib.sha256(token.strip().encode('utf-8')).hexdigest()}"
+
+    @staticmethod
+    def _is_token_expired(expires_at_raw: Optional[Any]) -> bool:
+        if not expires_at_raw or not str(expires_at_raw).strip():
+            return True
+        try:
+            if isinstance(expires_at_raw, datetime):
+                exp = expires_at_raw
+            else:
+                exp = datetime.fromisoformat(str(expires_at_raw).strip().replace("Z", "+00:00"))
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            return datetime.now(timezone.utc) >= exp
+        except Exception:
+            return True
+
     def generate_member_invitation(self, member_id: str, expires_in_days: int = 7) -> Tuple[str, str]:
         member = self.get_member_by_id(member_id)
         if not member:
             raise ValueError("Personnel record not found.")
 
         token = secrets.token_urlsafe(32)
+        token_hash = self._hash_token(token)
         expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
 
         with db_manager.connection() as conn:
@@ -592,7 +612,7 @@ class PostgresRepository:
                 SET invitation_token = %s, invitation_expires_at = %s, activation_status = 'invitation_sent'
                 WHERE organization_id = %s AND id = %s;
                 """,
-                (token, expires_at, self.organization_id, member_id),
+                (token_hash, expires_at, self.organization_id, member_id),
             )
 
         return token, expires_at.isoformat()
@@ -600,24 +620,20 @@ class PostgresRepository:
     def get_member_by_invitation_token(self, token: str) -> Optional[OrganizationMember]:
         if not token or not token.strip():
             return None
+        token_hash = self._hash_token(token)
         with db_manager.connection() as conn:
             cur = conn.cursor()
             self._set_tenant_session(cur)
             cur.execute(
                 "SELECT * FROM members WHERE organization_id = %s AND invitation_token = %s LIMIT 1;",
-                (self.organization_id, token.strip()),
+                (self.organization_id, token_hash),
             )
             row = cur.fetchone()
             if not row:
                 return None
             member = self._row_to_member(row)
-            if member.invitation_expires_at:
-                try:
-                    exp = datetime.fromisoformat(str(member.invitation_expires_at).replace("Z", "+00:00"))
-                    if datetime.now(timezone.utc) > exp:
-                        return None
-                except Exception:
-                    pass
+            if self._is_token_expired(member.invitation_expires_at):
+                return None
             return member
 
     def hash_password(self, password: str) -> str:
@@ -648,46 +664,52 @@ class PostgresRepository:
             return self.verify_password_hash(stored, password)
 
     def activate_member_account(self, token: str, auth_user_id: str, password: Optional[str] = None) -> Optional[OrganizationMember]:
-        member = self.get_member_by_invitation_token(token)
-        if not member:
+        if not token or not token.strip():
             return None
-
+        token_hash = self._hash_token(token)
         p_hash = self.hash_password(password) if password else None
 
         with db_manager.connection() as conn:
             cur = conn.cursor()
             self._set_tenant_session(cur)
+            cur.execute(
+                "SELECT * FROM members WHERE organization_id = %s AND invitation_token = %s LIMIT 1 FOR UPDATE;",
+                (self.organization_id, token_hash),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            member = self._row_to_member(row)
+            if self._is_token_expired(member.invitation_expires_at):
+                return None
+            if getattr(member, "activation_status", None) == "suspended" or getattr(member, "status", None) == "suspended":
+                return None
+
             if p_hash:
-                try:
-                    cur.execute(
-                        """
-                        UPDATE members
-                        SET auth_user_id = %s, activation_status = 'active', status = 'active',
-                            password_hash = %s, invitation_token = NULL, invitation_expires_at = NULL
-                        WHERE organization_id = %s AND id = %s;
-                        """,
-                        (auth_user_id, p_hash, self.organization_id, member.id),
-                    )
-                except Exception:
-                    cur.execute(
-                        """
-                        UPDATE members
-                        SET auth_user_id = %s, activation_status = 'active', status = 'active',
-                            invitation_token = NULL, invitation_expires_at = NULL
-                        WHERE organization_id = %s AND id = %s;
-                        """,
-                        (auth_user_id, self.organization_id, member.id),
-                    )
+                cur.execute(
+                    """
+                    UPDATE members
+                    SET auth_user_id = %s, activation_status = 'active', status = 'active',
+                        password_hash = %s, invitation_token = NULL, invitation_expires_at = NULL
+                    WHERE organization_id = %s AND id = %s AND invitation_token = %s
+                      AND (activation_status IS NULL OR activation_status != 'active');
+                    """,
+                    (auth_user_id, p_hash, self.organization_id, member.id, token_hash),
+                )
             else:
                 cur.execute(
                     """
                     UPDATE members
                     SET auth_user_id = %s, activation_status = 'active', status = 'active',
                         invitation_token = NULL, invitation_expires_at = NULL
-                    WHERE organization_id = %s AND id = %s;
+                    WHERE organization_id = %s AND id = %s AND invitation_token = %s
+                      AND (activation_status IS NULL OR activation_status != 'active');
                     """,
-                    (auth_user_id, self.organization_id, member.id),
+                    (auth_user_id, self.organization_id, member.id, token_hash),
                 )
+            if cur.rowcount != 1:
+                return None
+
             self._log_activity_raw(
                 conn,
                 actor_name=member.name,
@@ -767,14 +789,6 @@ class PostgresRepository:
         owner = self.get_member_by_id(owner_id) if owner_id else None
         if not owner:
             return None
-
-        if owner.invitation_token and owner.invitation_expires_at:
-            try:
-                exp = datetime.fromisoformat(str(owner.invitation_expires_at).replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) < exp:
-                    return owner.invitation_token
-            except Exception:
-                pass
 
         token, _ = self.generate_member_invitation(owner.id, expires_in_days=expires_in_days)
         return token

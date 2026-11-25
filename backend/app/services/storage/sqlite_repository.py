@@ -1905,13 +1905,30 @@ class EnterpriseRepository:
                 conn.close()
             return self.get_member_by_id(member_id)
 
+    @staticmethod
+    def _hash_token(token: str) -> str:
+        return f"sha256:{hashlib.sha256(token.strip().encode('utf-8')).hexdigest()}"
+
+    @staticmethod
+    def _is_token_expired(expires_at_raw: Optional[str]) -> bool:
+        if not expires_at_raw or not str(expires_at_raw).strip():
+            return True  # Fail closed when expiration timestamp is missing
+        try:
+            exp = datetime.fromisoformat(str(expires_at_raw).strip().replace("Z", "+00:00"))
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            return datetime.now(timezone.utc) >= exp
+        except Exception:
+            return True  # Fail closed on malformed expiration timestamp
+
     def generate_member_invitation(self, member_id: str, expires_in_days: int = 7) -> Tuple[str, str]:
-        """Generates a secure cryptographic one-time invitation token for account activation."""
+        """Generates a secure cryptographic one-time invitation token (stored hashed in DB)."""
         member = self.get_member_by_id(member_id)
         if not member:
             raise ValueError("Personnel record not found.")
 
         token = secrets.token_urlsafe(32)
+        token_hash = self._hash_token(token)
         expires_at = (datetime.now(timezone.utc) + timedelta(days=expires_in_days)).isoformat()
 
         with self._lock:
@@ -1924,7 +1941,7 @@ class EnterpriseRepository:
                     SET invitation_token = ?, invitation_expires_at = ?, activation_status = 'invitation_sent'
                     WHERE id = ?;
                     """,
-                    (token, expires_at, member_id),
+                    (token_hash, expires_at, member_id),
                 )
                 conn.commit()
             finally:
@@ -1932,27 +1949,23 @@ class EnterpriseRepository:
 
         return token, expires_at
 
-        return token, expires_at
-
     def get_member_by_invitation_token(self, token: str) -> Optional[OrganizationMember]:
-        """Resolves personnel record by cryptographic token, verifying signature and expiration."""
+        """Resolves personnel record by hashed cryptographic token, failing closed on expiration."""
         if not token or not token.strip():
             return None
+        token_hash = self._hash_token(token)
         conn = self._get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM members WHERE invitation_token = ? LIMIT 1;", (token.strip(),))
-        row = cur.fetchone()
-        conn.close()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM members WHERE invitation_token = ? LIMIT 1;", (token_hash,))
+            row = cur.fetchone()
+        finally:
+            conn.close()
         if not row:
             return None
         member = self._row_to_member(row)
-        if member.invitation_expires_at:
-            try:
-                exp = datetime.fromisoformat(member.invitation_expires_at.replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) > exp:
-                    return None
-            except Exception:
-                pass
+        if self._is_token_expired(member.invitation_expires_at):
+            return None
         return member
 
     def hash_password(self, password: str) -> str:
@@ -1997,26 +2010,35 @@ class EnterpriseRepository:
                 conn.close()
 
     def activate_member_account(self, token: str, auth_user_id: str, password: Optional[str] = None) -> Optional[OrganizationMember]:
-        """Binds verified Auth UID to personnel record and activates the account."""
-        member = self.get_member_by_invitation_token(token)
-        if not member:
+        """Atomically verifies, consumes the single-use hashed token, binds Auth UID, and activates the account."""
+        if not token or not token.strip():
             return None
-
+        token_hash = self._hash_token(token)
         p_hash = self.hash_password(password) if password else None
 
         with self._lock:
             conn = self._get_connection()
             try:
                 cur = conn.cursor()
+                cur.execute("SELECT * FROM members WHERE invitation_token = ? LIMIT 1;", (token_hash,))
+                row = cur.fetchone()
+                if not row:
+                    return None
+                member = self._row_to_member(row)
+                if self._is_token_expired(member.invitation_expires_at):
+                    return None
+                if getattr(member, "activation_status", None) == "suspended" or getattr(member, "status", None) == "suspended":
+                    return None
+
                 if p_hash:
                     cur.execute(
                         """
                         UPDATE members
                         SET auth_user_id = ?, activation_status = 'active', status = 'active',
                             password_hash = ?, invitation_token = NULL, invitation_expires_at = NULL
-                        WHERE id = ?;
+                        WHERE id = ? AND invitation_token = ? AND (activation_status IS NULL OR activation_status != 'active');
                         """,
-                        (auth_user_id, p_hash, member.id),
+                        (auth_user_id, p_hash, member.id, token_hash),
                     )
                 else:
                     cur.execute(
@@ -2024,10 +2046,14 @@ class EnterpriseRepository:
                         UPDATE members
                         SET auth_user_id = ?, activation_status = 'active', status = 'active',
                             invitation_token = NULL, invitation_expires_at = NULL
-                        WHERE id = ?;
+                        WHERE id = ? AND invitation_token = ? AND (activation_status IS NULL OR activation_status != 'active');
                         """,
-                        (auth_user_id, member.id),
+                        (auth_user_id, member.id, token_hash),
                     )
+                if cur.rowcount != 1:
+                    conn.rollback()
+                    return None
+
                 self._log_activity_raw(
                     conn,
                     actor_name=member.name,
@@ -2037,6 +2063,9 @@ class EnterpriseRepository:
                     module="auth",
                 )
                 conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
             finally:
                 conn.close()
 
@@ -2113,7 +2142,7 @@ class EnterpriseRepository:
         }
 
     def get_or_create_owner_bootstrap_token(self, expires_in_days: int = 3) -> Optional[str]:
-        """Retrieves or creates a secure bootstrap token for first-time Owner account initialization."""
+        """Issues a fresh, single-use hashed bootstrap token for first-time Owner account initialization."""
         status = self.get_owner_bootstrap_status()
         if status["is_bootstrapped"]:
             return None
@@ -2122,14 +2151,6 @@ class EnterpriseRepository:
         owner = self.get_member_by_id(owner_id) if owner_id else None
         if not owner:
             return None
-
-        if owner.invitation_token and owner.invitation_expires_at:
-            try:
-                exp = datetime.fromisoformat(owner.invitation_expires_at.replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) < exp:
-                    return owner.invitation_token
-            except Exception:
-                pass
 
         token, _ = self.generate_member_invitation(owner.id, expires_in_days=expires_in_days)
         return token
